@@ -8,6 +8,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { FileText, ThumbsUp, ThumbsDown, Copy, Check, Mail, BookOpenCheck, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, ExternalLink } from "lucide-react";
 import { useExcerptPersistence } from "@/hooks/useExcerptPersistence";
 import { useNotePersistence } from "@/hooks/useNotePersistence";
+import { useBillText } from "@/hooks/useBillText";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -97,10 +99,20 @@ export function ChatResponseFooter({
   const [selectedBillTitle, setSelectedBillTitle] = useState<string>("");
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [showCitations, setShowCitations] = useState(false);
+  const [showBillText, setShowBillText] = useState(false);
   const [copied, setCopied] = useState(false);
   const [emailSheetOpen, setEmailSheetOpen] = useState(false);
   const [feedbackState, setFeedbackState] = useState<'good' | 'bad' | null>(feedback ?? null);
   const accordionRef = useRef<HTMLDivElement>(null);
+  const billTextRef = useRef<HTMLDivElement>(null);
+
+  // Lazy-fetch bill text only when accordion is toggled open
+  const primaryBill = hasBills ? bills[0] : null;
+  const { data: billFullText, isLoading: billTextLoading } = useBillText(
+    primaryBill?.bill_number ?? null,
+    primaryBill?.session_id ?? null,
+    showBillText
+  );
 
   const handlePDFView = async (billNumber: string, billTitle: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -421,6 +433,18 @@ export function ChatResponseFooter({
     }
   }, [showCitations]);
 
+  // Auto-scroll to bill text when toggled on
+  useEffect(() => {
+    if (showBillText && billTextRef.current) {
+      setTimeout(() => {
+        billTextRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+  }, [showBillText]);
+
   return (
     <div className="space-y-6">
       {/* Message Content */}
@@ -449,20 +473,23 @@ export function ChatResponseFooter({
             <TooltipContent>Citations</TooltipContent>
           </Tooltip>
 
-          {/* View Bill */}
+          {/* View Bill Text Toggle */}
           {hasBills && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  onClick={(e) => handlePDFView(bills[0].bill_number, bills[0].title, e)}
+                  className={`h-8 w-8 ${showBillText
+                    ? "text-foreground bg-muted hover:bg-muted/80"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                  onClick={() => setShowBillText(!showBillText)}
                 >
                   <ScrollText className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>View bill</TooltipContent>
+              <TooltipContent>View bill text</TooltipContent>
             </Tooltip>
           )}
 
@@ -764,6 +791,47 @@ export function ChatResponseFooter({
                 </AccordionContent>
               </AccordionItem>
             )}
+          </Accordion>
+        </div>
+      )}
+
+      {/* Bill Text Accordion - toggled by ScrollText icon */}
+      {!isStreaming && showBillText && hasBills && (
+        <div ref={billTextRef} className="pt-4 animate-in fade-in duration-300">
+          <Accordion type="single" collapsible defaultValue="bill-text">
+            <AccordionItem value="bill-text" className="border-b">
+              <AccordionTrigger className="hover:no-underline py-4">
+                <span className="text-sm font-medium">
+                  View Bill — {primaryBill?.bill_number}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 pt-2">
+                {billTextLoading ? (
+                  <div className="space-y-3 px-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-[90%]" />
+                    <Skeleton className="h-4 w-[95%]" />
+                    <Skeleton className="h-4 w-[85%]" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ) : billFullText ? (
+                  <div
+                    className="bill-text-content prose prose-sm max-w-none text-foreground overflow-x-auto
+                      [&_pre]:whitespace-pre-wrap [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed
+                      [&_pre]:bg-white [&_pre]:text-black [&_pre]:p-6 [&_pre]:rounded-lg
+                      [&_p]:leading-relaxed [&_p]:my-2
+                      [&_u]:underline [&_b]:font-bold
+                      [&_u]:!text-green-600 [&_s]:!text-red-600
+                      [&_i]:!text-green-600 [&_i]:!bg-transparent"
+                    dangerouslySetInnerHTML={{ __html: billFullText }}
+                  />
+                ) : (
+                  <p className="text-muted-foreground text-sm italic px-2">
+                    Bill text is not available for this legislation.
+                  </p>
+                )}
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
         </div>
       )}
