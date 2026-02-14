@@ -1395,26 +1395,27 @@ const NewChat = () => {
         console.log('Extracted Perplexity citation numbers:', perplexityCitations);
       }
 
-      // Extract bill numbers from AI response to fetch citations (progressive loading)
+      // Extract bill numbers from user query AND AI response to fetch citations
       let responseCitations: BillCitation[] = [];
-      if (aiResponse) {
-        const responseBillNumbers = aiResponse.match(/[ASK]\d{4,}/gi) || [];
-        if (responseBillNumbers.length > 0) {
-          try {
-            // Fetch the exact bills mentioned in the AI response
-            const { data: mentionedBills, error } = await supabase
-              .from("Bills")
-              .select("bill_number, title, status_desc, description, committee, session_id")
-              .in("bill_number", responseBillNumbers.map(b => b.toUpperCase()))
-              .limit(10);
+      const billPattern = /[ASJK]\d{3,}[A-Z]?/gi;
+      const queryBillNumbers = userQuery.match(billPattern) || [];
+      const responseBillNumbers = aiResponse ? (aiResponse.match(billPattern) || []) : [];
+      const allBillNumbers = [...new Set([...queryBillNumbers, ...responseBillNumbers].map(b => normalizeBillNumber(b)))].filter(Boolean);
 
-            if (!error && mentionedBills && mentionedBills.length > 0) {
-              responseCitations = mentionedBills;
-              console.log(`Found ${mentionedBills.length} bills mentioned in AI response`);
-            }
-          } catch (error) {
-            console.error("Error fetching bills from AI response:", error);
+      if (allBillNumbers.length > 0) {
+        try {
+          const { data: mentionedBills, error } = await supabase
+            .from("Bills")
+            .select("bill_number, title, status_desc, description, committee, session_id")
+            .in("bill_number", allBillNumbers)
+            .limit(10);
+
+          if (!error && mentionedBills && mentionedBills.length > 0) {
+            responseCitations = mentionedBills;
+            console.log(`Found ${mentionedBills.length} bills mentioned in query/response`);
           }
+        } catch (error) {
+          console.error("Error fetching bills from query/response:", error);
         }
       }
 
