@@ -1165,6 +1165,11 @@ const NewChat = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setQuery("");
+    // Reset textarea height after clearing input
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.overflowY = 'hidden';
+    }
     // Clear selected items after submission
     setSelectedMembers([]);
     setSelectedBills([]);
