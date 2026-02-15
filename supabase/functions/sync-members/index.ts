@@ -502,8 +502,6 @@ async function syncSenateCommittees(sessionYear: number) {
 
         const memberCount = String(members.length);
 
-        console.log(`${apiName}: chair="${chairName}", members=${members.length}, slugs=${memberSlugs ? memberSlugs.split(';').length : 0}`);
-
         const updateFields: Record<string, any> = {
           committee_members: memberSlugs || null,
           member_count: memberCount,
