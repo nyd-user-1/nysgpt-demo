@@ -300,6 +300,22 @@ const buildCommitteePrompt = (committee: any): string => {
   return `Tell me about the ${name}${chair}. What legislation does this committee handle and what should I know about it?`;
 };
 
+/** Convert committee_members slug string to readable names for AI context */
+const formatCommitteeMembers = (committee: any): string => {
+  const slugs = committee.committee_members;
+  if (!slugs) return '';
+  const names = slugs.split(';').map((s: string) =>
+    s.trim().split('-').map((w: string) =>
+      w.charAt(0).toUpperCase() + w.slice(1)
+    ).join(' ')
+  ).filter(Boolean);
+  if (names.length === 0) return '';
+  const chamberPrefix = committee.chamber === 'Senate' ? 'Senate ' : committee.chamber === 'Assembly' ? 'Assembly ' : '';
+  const committeeName = `${chamberPrefix}${committee.committee_name || 'Committee'}`;
+  const chair = committee.chair_name ? `Chair: ${committee.chair_name}\n` : '';
+  return `Current members of the ${committeeName}:\n${chair}Members (${names.length}): ${names.join(', ')}`;
+};
+
 const NewChat = () => {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -831,7 +847,7 @@ const NewChat = () => {
     try {
       const { data, error } = await supabase
         .from("Committees")
-        .select("committee_id, committee_name, chamber, chair_name")
+        .select("committee_id, committee_name, chamber, chair_name, committee_members")
         .order("committee_name", { ascending: true })
         .range(offset, offset + 29);
 
@@ -1317,6 +1333,7 @@ const NewChat = () => {
           composedSystemContext = composeSystemPrompt({
             entityType: 'committee',
             entityName: `${prefix}${c.committee_name || ''}`.trim(),
+            dataContext: formatCommitteeMembers(c),
           });
         }
       }
@@ -2265,7 +2282,7 @@ const NewChat = () => {
                                     type="button"
                                     onClick={() => {
                                       setMobileDrawerCategory(null);
-                                      handleSubmit(null, buildCommitteePrompt(committee), composeSystemPrompt({ entityType: 'committee', entityName: `${prefix}${committee.committee_name || ''}`.trim() }));
+                                      handleSubmit(null, buildCommitteePrompt(committee), composeSystemPrompt({ entityType: 'committee', entityName: `${prefix}${committee.committee_name || ''}`.trim(), dataContext: formatCommitteeMembers(committee) }));
                                     }}
                                     className={cn(
                                       "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
@@ -2839,7 +2856,7 @@ const NewChat = () => {
                               type="button"
                               onClick={() => {
                                 setMobileDrawerCategory(null);
-                                handleSubmit(null, buildCommitteePrompt(committee), composeSystemPrompt({ entityType: 'committee', entityName: `${prefix}${committee.committee_name || ''}`.trim() }));
+                                handleSubmit(null, buildCommitteePrompt(committee), composeSystemPrompt({ entityType: 'committee', entityName: `${prefix}${committee.committee_name || ''}`.trim(), dataContext: formatCommitteeMembers(committee) }));
                               }}
                               className={cn(
                                 "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
