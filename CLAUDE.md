@@ -217,6 +217,63 @@ Strict mode with `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`. Pa
 - No GPT Engineer scripts in production builds
 - Category card gradients: Bill Research (blue), Policy (emerald), Advocacy (purple), Departments (yellow/amber)
 
+## Operational Scripts
+
+All scripts live in `scripts/` and call Supabase edge functions.
+
+### Hourly Bill Sync (cron)
+The `sync-bills` action on `nys-legislation-search` checks for new/updated bills from the NYS API (last 2 hours). Configured as a Supabase cron job. To trigger manually:
+```bash
+curl -X POST "https://kwyjohornlgujoqypyvu.supabase.co/functions/v1/nys-legislation-search" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ANON_KEY" \
+  -H "apikey: $ANON_KEY" \
+  -d '{"action":"sync-bills","sessionYear":2025}'
+```
+
+### Bill Resync (`scripts/resync-bills.sh`)
+Re-syncs all existing bills to fix sponsor/vote linkage. Runs in batches of 50, resumable.
+```bash
+./scripts/resync-bills.sh           # Start from beginning
+./scripts/resync-bills.sh 500       # Resume from offset 500
+```
+
+### Bill Embedding (`scripts/embed-bills.sh`)
+Generates pgvector embeddings for semantic search over bill text. Fetches full text from NYS API, chunks it, embeds via OpenAI `text-embedding-3-small` (256 dims), and stores in `bill_chunks` table. Batches of 10, 3s pause, resumable.
+```bash
+./scripts/embed-bills.sh            # Start from beginning
+./scripts/embed-bills.sh 290        # Resume from offset 290
+```
+Check progress:
+```bash
+curl -X POST "https://kwyjohornlgujoqypyvu.supabase.co/functions/v1/embed-bill-chunks" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ANON_KEY" \
+  -H "apikey: $ANON_KEY" \
+  -d '{"action":"status","sessionYear":2025}'
+```
+
+### Member Sync (`scripts/sync-members.sh`)
+Syncs all current NYS legislators into the People table from the NYS API.
+```bash
+./scripts/sync-members.sh           # Default session 2025
+./scripts/sync-members.sh 2025      # Explicit session year
+```
+
+### Committee Sync (`scripts/sync-committees.sh`)
+Syncs Senate committee data (chair, members, meeting schedule) from NYS API. Assembly data is not available via API.
+```bash
+./scripts/sync-committees.sh        # Default session 2025
+./scripts/sync-committees.sh 2025   # Explicit session year
+```
+
+## Semantic Search (pgvector)
+
+The `bill_chunks` table stores chunked bill text with 256-dimension vector embeddings for semantic search. Edge functions:
+- `embed-bill-chunks` — actions: `embed-single`, `embed-batch`, `status`
+- `semantic-search` — takes natural language query, returns matched bill chunks with similarity scores
+- `match_bill_chunks` — Supabase RPC for cosine similarity search with session/bill filters
+
 ## Build Optimization
 
 Vite `manualChunks` splits `vendor` (React) and `ui` (Radix) into preloaded chunks. Heavy libraries (TipTap, Recharts) are NOT in manualChunks — they bundle into their lazy-loaded page chunks to keep initial load small (~195 KB gzip).
