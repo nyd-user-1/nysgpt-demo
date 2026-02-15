@@ -481,12 +481,12 @@ async function syncSenateCommittees(sessionYear: number) {
         // Extract chair from members
         const members = apiCommittee.committeeMembers?.items || [];
         const chair = members.find((m: any) => m.title === 'CHAIR_PERSON');
-        const chairName = chair ? `${chair.name || ''}`.trim() : null;
+        const chairName = chair ? `${chair.fullName || chair.name || ''}`.trim() : null;
 
         // Build semicolon-separated slugs from all members
         const memberSlugs = members
           .map((m: any) => {
-            const name = (m.name || '').trim();
+            const name = (m.fullName || m.name || '').trim();
             return name ? memberFullNameToSlug(name) : null;
           })
           .filter(Boolean)
@@ -501,6 +501,8 @@ async function syncSenateCommittees(sessionYear: number) {
         }
 
         const memberCount = String(members.length);
+
+        console.log(`${apiName}: chair="${chairName}", members=${members.length}, slugs=${memberSlugs ? memberSlugs.split(';').length : 0}`);
 
         const updateFields: Record<string, any> = {
           committee_members: memberSlugs || null,
