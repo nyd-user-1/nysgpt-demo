@@ -73,19 +73,31 @@ export const CommitteeMembersTable = ({ committee }: CommitteeMembersTableProps)
             .filter(slug => slug.length > 0);
 
           if (memberSlugs.length > 0) {
-            // Convert slugs to search patterns (e.g., "rebecca-seawright" -> "rebecca%seawright")
             const memberPromises = memberSlugs.map(async (slug) => {
-              // Convert hyphenated slug to space-separated for matching
-              // "rebecca-seawright" becomes "rebecca seawright"
               const searchName = slug.replace(/-/g, ' ');
+              const nameParts = searchName.split(' ');
+              const firstName = nameParts[0];
+              const lastName = nameParts[nameParts.length - 1];
 
-              // Try to find member by matching name parts
-              const { data: memberData } = await supabase
+              // Try exact full name match first
+              let { data: memberData } = await supabase
                 .from("People")
                 .select("*")
-                .or(`name.ilike.%${searchName}%,first_name.ilike.%${searchName.split(' ')[0]}%`)
+                .ilike('name', `%${searchName}%`)
                 .limit(1)
-                .single();
+                .maybeSingle();
+
+              // Fallback: match on first + last name (handles middle initial differences)
+              if (!memberData && nameParts.length >= 2) {
+                const { data: fallbackData } = await supabase
+                  .from("People")
+                  .select("*")
+                  .ilike('name', `%${firstName}%`)
+                  .ilike('name', `%${lastName}%`)
+                  .limit(1)
+                  .maybeSingle();
+                memberData = fallbackData;
+              }
 
               return memberData;
             });
