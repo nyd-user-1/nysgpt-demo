@@ -61,7 +61,14 @@ export const MemberCommitteesTable = ({ member }: MemberCommitteesTableProps) =>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {committees.map((committee) => (
+            {[...committees]
+              .sort((a, b) => {
+                const aIsChair = a.role?.toLowerCase() === 'chair' ? 0 : 1;
+                const bIsChair = b.role?.toLowerCase() === 'chair' ? 0 : 1;
+                if (aIsChair !== bIsChair) return aIsChair - bIsChair;
+                return (a.committee_name || '').localeCompare(b.committee_name || '');
+              })
+              .map((committee) => (
               <Link
                 key={committee.committee_id}
                 to={`/committees/${committee.slug}`}
