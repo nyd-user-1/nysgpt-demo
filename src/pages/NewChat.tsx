@@ -779,7 +779,14 @@ const NewChat = () => {
     }
   };
 
-  // Load bills when dialog opens
+  // Pre-load bills, members, and committees on mount so pills open instantly
+  useEffect(() => {
+    fetchBillsForSelection();
+    fetchMembersForSelection();
+    fetchCommitteesForSelection();
+  }, []);
+
+  // Load bills when dialog opens (fallback if not already loaded)
   useEffect(() => {
     if (billsDialogOpen && availableBills.length === 0) {
       fetchBillsForSelection();
