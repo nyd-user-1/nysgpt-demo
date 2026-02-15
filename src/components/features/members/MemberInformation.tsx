@@ -16,47 +16,9 @@ interface MemberInformationProps {
   hasNotes?: boolean;
 }
 
-// Senate leadership titles — keyed by normalized last name (or "last, first" for disambiguation)
-const SENATE_LEADERSHIP: Record<string, string> = {
-  "stewart-cousins": "President Pro Tempore and Majority Leader",
-  "gianaris": "Deputy Majority Leader",
-  "krueger": "Chair of the Senate Finance Committee",
-  "stavisky": "Vice President Pro Tempore",
-  "parker": "Senior Assistant Majority Leader",
-  "serrano": "Chair of the Majority Conference",
-  "gounardes": "Chair of Majority Program Development Committee",
-  "rivera": "Assistant Majority Leader on Conference Operations",
-  "bailey": "Assistant Majority Leader on House Operations",
-  "comrie": "Majority Whip",
-  "liu": "Majority Conference Vice-Chair",
-  "persaud": "Majority Conference Secretary",
-  "addabbo": "Majority Deputy Whip",
-  "mayer": "Majority Assistant Whip",
-  "martinez": "Liaison to the Executive Branch",
-  "skoufis": "Deputy Majority Leader for State Federal Relations",
-  "salazar": "Deputy Majority Leader for Senate and Assembly Relations",
-  "may": "Chair of the Majority Steering Committee",
-  "ortt": "Minority Leader",
-  "lanza": "Deputy Minority Leader and Floor Leader",
-  "o'mara": "Ranking Member of the Finance Committee",
-  "helming": "Chair of the Senate Minority Conference",
-  "gallivan": "Minority Whip",
-  "palumbo": "Deputy Floor Leader",
-  "griffo": "Assistant Minority Leader",
-  "canzoneri-fitzpatrick": "Vice Chair of the Senate Minority Conference",
-  "weilk": "Secretary of the Minority Conference",
-};
-
-function getLeadershipTitle(member: Member): string | null {
-  const lastName = (member.last_name || '').toLowerCase().trim();
-  if (!lastName) return null;
-  return SENATE_LEADERSHIP[lastName] || null;
-}
-
 export const MemberInformation = ({ member, hasNotes = false }: MemberInformationProps) => {
   const [imageError, setImageError] = useState(false);
   const memberName = member.name || `${member.first_name || ''} ${member.last_name || ''}`.trim() || `Member #${member.people_id}`;
-  const leadershipTitle = member.chamber === 'Senate' ? getLeadershipTitle(member) : null;
 
   return (
     <>
@@ -91,8 +53,8 @@ export const MemberInformation = ({ member, hasNotes = false }: MemberInformatio
             )}
             <div>
               <h1 className="text-2xl font-semibold text-foreground">{memberName}</h1>
-              {leadershipTitle && (
-                <p className="text-sm text-muted-foreground mt-1">{leadershipTitle}</p>
+              {member.leadership_title && (
+                <p className="text-sm text-muted-foreground mt-1">{member.leadership_title}</p>
               )}
             </div>
           </div>

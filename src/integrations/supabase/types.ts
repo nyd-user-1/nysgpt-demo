@@ -510,6 +510,7 @@ export type Database = {
           followthemoney_eid: number | null
           knowwho_pid: number | null
           last_name: string | null
+          leadership_title: string | null
           legiscan_legislation_url: string | null
           legiscan_rss_url: string | null
           middle_name: string | null
@@ -549,6 +550,7 @@ export type Database = {
           followthemoney_eid?: number | null
           knowwho_pid?: number | null
           last_name?: string | null
+          leadership_title?: string | null
           legiscan_legislation_url?: string | null
           legiscan_rss_url?: string | null
           middle_name?: string | null
@@ -588,6 +590,7 @@ export type Database = {
           followthemoney_eid?: number | null
           knowwho_pid?: number | null
           last_name?: string | null
+          leadership_title?: string | null
           legiscan_legislation_url?: string | null
           legiscan_rss_url?: string | null
           middle_name?: string | null
