@@ -171,12 +171,13 @@ export const CommitteeVotesTable = ({ committee }: CommitteeVotesTableProps) => 
 
         const billIds = committeeBills.map(b => b.bill_id);
 
-        // Get roll calls for these bills where description is COMMITTEE
+        // Get roll calls for these bills where description is COMMITTEE, scoped to this committee's chamber
         const { data: rollCallData, error: rollCallError } = await supabase
           .from("Roll Call")
           .select("*")
           .in("bill_id", billIds)
           .ilike("description", "%COMMITTEE%")
+          .eq("chamber", committee.chamber)
           .order("date", { ascending: false })
           .limit(100);
 
