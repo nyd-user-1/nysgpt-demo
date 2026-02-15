@@ -175,7 +175,7 @@ export const AdvancedSearchCombobox: React.FC<AdvancedSearchComboboxProps> = ({
             promises.push(
               supabase
                 .from('Committees')
-                .select('committee_id, committee_name, chamber, description, chair_name, member_count, active_bills_count')
+                .select('committee_id, committee_name, chamber, description, chair_name, member_count, active_bills_count, committee_members')
                 .or(`committee_name.ilike.%${query}%, description.ilike.%${query}%, chair_name.ilike.%${query}%`)
                 .limit(4)
             );
@@ -217,7 +217,9 @@ export const AdvancedSearchCombobox: React.FC<AdvancedSearchComboboxProps> = ({
                 description: committee.description,
                 chair: committee.chair_name,
                 chamber: committee.chamber,
-                memberCount: committee.member_count,
+                memberCount: committee.committee_members
+                  ? String(committee.committee_members.split(';').filter((s: string) => s.trim()).length)
+                  : committee.member_count,
                 activeBills: committee.active_bills_count
               }
             }))

@@ -121,7 +121,9 @@ const Committees = () => {
             const committee: Committee = {
               committee_id: matchedCommittee.committee_id,
               name: matchedCommittee.committee_name || '',
-              memberCount: matchedCommittee.member_count || '0',
+              memberCount: matchedCommittee.committee_members
+                ? String(matchedCommittee.committee_members.split(';').filter((s: string) => s.trim()).length)
+                : (matchedCommittee.member_count || '0'),
               billCount: matchedCommittee.active_bills_count || '0',
               description: matchedCommittee.description,
               chair_name: matchedCommittee.chair_name,

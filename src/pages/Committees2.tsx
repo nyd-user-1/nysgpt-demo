@@ -288,10 +288,12 @@ function CommitteeCard({ committee, onClick, onChatClick }: CommitteeCardProps) 
               <p className="font-medium truncate">{committee.chair_name}</p>
             </div>
           )}
-          {committee.member_count && (
+          {(committee.committee_members || committee.member_count) && (
             <div>
               <span className="text-muted-foreground">Members</span>
-              <p className="font-medium">{committee.member_count}</p>
+              <p className="font-medium">{committee.committee_members
+                ? committee.committee_members.split(';').filter(s => s.trim()).length
+                : committee.member_count}</p>
             </div>
           )}
           {committee.meeting_schedule && (

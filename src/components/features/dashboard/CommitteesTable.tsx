@@ -78,7 +78,9 @@ export const CommitteesTable = ({ limit = 10 }: CommitteesTableProps) => {
             meeting_schedule: committee.meeting_schedule || null,
             next_meeting: committee.next_meeting || null,
             address: committee.address || null,
-            memberCount: committee.member_count?.toString() || "0",
+            memberCount: committee.committee_members
+              ? String(committee.committee_members.split(';').filter((s: string) => s.trim()).length)
+              : (committee.member_count?.toString() || "0"),
             billCount: committee.active_bills_count?.toString() || "0"
           };
         });

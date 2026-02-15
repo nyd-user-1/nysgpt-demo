@@ -43,7 +43,9 @@ export const useCommitteesData = () => {
       const transformedCommittees: Committee[] = committeesData?.map((committee) => ({
         committee_id: committee.committee_id,
         name: committee.committee_name || "Unknown Committee",
-        memberCount: committee.member_count || "0",
+        memberCount: committee.committee_members
+          ? String(committee.committee_members.split(';').filter((s: string) => s.trim()).length)
+          : (committee.member_count || "0"),
         billCount: committee.active_bills_count || "0", 
         description: committee.description,
         chair_name: committee.chair_name,
