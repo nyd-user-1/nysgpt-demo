@@ -1,6 +1,7 @@
 // Admin email whitelist
 const ADMIN_EMAILS = [
-  'brendan.stanton@gmail.com'
+  'brendan.stanton@gmail.com',
+  'brendan@nysgpt.com'
 ];
 
 /**
