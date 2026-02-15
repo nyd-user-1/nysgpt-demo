@@ -5,7 +5,7 @@
 
 import { useState, ReactNode, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FileText, ThumbsUp, ThumbsDown, Copy, Check, Mail, BookOpenCheck, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, ExternalLink } from "lucide-react";
+import { FileText, ThumbsUp, ThumbsDown, Copy, Check, Mail, BookOpenCheck, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen } from "lucide-react";
 import { useExcerptPersistence } from "@/hooks/useExcerptPersistence";
 import { useNotePersistence } from "@/hooks/useNotePersistence";
 import { useBillText } from "@/hooks/useBillText";
@@ -522,24 +522,25 @@ export function ChatResponseFooter({
             </Tooltip>
           )}
 
-          {/* Open as Note Badge */}
+          {/* Open as Note */}
           {!hideCreateExcerpt && assistantMessageText && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                   onClick={handleOpenAsNote}
                   disabled={noteLoading}
-                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-50"
                 >
                   {noteLoading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <NotebookPen className="h-4 w-4" />
                   )}
-                  <span>Open as Note</span>
-                </button>
+                </Button>
               </TooltipTrigger>
-              <TooltipContent>Open this response as a standalone note</TooltipContent>
+              <TooltipContent>Open as Note</TooltipContent>
             </Tooltip>
           )}
 
