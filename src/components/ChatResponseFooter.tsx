@@ -818,8 +818,8 @@ export function ChatResponseFooter({
                 ) : billFullText ? (
                   <div
                     className="bill-text-content prose prose-sm max-w-none text-foreground overflow-x-auto
-                      [&_pre]:whitespace-pre-wrap [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed
-                      [&_pre]:bg-white [&_pre]:text-black [&_pre]:p-6 [&_pre]:rounded-lg
+                      [&_pre]:whitespace-pre-wrap [&_pre]:font-mono [&_pre]:text-[11px] [&_pre]:leading-relaxed
+                      [&_pre]:bg-white [&_pre]:text-black [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
                       [&_p]:leading-relaxed [&_p]:my-2
                       [&_u]:underline [&_b]:font-bold
                       [&_u]:!text-green-600 [&_s]:!text-red-600
