@@ -36,14 +36,24 @@ export const useMemberCommittees = (member: Member) => {
 
         if (committeesError) throw committeesError;
 
-        const transformedCommittees: MemberCommittee[] = committeesData?.map((committee) => ({
-          committee_id: committee.committee_id,
-          committee_name: committee.committee_name || "Unknown Committee",
-          role: "Member", // Default role since we don't have specific role data
-          chamber: committee.chamber || "Unknown",
-          description: committee.description,
-          slug: committee.slug,
-        })) || [];
+        const memberFirstName = (member.first_name || '').toLowerCase();
+        const memberLastName = (member.last_name || '').toLowerCase();
+
+        const transformedCommittees: MemberCommittee[] = committeesData?.map((committee) => {
+          const chairName = (committee.chair_name || '').toLowerCase();
+          const isChair = chairName && memberLastName &&
+            chairName.includes(memberLastName) &&
+            chairName.includes(memberFirstName);
+
+          return {
+            committee_id: committee.committee_id,
+            committee_name: committee.committee_name || "Unknown Committee",
+            role: isChair ? "Chair" : "Member",
+            chamber: committee.chamber || "Unknown",
+            description: committee.description,
+            slug: committee.slug,
+          };
+        }) || [];
 
         setCommittees(transformedCommittees);
       } catch (error: any) {
