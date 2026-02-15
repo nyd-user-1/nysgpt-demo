@@ -61,6 +61,31 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ── Committee sync helpers ──
+
+function memberFullNameToSlug(fullName: string): string {
+  return fullName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .split(/\s+/)
+    .filter(part => part.length > 1)
+    .join('-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function normalizeCommitteeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/^(senate|assembly)\s+/, '')
+    .replace(/^committee\s+on\s+/, '')
+    .replace(/\s+committee$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ── Photo URL construction ──
 
 function buildPhotoUrl(chamber: string, districtCode: number | string, imgName?: string | null): string | null {
@@ -390,6 +415,158 @@ async function syncMembers(sessionYear: number) {
   }
 }
 
+// ── Senate committee sync logic ──
+
+async function syncSenateCommittees(sessionYear: number) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const nysApiKey = Deno.env.get("NYS_LEGISLATION_API_KEY");
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase configuration");
+  }
+  if (!nysApiKey) {
+    throw new Error("Missing NYS API key");
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const startTime = Date.now();
+  let matchedCount = 0;
+  let updatedCount = 0;
+  let errorCount = 0;
+  const errors: string[] = [];
+  const unmatchedNames: string[] = [];
+
+  try {
+    // 1. Fetch all Senate committees from the NYS API
+    const apiUrl = `https://legislation.nysenate.gov/api/3/committees/${sessionYear}/senate?full=true&key=${nysApiKey}&limit=1000`;
+    console.log(`Fetching Senate committees for session year ${sessionYear}...`);
+    const apiData = await fetchWithRetry(apiUrl);
+    const apiCommittees = apiData.result?.items || [];
+    console.log(`Fetched ${apiCommittees.length} committees from API`);
+
+    // 2. Load all DB committees where chamber = 'Senate'
+    const { data: dbCommittees, error: loadError } = await supabase
+      .from("Committees")
+      .select("committee_id, committee_name, chamber")
+      .eq("chamber", "Senate");
+
+    if (loadError) {
+      throw new Error(`Failed to load committees: ${loadError.message}`);
+    }
+    console.log(`Loaded ${dbCommittees?.length || 0} Senate committees from DB`);
+
+    // 3. Build normalized-name map for matching
+    const dbMap = new Map<string, typeof dbCommittees[0]>();
+    for (const c of dbCommittees || []) {
+      if (c.committee_name) {
+        dbMap.set(normalizeCommitteeName(c.committee_name), c);
+      }
+    }
+
+    // 4. For each API committee, match and update
+    for (const apiCommittee of apiCommittees) {
+      try {
+        const apiName = apiCommittee.name || '';
+        const normalizedApiName = normalizeCommitteeName(apiName);
+
+        const dbCommittee = dbMap.get(normalizedApiName);
+        if (!dbCommittee) {
+          unmatchedNames.push(apiName);
+          continue;
+        }
+
+        matchedCount++;
+
+        // Extract chair from members
+        const members = apiCommittee.committeeMembers?.items || [];
+        const chair = members.find((m: any) => m.title === 'CHAIR_PERSON');
+        const chairName = chair ? `${chair.name || ''}`.trim() : null;
+
+        // Build semicolon-separated slugs from all members
+        const memberSlugs = members
+          .map((m: any) => {
+            const name = (m.name || '').trim();
+            return name ? memberFullNameToSlug(name) : null;
+          })
+          .filter(Boolean)
+          .join(';');
+
+        // Build meeting schedule from meetDay + meetTime
+        let meetingSchedule: string | null = null;
+        const meetDay = apiCommittee.meetDay || '';
+        const meetTime = apiCommittee.meetTime || '';
+        if (meetDay || meetTime) {
+          meetingSchedule = [meetDay, meetTime].filter(Boolean).join(' ');
+        }
+
+        const memberCount = String(members.length);
+
+        const updateFields: Record<string, any> = {
+          committee_members: memberSlugs || null,
+          member_count: memberCount,
+        };
+        if (chairName) {
+          updateFields.chair_name = chairName;
+        }
+        if (meetingSchedule) {
+          updateFields.meeting_schedule = meetingSchedule;
+        }
+
+        const { error: updateError } = await supabase
+          .from("Committees")
+          .update(updateFields)
+          .eq("committee_id", dbCommittee.committee_id);
+
+        if (updateError) {
+          console.error(`Failed to update ${apiName}: ${updateError.message}`);
+          errorCount++;
+          errors.push(`Update failed: ${apiName} - ${updateError.message}`);
+        } else {
+          updatedCount++;
+        }
+      } catch (itemError) {
+        console.error(`Error processing committee:`, itemError);
+        errorCount++;
+        errors.push(`Processing error: ${itemError.message}`);
+      }
+    }
+
+    const duration = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
+    const result = {
+      success: true,
+      totalFetched: apiCommittees.length,
+      matched: matchedCount,
+      updated: updatedCount,
+      unmatched: unmatchedNames.length,
+      unmatchedNames: unmatchedNames.length > 0 ? unmatchedNames : undefined,
+      errors: errorCount,
+      errorDetails: errors.length > 0 ? errors.slice(0, 20) : undefined,
+      duration,
+    };
+
+    console.log('Committee sync complete:', JSON.stringify(result));
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    const duration = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
+    console.error('Committee sync failed:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message,
+      matched: matchedCount,
+      updated: updatedCount,
+      errors: errorCount,
+      duration,
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 // ── Request handler ──
 
 serve(async (req) => {
@@ -401,20 +578,25 @@ serve(async (req) => {
     const body = await req.json();
     const { action, sessionYear } = body;
 
-    if (action !== 'sync-members') {
-      return new Response(JSON.stringify({
-        error: `Unknown action: ${action}. Use "sync-members".`,
-        success: false,
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const year = sessionYear || getCurrentSessionYear();
+
+    if (action === 'sync-members') {
+      console.log(`Starting member sync for session year ${year}...`);
+      return await syncMembers(year);
     }
 
-    const year = sessionYear || getCurrentSessionYear();
-    console.log(`Starting member sync for session year ${year}...`);
+    if (action === 'sync-senate-committees') {
+      console.log(`Starting Senate committee sync for session year ${year}...`);
+      return await syncSenateCommittees(year);
+    }
 
-    return await syncMembers(year);
+    return new Response(JSON.stringify({
+      error: `Unknown action: ${action}. Use "sync-members" or "sync-senate-committees".`,
+      success: false,
+    }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error in sync-members function:', error);
     return new Response(JSON.stringify({
