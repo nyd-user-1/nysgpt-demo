@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { autoLinkBills } from '@/utils/autoLinkBills';
@@ -8,7 +9,8 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, User, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export interface BillCitationData {
   bill_number: string;
@@ -17,6 +19,12 @@ export interface BillCitationData {
   description?: string;
   committee?: string;
   session_id?: number;
+  sponsor_name?: string;
+  sponsor_party?: string;
+  sponsor_district?: string;
+  sponsor_chamber?: string;
+  sponsor_slug?: string;
+  committee_slug?: string;
 }
 
 /**
@@ -60,6 +68,21 @@ function findBill(bills: BillCitationData[], billNumber: string): BillCitationDa
   return bills.find(b => normalizeBillNumber(b.bill_number) === normalized);
 }
 
+/**
+ * Generate a slug from a name (matching memberSlug.ts logic).
+ */
+function nameToSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .split(/\s+/)
+    .filter(part => part.length > 1)
+    .join('-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 interface BillHoverLinkProps {
   to: string;
   bill: BillCitationData;
@@ -67,8 +90,25 @@ interface BillHoverLinkProps {
 }
 
 function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
+  const [slide, setSlide] = useState(0);
+
+  // Count total slides: always bill (1), + sponsor if present, + committee if present
+  const hasSponsor = !!bill.sponsor_name;
+  const hasCommittee = !!bill.committee;
+  const totalSlides = 1 + (hasSponsor ? 1 : 0) + (hasCommittee ? 1 : 0);
+
+  const prev = useCallback(() => setSlide(s => Math.max(0, s - 1)), []);
+  const next = useCallback(() => setSlide(s => Math.min(totalSlides - 1, s + 1)), [totalSlides]);
+
+  // Reset slide when hover card opens
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (open) setSlide(0);
+  }, []);
+
+  const sponsorSlug = bill.sponsor_slug || (bill.sponsor_name ? nameToSlug(bill.sponsor_name) : '');
+
   return (
-    <HoverCard openDelay={300} closeDelay={100}>
+    <HoverCard openDelay={300} closeDelay={150} onOpenChange={handleOpenChange}>
       <HoverCardTrigger asChild>
         <Link
           to={to}
@@ -83,38 +123,151 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
         side="bottom"
         sideOffset={6}
       >
-        <div className="p-3 space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <Link to={to} className="group flex-1">
-              <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
-                {bill.bill_number}
-              </h4>
-            </Link>
-            <Link to={to} className="shrink-0 text-muted-foreground hover:text-foreground">
-              <ExternalLink className="h-3.5 w-3.5" />
-            </Link>
+        {/* Carousel Header */}
+        {totalSlides > 1 && (
+          <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
+                disabled={slide === 0}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
+                disabled={slide === totalSlides - 1}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {slide + 1}/{totalSlides}
+            </span>
           </div>
-          <p className="text-xs text-foreground leading-snug line-clamp-2">
-            {bill.title}
-          </p>
-          <div className="flex items-center flex-wrap gap-1.5">
-            {bill.status_desc && (
-              <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
-                {bill.status_desc}
-              </Badge>
-            )}
-            {bill.committee && (
-              <span className="text-[10px] text-muted-foreground">
-                {bill.committee}
-              </span>
-            )}
-          </div>
-          {bill.description && (
-            <p className="text-[11px] text-muted-foreground leading-snug line-clamp-3 border-t pt-2">
-              {bill.description}
+        )}
+
+        {/* Slide 1: Bill */}
+        {slide === 0 && (
+          <div className="p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <Link to={to} className="group flex-1">
+                <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                  {bill.bill_number}
+                </h4>
+              </Link>
+              <Link to={to} className="shrink-0 text-muted-foreground hover:text-foreground">
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">
+              {bill.title}
             </p>
-          )}
-        </div>
+            <div className="flex items-center flex-wrap gap-1.5">
+              {bill.status_desc && (
+                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
+                  {bill.status_desc}
+                </Badge>
+              )}
+              {bill.committee && (
+                <span className="text-[10px] text-muted-foreground">
+                  {bill.committee}
+                </span>
+              )}
+            </div>
+            {bill.description && (
+              <p className="text-xs text-muted-foreground leading-snug line-clamp-3 border-t pt-2">
+                {bill.description}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Slide 2: Sponsor */}
+        {hasSponsor && slide === 1 && (
+          <div className="p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              {sponsorSlug ? (
+                <Link to={`/members/${sponsorSlug}`} className="group flex-1">
+                  <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                    {bill.sponsor_name}
+                  </h4>
+                </Link>
+              ) : (
+                <h4 className="text-sm font-semibold text-foreground flex-1">
+                  {bill.sponsor_name}
+                </h4>
+              )}
+              <div className="shrink-0 h-7 w-7 rounded-full bg-muted flex items-center justify-center">
+                <User className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Primary Sponsor
+            </p>
+            <div className="flex items-center flex-wrap gap-1.5">
+              {bill.sponsor_party && (
+                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
+                  {bill.sponsor_party}
+                </Badge>
+              )}
+              {bill.sponsor_chamber && (
+                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
+                  {bill.sponsor_chamber}
+                </Badge>
+              )}
+              {bill.sponsor_district && (
+                <span className="text-[10px] text-muted-foreground">
+                  District {bill.sponsor_district}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground leading-snug border-t pt-2">
+              Sponsor of {bill.bill_number}
+              {bill.committee ? ` · ${bill.committee}` : ''}
+            </p>
+          </div>
+        )}
+
+        {/* Slide 3: Committee */}
+        {hasCommittee && slide === (hasSponsor ? 2 : 1) && (
+          <div className="p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              {bill.committee_slug ? (
+                <Link to={`/committees/${bill.committee_slug}`} className="group flex-1">
+                  <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                    {bill.committee}
+                  </h4>
+                </Link>
+              ) : (
+                <h4 className="text-sm font-semibold text-foreground flex-1">
+                  {bill.committee}
+                </h4>
+              )}
+              <div className="shrink-0 h-7 w-7 rounded-full bg-muted flex items-center justify-center">
+                <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Assigned Committee
+            </p>
+            <div className="flex items-center flex-wrap gap-1.5">
+              {bill.status_desc && (
+                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
+                  {bill.status_desc}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground leading-snug border-t pt-2">
+              {bill.bill_number} is currently in the {bill.committee} committee.
+            </p>
+          </div>
+        )}
       </HoverCardContent>
     </HoverCard>
   );

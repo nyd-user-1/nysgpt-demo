@@ -244,6 +244,11 @@ interface BillCitation {
   committee?: string;
   session_id?: number;
   sponsor_name?: string;
+  sponsor_party?: string;
+  sponsor_district?: string;
+  sponsor_chamber?: string;
+  sponsor_slug?: string;
+  committee_slug?: string;
 }
 
 // SchoolFundingCategory and SchoolFundingDetails imported from @/lib/context/schoolFundingContext
@@ -1435,13 +1440,60 @@ const NewChat = () => {
         try {
           const { data: mentionedBills, error } = await supabase
             .from("Bills")
-            .select("bill_number, title, status_desc, description, committee, session_id")
+            .select("bill_id, bill_number, title, status_desc, description, committee, session_id")
             .in("bill_number", allBillNumbers)
             .limit(10);
 
           if (!error && mentionedBills && mentionedBills.length > 0) {
             responseCitations = mentionedBills;
             console.log(`Found ${mentionedBills.length} bills mentioned in query/response`);
+
+            // Fetch sponsor data for inline citation hover cards
+            try {
+              const billIds = mentionedBills.map(b => b.bill_id).filter(Boolean) as number[];
+              if (billIds.length > 0) {
+                const { data: sponsorsData } = await supabase
+                  .from('Sponsors')
+                  .select('bill_id, people_id, position')
+                  .in('bill_id', billIds)
+                  .eq('position', 1);
+
+                if (sponsorsData && sponsorsData.length > 0) {
+                  const peopleIds = [...new Set(sponsorsData.map(s => s.people_id).filter(Boolean))] as number[];
+                  const { data: peopleData } = await supabase
+                    .from('People')
+                    .select('people_id, name, party, district, chamber')
+                    .in('people_id', peopleIds);
+
+                  if (peopleData) {
+                    const peopleMap = new Map(peopleData.map(p => [p.people_id, p]));
+                    const sponsorMap = new Map(sponsorsData.map(s => [s.bill_id, peopleMap.get(s.people_id!) || null]));
+
+                    responseCitations = responseCitations.map(bill => {
+                      const sponsor = sponsorMap.get(bill.bill_id!);
+                      const committee = bill.committee;
+                      // Generate committee slug: detect chamber from bill number prefix
+                      const chamber = bill.bill_number?.startsWith('S') ? 'senate' :
+                                      bill.bill_number?.startsWith('A') ? 'assembly' : '';
+                      const committeeSlug = committee && chamber
+                        ? `${chamber}-${committee.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`
+                        : undefined;
+                      return {
+                        ...bill,
+                        sponsor_name: sponsor?.name || undefined,
+                        sponsor_party: sponsor?.party || undefined,
+                        sponsor_district: sponsor?.district || undefined,
+                        sponsor_chamber: sponsor?.chamber || undefined,
+                        committee_slug: committeeSlug,
+                      };
+                    });
+                  }
+                }
+              }
+            } catch (sponsorError) {
+              console.error("Error fetching sponsor data:", sponsorError);
+              // Non-fatal: citations still work without sponsor data
+            }
           }
         } catch (error) {
           console.error("Error fetching bills from query/response:", error);
