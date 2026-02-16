@@ -83,10 +83,10 @@ export function EmailLetterSheet({
   const fetchSponsors = async () => {
     setLoading(true);
     try {
-      // First get the bill_id and committee_id from bill_number
+      // First get the bill_id and committee from bill_number
       const { data: billData } = await supabase
         .from("Bills")
-        .select("bill_id, committee_id")
+        .select("bill_id, committee")
         .eq("bill_number", billNumber)
         .single();
 
@@ -125,12 +125,13 @@ export function EmailLetterSheet({
       }
 
       // Fetch committee members if the bill has a committee
-      if (billData.committee_id) {
+      if (billData.committee) {
         const { data: committeeData } = await supabase
           .from("Committees")
           .select("committee_name, committee_members")
-          .eq("committee_id", billData.committee_id)
-          .single();
+          .ilike("committee_name", `%${billData.committee}%`)
+          .limit(1)
+          .maybeSingle();
 
         if (committeeData && committeeData.committee_members) {
           setCommitteeName(committeeData.committee_name || "");
