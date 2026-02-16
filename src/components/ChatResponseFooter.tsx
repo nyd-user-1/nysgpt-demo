@@ -493,57 +493,6 @@ export function ChatResponseFooter({
             </Tooltip>
           )}
 
-          {/* Create Excerpt */}
-          {!hideCreateExcerpt && userMessage && assistantMessageText && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-8 w-8 ${excerptSaved
-                    ? "text-green-600 hover:text-green-600 hover:bg-green-50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                  onClick={handleCreateExcerpt}
-                  disabled={excerptLoading || excerptSaved}
-                >
-                  {excerptLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : excerptSaved ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <TextQuote className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {excerptSaved ? "Excerpt saved" : "Create Excerpt"}
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* Open as Note */}
-          {!hideCreateExcerpt && assistantMessageText && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  onClick={handleOpenAsNote}
-                  disabled={noteLoading}
-                >
-                  {noteLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <NotebookPen className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Open as Note</TooltipContent>
-            </Tooltip>
-          )}
-
           {/* More Actions Dropdown */}
           <DropdownMenu>
             <Tooltip>
@@ -580,6 +529,24 @@ export function ChatResponseFooter({
                   Email to sponsor
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem onClick={handleCreateExcerpt} disabled={excerptLoading || excerptSaved} className="focus:bg-muted focus:text-foreground">
+                {excerptLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : excerptSaved ? (
+                  <Check className="h-4 w-4 mr-2 text-green-600" />
+                ) : (
+                  <TextQuote className="h-4 w-4 mr-2" />
+                )}
+                {excerptSaved ? "Excerpt saved" : "Create Excerpt"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleOpenAsNote} disabled={noteLoading} className="focus:bg-muted focus:text-foreground">
+                {noteLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <NotebookPen className="h-4 w-4 mr-2" />
+                )}
+                Open as Note
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleCopy} className="focus:bg-muted focus:text-foreground">
                 {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                 {copied ? "Copied!" : "Copy"}

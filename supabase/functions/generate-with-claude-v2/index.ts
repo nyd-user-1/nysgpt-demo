@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getConstitutionalPrompt } from '../_shared/constitution.ts';
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const nysApiKey = Deno.env.get('NYS_LEGISLATION_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -230,6 +231,158 @@ function formatNYSgptBillsForContext(bills: any[]) {
   return contextText;
 }
 
+// Search bill chunks using semantic (vector) similarity
+async function searchSemanticBillChunks(query: string): Promise<any[] | null> {
+  if (!openAIApiKey || !supabaseUrl || !supabaseServiceKey) {
+    console.log('Missing credentials for semantic search, skipping');
+    return null;
+  }
+
+  try {
+    // Generate embedding for the query using OpenAI
+    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: query,
+        dimensions: 256,
+      }),
+    });
+
+    if (!embeddingResponse.ok) {
+      console.error('Failed to generate query embedding:', embeddingResponse.status);
+      return null;
+    }
+
+    const embeddingData = await embeddingResponse.json();
+    const queryEmbedding = embeddingData.data[0].embedding;
+
+    // Call match_bill_chunks RPC
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const currentYear = new Date().getFullYear();
+    const sessionYear = currentYear % 2 === 1 ? currentYear : currentYear - 1;
+
+    const { data: matches, error } = await supabase.rpc('match_bill_chunks', {
+      query_embedding: JSON.stringify(queryEmbedding),
+      match_threshold: 0.3,
+      match_count: 15,
+      filter_session_id: sessionYear,
+      filter_bill_number: null,
+    });
+
+    if (error) {
+      console.error('Semantic search RPC error:', error.message);
+      return null;
+    }
+
+    // Deduplicate: keep max 2 chunks per bill for diverse coverage
+    const billChunkCounts = new Map<string, number>();
+    const deduped = (matches || []).filter((chunk: any) => {
+      const count = billChunkCounts.get(chunk.bill_number) || 0;
+      if (count >= 2) return false;
+      billChunkCounts.set(chunk.bill_number, count + 1);
+      return true;
+    });
+
+    console.log(`Semantic search found ${matches?.length || 0} chunks, deduped to ${deduped.length} across ${billChunkCounts.size} bills`);
+    return deduped.length > 0 ? deduped : null;
+  } catch (error) {
+    console.error('Error in semantic search:', error);
+    return null;
+  }
+}
+
+// Direct lookup of bill chunks by bill number (for specific bill queries)
+async function fetchBillChunksByNumber(query: string): Promise<any[] | null> {
+  if (!supabaseUrl || !supabaseServiceKey) return null;
+
+  try {
+    const billNumberPattern = /[ASK]\d{1,}/gi;
+    const billNumbers = query.match(billNumberPattern);
+    if (!billNumbers || billNumbers.length === 0) return null;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const normalized = billNumbers.map(bn => normalizeBillNumber(bn));
+
+    const { data, error } = await supabase
+      .from('bill_chunks')
+      .select('bill_number, chunk_type, chunk_index, content')
+      .in('bill_number', normalized)
+      .order('bill_number')
+      .order('chunk_index');
+
+    if (error) {
+      console.error('Bill chunks lookup error:', error.message);
+      return null;
+    }
+
+    console.log(`Direct bill chunks lookup found ${data?.length || 0} chunks for ${normalized.join(', ')}`);
+    return data && data.length > 0 ? data : null;
+  } catch (error) {
+    console.error('Error in bill chunks lookup:', error);
+    return null;
+  }
+}
+
+// Format direct bill chunks as full text context
+function formatBillChunksForContext(chunks: any[]): string {
+  if (!chunks || chunks.length === 0) return '';
+
+  let contextText = '\n\nFULL BILL TEXT FROM NYSGPT DATABASE:\n\n';
+
+  const byBill = new Map<string, any[]>();
+  for (const chunk of chunks) {
+    if (!byBill.has(chunk.bill_number)) byBill.set(chunk.bill_number, []);
+    byBill.get(chunk.bill_number)!.push(chunk);
+  }
+
+  for (const [billNumber, billChunks] of byBill) {
+    contextText += `=== BILL ${billNumber} - VERBATIM TEXT ===\n`;
+    for (const chunk of billChunks) {
+      contextText += chunk.content + '\n';
+    }
+    contextText += '\n';
+  }
+
+  return contextText;
+}
+
+// Format semantic search results for LLM context
+function formatSemanticResultsForContext(chunks: any[]): string {
+  if (!chunks || chunks.length === 0) return '';
+
+  let contextText = '\n\nSEMANTIC SEARCH - RELEVANT BILL TEXT FROM NYSGPT DATABASE:\n\n';
+
+  // Group chunks by bill_number
+  const byBill = new Map<string, any[]>();
+  for (const chunk of chunks) {
+    const key = chunk.bill_number;
+    if (!byBill.has(key)) byBill.set(key, []);
+    byBill.get(key)!.push(chunk);
+  }
+
+  let billIndex = 1;
+  for (const [billNumber, billChunks] of byBill) {
+    contextText += `${billIndex}. BILL ${billNumber} (semantic match):\n`;
+    for (const chunk of billChunks) {
+      const label = chunk.chunk_type.toUpperCase();
+      const similarity = (chunk.similarity * 100).toFixed(0);
+      const excerpt = chunk.content.length > 500
+        ? chunk.content.substring(0, 500) + '...'
+        : chunk.content;
+      contextText += `   [${label}] (${similarity}% relevance): ${excerpt}\n`;
+    }
+    contextText += '\n';
+    billIndex++;
+  }
+
+  return contextText;
+}
+
 // Claude-specific system prompt for NYSgpt
 const CLAUDE_SYSTEM_PROMPT = `# System Prompt for NYSgpt NY State Legislative Analysis AI
 
@@ -376,6 +529,8 @@ serve(async (req) => {
     // Search NYSgpt database AND conditionally search NYS API
     let nysgptBills: any[] = [];
     let nysData: any = null;
+    let semanticResults: any[] | null = null;
+    let billChunksResults: any[] | null = null;
 
     // Fast-path detection: skip NYS API for simple chat queries in fast mode
     // BUT always search NYSgpt database for legislative queries
@@ -384,6 +539,20 @@ serve(async (req) => {
     // Start data searches in parallel (non-blocking)
     let nysDataPromise: Promise<any> | null = null;
     const nysgptDataPromise = searchNYSgptDatabase(prompt, getCurrentSessionYear());
+    const semanticSearchPromise = searchSemanticBillChunks(prompt);
+
+    // Fetch full bill text: from current query OR from recent conversation history
+    let billLookupQuery = prompt;
+    if (!prompt.match(/[ASK]\d{1,}/gi) && context?.previousMessages?.length > 0) {
+      const recentMessages = (context.previousMessages as any[]).slice(-3);
+      const historyText = recentMessages.map((m: any) => m.content || '').join(' ');
+      const historyBills = historyText.match(/[ASK]\d{1,}/gi);
+      if (historyBills) {
+        billLookupQuery = [...new Set(historyBills)].join(' ');
+        console.log(`No bill in query, found bills in conversation history: ${billLookupQuery}`);
+      }
+    }
+    const billChunksPromise = billLookupQuery.match(/[ASK]\d{1,}/gi) ? fetchBillChunksByNumber(billLookupQuery) : null;
 
     // Start NYS API search if appropriate
     if (nysApiKey && !shouldSkipNYSData) {
@@ -394,6 +563,16 @@ serve(async (req) => {
     // This ensures AI has context even for streaming responses
     nysgptBills = await nysgptDataPromise;
     console.log(`NYSgpt database search found ${nysgptBills?.length || 0} bills`);
+
+    // Wait for semantic search results (runs in parallel with above)
+    semanticResults = await semanticSearchPromise;
+    console.log(`Semantic search found ${semanticResults?.length || 0} relevant chunks`);
+
+    // Wait for direct bill chunks lookup (full text for specific bills)
+    if (billChunksPromise) {
+      billChunksResults = await billChunksPromise;
+      console.log(`Direct bill chunks lookup found ${billChunksResults?.length || 0} chunks`);
+    }
 
     // For non-streaming, also wait for NYS API data
     if (!stream && nysDataPromise) {
@@ -416,6 +595,16 @@ serve(async (req) => {
       legislativeContext += formatNYSDataForContext(nysData);
     }
 
+    // Add semantic search results (bill body text matched by meaning)
+    if (semanticResults && semanticResults.length > 0) {
+      legislativeContext += formatSemanticResultsForContext(semanticResults);
+    }
+
+    // Add full bill text when a specific bill number was queried
+    if (billChunksResults && billChunksResults.length > 0) {
+      legislativeContext += formatBillChunksForContext(billChunksResults);
+    }
+
     // Build the enhanced system prompt with constitutional principles and legislative data
     const constitutionalContext = getConstitutionalPrompt(type || 'chat');
     let enhancedSystemPrompt = `${constitutionalContext}\n\n${CLAUDE_SYSTEM_PROMPT}`;
@@ -429,7 +618,7 @@ serve(async (req) => {
     }
 
     if (legislativeContext) {
-      enhancedSystemPrompt += `\n\nCURRENT LEGISLATIVE DATA:\n${legislativeContext}\n\nUse this information to provide accurate, up-to-date legislative analysis with specific details.`;
+      enhancedSystemPrompt += `\n\nCURRENT LEGISLATIVE DATA:\n${legislativeContext}\n\nIMPORTANT: Use the specific bill data above to ground your response. Cite actual bill numbers, sponsors, and details from this data rather than relying on general knowledge. These are real bills from the NYSgpt database.`;
     }
 
     // Build user message
