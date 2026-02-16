@@ -71,7 +71,7 @@ export const useMembersData = () => {
         .select("*", { count: 'exact', head: true })
         .not("chamber", "is", null)
         .not("name", "is", null)
-        .or('archived.is.null,archived.eq.false');
+;
 
       setTotalMembers(count || 0);
 
