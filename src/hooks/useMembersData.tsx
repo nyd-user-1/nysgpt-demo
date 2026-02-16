@@ -70,7 +70,8 @@ export const useMembersData = () => {
         .from("People")
         .select("*", { count: 'exact', head: true })
         .not("chamber", "is", null)
-        .not("name", "is", null);
+        .not("name", "is", null)
+        .or('archived.is.null,archived.eq.false');
 
       setTotalMembers(count || 0);
 
@@ -80,6 +81,7 @@ export const useMembersData = () => {
         .select("*")
         .not("chamber", "is", null)
         .not("name", "is", null)
+        .or('archived.is.null,archived.eq.false')
         .order("last_name", { ascending: true })
         .limit(SERVER_PAGE_SIZE);
 
@@ -166,6 +168,7 @@ export const useMembersData = () => {
         .select("*")
         .not("chamber", "is", null)
         .not("name", "is", null)
+        .or('archived.is.null,archived.eq.false')
         .order("last_name", { ascending: true })
         .range(serverOffset, serverOffset + SERVER_PAGE_SIZE - 1);
 

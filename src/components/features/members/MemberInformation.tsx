@@ -53,7 +53,10 @@ export const MemberInformation = ({ member, hasNotes = false }: MemberInformatio
             )}
             <div>
               <h1 className="text-2xl font-semibold text-foreground">{memberName}</h1>
-              {member.leadership_title && (
+              {member.archived && (
+                <p className="text-sm text-muted-foreground mt-1">Retired</p>
+              )}
+              {member.leadership_title && !member.archived && (
                 <p className="text-sm text-muted-foreground mt-1">{member.leadership_title}</p>
               )}
             </div>

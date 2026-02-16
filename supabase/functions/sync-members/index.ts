@@ -312,35 +312,50 @@ async function syncMembers(sessionYear: number) {
               updatedCount++;
             }
           } else {
-            // Different person in same district → overwrite existing record
-            console.log(`District ${district}: replacing "${existing.last_name}" (norm: "${existingLastNorm}") with "${lastName}" (norm: "${apiLastNorm}")`);
+            // Different person in same district → archive old, insert new
+            console.log(`District ${district}: archiving "${existing.last_name}" (norm: "${existingLastNorm}"), inserting "${lastName}" (norm: "${apiLastNorm}")`);
 
-            const replaceFields: Record<string, any> = {
+            // Archive the old member (keep their record intact for bill/vote history)
+            const { error: archiveError } = await supabase
+              .from("People")
+              .update({ archived: true, district: null })
+              .eq("people_id", existing.people_id);
+
+            if (archiveError) {
+              console.error(`Failed to archive ${existing.name}: ${archiveError.message}`);
+              errorCount++;
+              errors.push(`Archive failed: ${existing.name} - ${archiveError.message}`);
+              continue;
+            }
+
+            // Insert new member with a fresh people_id
+            const newRecord = {
+              people_id: nextId++,
               name: fullName,
               first_name: firstName,
               last_name: lastName,
               middle_name: middleName,
               chamber: chamberName,
+              district: district,
               role: role,
               email: email,
-              nys_bio_url: nysBioUrl,
               photo_url: photoUrl,
+              nys_bio_url: nysBioUrl,
             };
 
-            const { error: replaceError } = await supabase
+            const { error: insertError } = await supabase
               .from("People")
-              .update(replaceFields)
-              .eq("people_id", existing.people_id);
+              .insert(newRecord);
 
-            if (replaceError) {
-              console.error(`Failed to replace ${existing.name} with ${fullName}: ${replaceError.message}`);
+            if (insertError) {
+              console.error(`Failed to insert replacement ${fullName}: ${insertError.message}`);
               errorCount++;
-              errors.push(`Replace failed: ${existing.name} → ${fullName} - ${replaceError.message}`);
+              errors.push(`Insert replacement failed: ${fullName} - ${insertError.message}`);
             } else {
-              archivedCount++; // counts as a replacement
-              updatedCount++;
+              archivedCount++;
+              insertedCount++;
               replacements.push(`${district}: "${existing.last_name}" → "${lastName}"`);
-              districtMap.set(district, { ...existing, name: fullName, first_name: firstName, last_name: lastName, photo_url: photoUrl || existing.photo_url } as any);
+              districtMap.set(district, { ...newRecord, photo_url: photoUrl } as any);
             }
           }
         } else {
