@@ -13,7 +13,7 @@ export default function FooterSimple() {
             href="/advertise"
             className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
           >
-            Advertise
+            Partner
           </a>
           <a
             href="/contact"

@@ -536,7 +536,7 @@ export default function PromptHub() {
                     className="flex items-center gap-3 py-3 bg-muted/50 hover:bg-muted/70 hover:shadow-lg hover:border-border rounded-lg px-4 border border-transparent transition-all"
                   >
                     <Megaphone className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-sm font-medium">Advertise</span>
+                    <span className="text-sm font-medium">Partner</span>
                   </Link>
                   <Link
                     to="/submit-prompt"
