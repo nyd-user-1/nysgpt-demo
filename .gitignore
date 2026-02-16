@@ -2,3 +2,6 @@
 node_modules
 dist/
 .DS_Store
+supabase/.temp/
+2026-02-07-mobile-ui-prompt-hub-refactor.txt
+YC_CLAUDE_CODE_SESSION.md
