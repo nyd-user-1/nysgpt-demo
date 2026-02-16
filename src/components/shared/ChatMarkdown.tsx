@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, Children, isValidElement, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { autoLinkBills } from '@/utils/autoLinkBills';
@@ -366,21 +366,29 @@ interface ChatMarkdownProps {
   bills?: BillCitationData[];
 }
 
+function collectBillsFromElements(node: ReactNode): { bill: BillCitationData; to: string }[] {
+  const results: { bill: BillCitationData; to: string }[] = [];
+  Children.forEach(node, (child) => {
+    if (!isValidElement(child)) return;
+    if (child.type === BillHoverLink) {
+      const props = child.props as BillHoverLinkProps;
+      results.push({ bill: props.bill, to: props.to });
+    }
+    if ((child.props as any).children) {
+      results.push(...collectBillsFromElements((child.props as any).children));
+    }
+  });
+  return results;
+}
+
 export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
   const processed = autoLinkBills(children);
-  const billsInBlock = useRef<{ bill: BillCitationData; to: string }[]>([]);
-
-  const flushPills = () => {
-    const collected = [...billsInBlock.current];
-    billsInBlock.current = [];
-    return collected;
-  };
 
   return (
     <ReactMarkdown
       components={{
         p: ({ children }) => {
-          const pills = flushPills();
+          const pills = collectBillsFromElements(children);
           return (
             <p className="mb-3 leading-relaxed text-foreground">
               {children}
@@ -431,7 +439,6 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
             const bill = billNumber && bills?.length ? findBill(bills, billNumber) : undefined;
 
             if (bill) {
-              billsInBlock.current.push({ bill, to: href });
               return (
                 <BillHoverLink to={href} bill={bill}>
                   {children}
@@ -456,7 +463,6 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
             const bill = billNumber && bills?.length ? findBill(bills, billNumber) : undefined;
 
             if (bill) {
-              billsInBlock.current.push({ bill, to: internalPath });
               return (
                 <BillHoverLink to={internalPath} bill={bill}>
                   {children}
