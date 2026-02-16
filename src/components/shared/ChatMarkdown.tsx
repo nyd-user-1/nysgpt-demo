@@ -117,7 +117,7 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
         </Link>
       </HoverCardTrigger>
       <HoverCardContent
-        className="w-80 p-0 overflow-hidden"
+        className="w-80 p-0 overflow-hidden not-prose"
         align="start"
         side="bottom"
         sideOffset={6}
