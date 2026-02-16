@@ -126,10 +126,15 @@ export function EmailLetterSheet({
 
       // Fetch committee members if the bill has a committee
       if (billData.committee) {
+        // Bills store "Senate Consumer Affairs and Protection" but Committees
+        // store "Consumer Affairs and Protection" (no chamber prefix)
+        const strippedCommittee = billData.committee
+          .replace(/^(Senate|Assembly)\s+/i, "");
+
         const { data: committeeData } = await supabase
           .from("Committees")
           .select("committee_name, committee_members")
-          .ilike("committee_name", `%${billData.committee}%`)
+          .ilike("committee_name", `%${strippedCommittee}%`)
           .limit(1)
           .maybeSingle();
 
