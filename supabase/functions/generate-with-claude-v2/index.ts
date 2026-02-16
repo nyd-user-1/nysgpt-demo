@@ -268,7 +268,7 @@ async function searchSemanticBillChunks(query: string): Promise<any[] | null> {
 
     const { data: matches, error } = await supabase.rpc('match_bill_chunks', {
       query_embedding: JSON.stringify(queryEmbedding),
-      match_threshold: 0.3,
+      match_threshold: 0.55,
       match_count: 15,
       filter_session_id: sessionYear,
       filter_bill_number: null,

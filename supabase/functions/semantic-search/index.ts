@@ -49,7 +49,7 @@ serve(async (req) => {
       query,
       sessionYear,
       billNumber,
-      threshold = 0.3,
+      threshold = 0.55,
       limit = 10,
     } = requestBody;
 
