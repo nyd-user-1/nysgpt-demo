@@ -124,7 +124,7 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
       >
         {/* Carousel Header */}
         {totalSlides > 1 && (
-          <div className="flex items-center justify-between px-3 py-2 bg-muted/30">
+          <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50">
             <div className="flex items-center gap-1.5">
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
@@ -149,7 +149,7 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
 
         {/* Slide 1: Bill */}
         {slide === 0 && (
-          <div className="p-3 space-y-2">
+          <div className="px-3 pb-3 pt-2 space-y-2">
             <Link to={to} className="group">
               <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
                 {bill.bill_number}
@@ -165,7 +165,7 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
 
         {/* Slide 2: Sponsor */}
         {hasSponsor && slide === 1 && (
-          <div className="p-3 space-y-2">
+          <div className="px-3 pb-3 pt-2 space-y-2">
             {sponsorSlug ? (
               <Link to={`/members/${sponsorSlug}`} className="group">
                 <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
@@ -202,7 +202,7 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
 
         {/* Slide 3: Committee */}
         {hasCommittee && slide === (hasSponsor ? 2 : 1) && (
-          <div className="p-3 space-y-2">
+          <div className="px-3 pb-3 pt-2 space-y-2">
             {bill.committee_slug ? (
               <Link to={`/committees/${bill.committee_slug}`} className="group">
                 <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
