@@ -9,8 +9,7 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 export interface BillCitationData {
   bill_number: string;
@@ -125,26 +124,22 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
       >
         {/* Carousel Header */}
         {totalSlides > 1 && (
-          <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
+          <div className="flex items-center justify-between px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
                 disabled={slide === 0}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
               >
-                <ChevronLeft className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
+                <ArrowLeft className="h-3.5 w-3.5" />
+              </button>
+              <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
                 disabled={slide === totalSlides - 1}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
               >
-                <ChevronRight className="h-3 w-3" />
-              </Button>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
             </div>
             <span className="text-xs text-muted-foreground tabular-nums">
               {slide + 1}/{totalSlides}
