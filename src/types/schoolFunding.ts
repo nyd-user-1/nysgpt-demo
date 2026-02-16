@@ -1,14 +1,9 @@
-// SchoolFunding type matching Supabase school_funding table (raw data)
+// SchoolFunding category shape from JSONB categories array
 export interface SchoolFunding {
-  id: number;
-  enacted_budget: string | null;
-  "BEDS Code": string | null;
-  "County": string | null;
-  "District": string | null;
   aid_category: string | null;
   base_year: string | null;
   school_year: string | null;
-  "Change": string | null;
+  change: string | null;
   percent_change: string | null;
 }
 

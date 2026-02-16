@@ -51,7 +51,7 @@ const SchoolFundingDetail = () => {
     enabled: !!fundingId,
   });
 
-  // Fetch detailed breakdown by aid category from raw school_funding table
+  // Fetch detailed breakdown by aid category from school_funding JSONB categories
   const { data: categories } = useQuery({
     queryKey: ['school-funding-categories', funding?.district, funding?.enacted_budget],
     queryFn: async () => {
@@ -59,12 +59,13 @@ const SchoolFundingDetail = () => {
 
       const { data, error } = await supabase
         .from('school_funding')
-        .select('*')
+        .select('categories')
         .eq('District', funding.district)
-        .eq('enacted_budget', funding.enacted_budget);
+        .eq('enacted_budget', funding.enacted_budget)
+        .single();
 
       if (error) throw error;
-      return data as SchoolFunding[];
+      return (data?.categories || []) as SchoolFunding[];
     },
     enabled: !!funding,
   });
@@ -118,7 +119,7 @@ const SchoolFundingDetail = () => {
       totalSchoolYear: funding.total_school_year,
       totalChange: funding.total_change,
       percentChange: funding.percent_change,
-      categories: (categories || []).map(cat => {
+      categories: (categories || []).map((cat: SchoolFunding) => {
         // Parse dollar amounts from base_year and school_year columns
         const baseYearStr = cat.base_year || '0';
         const schoolYearStr = cat.school_year || '0';
@@ -383,7 +384,7 @@ const SchoolFundingDetail = () => {
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     {categories.map((category, index) => {
-                      const change = parseFloat(category.Change || '0');
+                      const change = parseFloat(category.change || '0');
                       const pctChange = parseFloat(category.percent_change || '0');
                       const isPositive = change >= 0;
 

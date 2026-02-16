@@ -74,12 +74,21 @@ const SchoolFundingPage = () => {
     const county = record.county || 'New York';
     const budgetYear = record.enacted_budget || '';
 
-    // Fetch detailed categories for this district/year
-    const { data: categories } = await supabase
+    // Fetch detailed categories for this district/year from JSONB column
+    const { data: fundingRow } = await supabase
       .from('school_funding')
-      .select('*')
+      .select('categories')
       .eq('District', record.district)
-      .eq('enacted_budget', record.enacted_budget);
+      .eq('enacted_budget', record.enacted_budget)
+      .single();
+
+    const categories = (fundingRow?.categories || []) as Array<{
+      aid_category: string | null;
+      base_year: string | null;
+      school_year: string | null;
+      change: string | null;
+      percent_change: string | null;
+    }>;
 
     // Store school funding details in sessionStorage for the chat to display
     const schoolFundingDetails = {
@@ -90,7 +99,7 @@ const SchoolFundingPage = () => {
       totalSchoolYear: record.total_school_year,
       totalChange: record.total_change,
       percentChange: record.percent_change,
-      categories: (categories || []).map(cat => {
+      categories: categories.map(cat => {
         // Parse dollar amounts from base_year and school_year columns
         const baseYearStr = cat.base_year || '0';
         const schoolYearStr = cat.school_year || '0';

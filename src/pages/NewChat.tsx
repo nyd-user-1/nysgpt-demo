@@ -1472,11 +1472,10 @@ const NewChat = () => {
                     responseCitations = responseCitations.map(bill => {
                       const sponsor = sponsorMap.get(bill.bill_id!);
                       const committee = bill.committee;
-                      // Generate committee slug: detect chamber from bill number prefix
-                      const chamber = bill.bill_number?.startsWith('S') ? 'senate' :
-                                      bill.bill_number?.startsWith('A') ? 'assembly' : '';
-                      const committeeSlug = committee && chamber
-                        ? `${chamber}-${committee.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')}`
+                      // Generate committee slug from full committee name
+                      // Committee names already include chamber prefix (e.g. "Senate Local Government")
+                      const committeeSlug = committee
+                        ? committee.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-')
                         : undefined;
                       return {
                         ...bill,
