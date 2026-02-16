@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { autoLinkBills } from '@/utils/autoLinkBills';
@@ -224,6 +224,143 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
   );
 }
 
+interface BillCitationPillProps {
+  bill: BillCitationData;
+  to: string;
+}
+
+function BillCitationPill({ bill, to }: BillCitationPillProps) {
+  const [slide, setSlide] = useState(0);
+
+  const hasSponsor = !!bill.sponsor_name;
+  const hasCommittee = !!bill.committee;
+  const totalSlides = 1 + (hasSponsor ? 1 : 0) + (hasCommittee ? 1 : 0);
+  const extraCount = (hasSponsor ? 1 : 0) + (hasCommittee ? 1 : 0);
+
+  const prev = useCallback(() => setSlide(s => Math.max(0, s - 1)), []);
+  const next = useCallback(() => setSlide(s => Math.min(totalSlides - 1, s + 1)), [totalSlides]);
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (open) setSlide(0);
+  }, []);
+
+  const sponsorSlug = bill.sponsor_slug || (bill.sponsor_name ? nameToSlug(bill.sponsor_name) : '');
+
+  const label = extraCount > 0
+    ? `${bill.bill_number} +${extraCount}`
+    : bill.bill_number;
+
+  return (
+    <HoverCard openDelay={300} closeDelay={150} onOpenChange={handleOpenChange}>
+      <HoverCardTrigger asChild>
+        <span className="inline-flex items-center bg-muted text-muted-foreground text-[11px] rounded-full px-2 py-0.5 ml-1 cursor-default align-baseline">
+          {label}
+        </span>
+      </HoverCardTrigger>
+      <HoverCardContent
+        className="w-80 p-0 overflow-hidden not-prose"
+        align="start"
+        side="bottom"
+        sideOffset={6}
+      >
+        {totalSlides > 1 && (
+          <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50">
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); prev(); }}
+                disabled={slide === 0}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); next(); }}
+                disabled={slide === totalSlides - 1}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+              >
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {slide + 1}/{totalSlides}
+            </span>
+          </div>
+        )}
+
+        {slide === 0 && (
+          <div className="px-3 pb-3 pt-2 space-y-2">
+            <Link to={to} className="group">
+              <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                {bill.bill_number}
+              </h4>
+            </Link>
+            {bill.description && (
+              <p className="text-xs text-muted-foreground leading-snug line-clamp-3">
+                {bill.description}
+              </p>
+            )}
+          </div>
+        )}
+
+        {hasSponsor && slide === 1 && (
+          <div className="px-3 pb-3 pt-2 space-y-2">
+            {sponsorSlug ? (
+              <Link to={`/members/${sponsorSlug}`} className="group">
+                <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                  {bill.sponsor_name}
+                </h4>
+              </Link>
+            ) : (
+              <h4 className="text-sm font-semibold text-foreground">
+                {bill.sponsor_name}
+              </h4>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Primary Sponsor
+            </p>
+            <div className="flex items-center flex-wrap gap-1.5">
+              {bill.sponsor_party && (
+                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
+                  {bill.sponsor_party}
+                </Badge>
+              )}
+              {bill.sponsor_chamber && (
+                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
+                  {bill.sponsor_chamber}
+                </Badge>
+              )}
+              {bill.sponsor_district && (
+                <span className="text-[10px] text-muted-foreground">
+                  District {bill.sponsor_district}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {hasCommittee && slide === (hasSponsor ? 2 : 1) && (
+          <div className="px-3 pb-3 pt-2 space-y-2">
+            {bill.committee_slug ? (
+              <Link to={`/committees/${bill.committee_slug}`} className="group">
+                <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                  {bill.committee}
+                </h4>
+              </Link>
+            ) : (
+              <h4 className="text-sm font-semibold text-foreground">
+                {bill.committee}
+              </h4>
+            )}
+            <p className="text-xs text-muted-foreground leading-snug">
+              {bill.bill_number} is currently in the {bill.committee} committee.
+            </p>
+          </div>
+        )}
+      </HoverCardContent>
+    </HoverCard>
+  );
+}
+
 interface ChatMarkdownProps {
   children: string;
   bills?: BillCitationData[];
@@ -231,13 +368,28 @@ interface ChatMarkdownProps {
 
 export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
   const processed = autoLinkBills(children);
+  const billsInBlock = useRef<{ bill: BillCitationData; to: string }[]>([]);
+
+  const flushPills = () => {
+    const collected = [...billsInBlock.current];
+    billsInBlock.current = [];
+    return collected;
+  };
 
   return (
     <ReactMarkdown
       components={{
-        p: ({ children }) => (
-          <p className="mb-3 leading-relaxed text-foreground">{children}</p>
-        ),
+        p: ({ children }) => {
+          const pills = flushPills();
+          return (
+            <p className="mb-3 leading-relaxed text-foreground">
+              {children}
+              {pills.map((p, i) => (
+                <BillCitationPill key={i} bill={p.bill} to={p.to} />
+              ))}
+            </p>
+          );
+        },
         strong: ({ children }) => (
           <strong className="font-semibold text-foreground">{children}</strong>
         ),
@@ -267,9 +419,17 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
         ol: ({ children }) => (
           <ol className="list-decimal pl-6 space-y-1 my-2">{children}</ol>
         ),
-        li: ({ children }) => (
-          <li className="text-foreground text-sm">{children}</li>
-        ),
+        li: ({ children }) => {
+          const pills = flushPills();
+          return (
+            <li className="text-foreground text-sm">
+              {children}
+              {pills.map((p, i) => (
+                <BillCitationPill key={i} bill={p.bill} to={p.to} />
+              ))}
+            </li>
+          );
+        },
         a: ({ href, children }) => {
           if (!href) return <span>{children}</span>;
 
@@ -279,6 +439,7 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
             const bill = billNumber && bills?.length ? findBill(bills, billNumber) : undefined;
 
             if (bill) {
+              billsInBlock.current.push({ bill, to: href });
               return (
                 <BillHoverLink to={href} bill={bill}>
                   {children}
@@ -303,6 +464,7 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
             const bill = billNumber && bills?.length ? findBill(bills, billNumber) : undefined;
 
             if (bill) {
+              billsInBlock.current.push({ bill, to: internalPath });
               return (
                 <BillHoverLink to={internalPath} bill={bill}>
                   {children}
