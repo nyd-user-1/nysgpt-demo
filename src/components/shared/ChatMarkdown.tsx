@@ -366,16 +366,21 @@ interface ChatMarkdownProps {
   bills?: BillCitationData[];
 }
 
-function collectBillsFromElements(node: ReactNode): { bill: BillCitationData; to: string }[] {
+function collectBillsFromElements(node: ReactNode, bills: BillCitationData[]): { bill: BillCitationData; to: string }[] {
   const results: { bill: BillCitationData; to: string }[] = [];
   Children.forEach(node, (child) => {
     if (!isValidElement(child)) return;
-    if (child.type === BillHoverLink) {
-      const props = child.props as BillHoverLinkProps;
-      results.push({ bill: props.bill, to: props.to });
+    const props = child.props as any;
+    const href: unknown = props.href || props.to;
+    if (href && typeof href === 'string') {
+      const billNumber = extractBillFromPath(href);
+      if (billNumber) {
+        const bill = findBill(bills, billNumber);
+        if (bill) results.push({ bill, to: href });
+      }
     }
-    if ((child.props as any).children) {
-      results.push(...collectBillsFromElements((child.props as any).children));
+    if (props.children) {
+      results.push(...collectBillsFromElements(props.children, bills));
     }
   });
   return results;
@@ -388,7 +393,7 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
     <ReactMarkdown
       components={{
         p: ({ children }) => {
-          const pills = collectBillsFromElements(children);
+          const pills = collectBillsFromElements(children, bills || []);
           return (
             <p className="mb-3 leading-relaxed text-foreground">
               {children}
