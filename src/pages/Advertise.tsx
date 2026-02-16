@@ -47,7 +47,7 @@ export default function Advertise() {
   }, []);
 
   // Dropdown options
-  const industryOptions = ['Government', 'Lobbying', 'Non Profit', 'Legal', 'Construction'];
+  const industryOptions = ['Government', 'Lobbying', 'Non Profit', 'Legal', 'Construction', 'Media'];
   const companySizeOptions = ['1-25', '26-50', '51-100', '101-200', '201+'];
 
 
@@ -155,7 +155,7 @@ export default function Advertise() {
           ],
           context: {
             pageUri: window.location.href,
-            pageName: 'Advertise with NYSgpt',
+            pageName: 'Partner with NYSgpt',
           },
         }),
       });
@@ -300,7 +300,7 @@ export default function Advertise() {
         <div className="flex items-center justify-center p-8">
           <div className="w-full max-w-md">
             <h1 className="mb-2 scroll-m-20 text-3xl font-bold tracking-tight md:text-4xl">
-              Advertise with NYSgpt
+              Partner with NYSgpt
             </h1>
             <p className="text-muted-foreground mb-8">
               Complete the steps below to get started.
