@@ -419,17 +419,9 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
         ol: ({ children }) => (
           <ol className="list-decimal pl-6 space-y-1 my-2">{children}</ol>
         ),
-        li: ({ children }) => {
-          const pills = flushPills();
-          return (
-            <li className="text-foreground text-sm">
-              {children}
-              {pills.map((p, i) => (
-                <BillCitationPill key={i} bill={p.bill} to={p.to} />
-              ))}
-            </li>
-          );
-        },
+        li: ({ children }) => (
+          <li className="text-foreground text-sm">{children}</li>
+        ),
         a: ({ href, children }) => {
           if (!href) return <span>{children}</span>;
 
