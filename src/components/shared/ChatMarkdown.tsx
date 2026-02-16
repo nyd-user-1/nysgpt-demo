@@ -9,7 +9,7 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, ExternalLink, User, Building2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface BillCitationData {
@@ -155,33 +155,16 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
         {/* Slide 1: Bill */}
         {slide === 0 && (
           <div className="p-3 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <Link to={to} className="group flex-1">
-                <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
-                  {bill.bill_number}
-                </h4>
-              </Link>
-              <Link to={to} className="shrink-0 text-muted-foreground hover:text-foreground">
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-            </div>
+            <Link to={to} className="group">
+              <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
+                {bill.bill_number}
+              </h4>
+            </Link>
             <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">
               {bill.title}
             </p>
-            <div className="flex items-center flex-wrap gap-1.5">
-              {bill.status_desc && (
-                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
-                  {bill.status_desc}
-                </Badge>
-              )}
-              {bill.committee && (
-                <span className="text-[10px] text-muted-foreground">
-                  {bill.committee}
-                </span>
-              )}
-            </div>
             {bill.description && (
-              <p className="text-xs text-muted-foreground leading-snug line-clamp-3 border-t pt-2">
+              <p className="text-xs text-muted-foreground leading-snug line-clamp-3">
                 {bill.description}
               </p>
             )}
@@ -191,22 +174,17 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
         {/* Slide 2: Sponsor */}
         {hasSponsor && slide === 1 && (
           <div className="p-3 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              {sponsorSlug ? (
-                <Link to={`/members/${sponsorSlug}`} className="group flex-1">
-                  <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
-                    {bill.sponsor_name}
-                  </h4>
-                </Link>
-              ) : (
-                <h4 className="text-sm font-semibold text-foreground flex-1">
+            {sponsorSlug ? (
+              <Link to={`/members/${sponsorSlug}`} className="group">
+                <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
                   {bill.sponsor_name}
                 </h4>
-              )}
-              <div className="shrink-0 h-7 w-7 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-            </div>
+              </Link>
+            ) : (
+              <h4 className="text-sm font-semibold text-foreground">
+                {bill.sponsor_name}
+              </h4>
+            )}
             <p className="text-xs text-muted-foreground">
               Primary Sponsor
             </p>
@@ -237,33 +215,18 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
         {/* Slide 3: Committee */}
         {hasCommittee && slide === (hasSponsor ? 2 : 1) && (
           <div className="p-3 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              {bill.committee_slug ? (
-                <Link to={`/committees/${bill.committee_slug}`} className="group flex-1">
-                  <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
-                    {bill.committee}
-                  </h4>
-                </Link>
-              ) : (
-                <h4 className="text-sm font-semibold text-foreground flex-1">
+            {bill.committee_slug ? (
+              <Link to={`/committees/${bill.committee_slug}`} className="group">
+                <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
                   {bill.committee}
                 </h4>
-              )}
-              <div className="shrink-0 h-7 w-7 rounded-full bg-muted flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Assigned Committee
-            </p>
-            <div className="flex items-center flex-wrap gap-1.5">
-              {bill.status_desc && (
-                <Badge variant="outline" className="text-[10px] font-normal px-1.5 py-0">
-                  {bill.status_desc}
-                </Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground leading-snug border-t pt-2">
+              </Link>
+            ) : (
+              <h4 className="text-sm font-semibold text-foreground">
+                {bill.committee}
+              </h4>
+            )}
+            <p className="text-xs text-muted-foreground leading-snug">
               {bill.bill_number} is currently in the {bill.committee} committee.
             </p>
           </div>
