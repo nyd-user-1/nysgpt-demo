@@ -154,15 +154,12 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
 
         {/* Slide 1: Bill */}
         {slide === 0 && (
-          <div className="p-3 space-y-2">
+          <div className="px-3 pb-3 pt-2 space-y-2">
             <Link to={to} className="group">
               <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
                 {bill.bill_number}
               </h4>
             </Link>
-            <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">
-              {bill.title}
-            </p>
             {bill.description && (
               <p className="text-xs text-muted-foreground leading-snug line-clamp-3">
                 {bill.description}
@@ -173,7 +170,7 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
 
         {/* Slide 2: Sponsor */}
         {hasSponsor && slide === 1 && (
-          <div className="p-3 space-y-2">
+          <div className="px-3 pb-3 pt-2 space-y-2">
             {sponsorSlug ? (
               <Link to={`/members/${sponsorSlug}`} className="group">
                 <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
@@ -205,16 +202,12 @@ function BillHoverLink({ to, bill, children }: BillHoverLinkProps) {
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground leading-snug border-t pt-2">
-              Sponsor of {bill.bill_number}
-              {bill.committee ? ` · ${bill.committee}` : ''}
-            </p>
           </div>
         )}
 
         {/* Slide 3: Committee */}
         {hasCommittee && slide === (hasSponsor ? 2 : 1) && (
-          <div className="p-3 space-y-2">
+          <div className="px-3 pb-3 pt-2 space-y-2">
             {bill.committee_slug ? (
               <Link to={`/committees/${bill.committee_slug}`} className="group">
                 <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-500 transition-colors">
