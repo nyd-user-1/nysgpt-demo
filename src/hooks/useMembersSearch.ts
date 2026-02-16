@@ -16,8 +16,7 @@ export function useMembersSearch() {
         .from('People')
         .select('*', { count: 'exact' })
         .not('chamber', 'is', null)
-        .not('name', 'is', null)
-;
+        .not('name', 'is', null);
 
       // Server-side search across name, district
       if (searchTerm && searchTerm.length >= 2) {

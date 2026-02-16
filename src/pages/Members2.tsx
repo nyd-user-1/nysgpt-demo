@@ -328,6 +328,12 @@ function MemberCard({ member, onClick, onChatClick }: MemberCardProps) {
               <p className="font-medium">{member.role}</p>
             </div>
           )}
+          {member.archived && (
+            <div>
+              <span className="text-muted-foreground">Status</span>
+              <p className="font-medium">Archived</p>
+            </div>
+          )}
         </div>
 
         {/* Action button - appears on hover */}

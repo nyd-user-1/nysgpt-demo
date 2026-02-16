@@ -70,8 +70,7 @@ export const useMembersData = () => {
         .from("People")
         .select("*", { count: 'exact', head: true })
         .not("chamber", "is", null)
-        .not("name", "is", null)
-;
+        .not("name", "is", null);
 
       setTotalMembers(count || 0);
 
