@@ -225,7 +225,7 @@ export function EmailLetterSheet({
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-lg flex flex-col">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />
@@ -247,7 +247,7 @@ export function EmailLetterSheet({
             </p>
           </div>
         ) : (
-          <div className="space-y-6 mt-6">
+          <div className="flex-1 flex flex-col gap-6 mt-6 min-h-0 overflow-y-auto">
             {/* To Field */}
             <div className="space-y-2">
               <Label>To (Primary Sponsor)</Label>
@@ -345,13 +345,13 @@ export function EmailLetterSheet({
             </div>
 
             {/* Letter Body */}
-            <div className="space-y-2">
+            <div className="flex-1 flex flex-col gap-2 min-h-0">
               <Label htmlFor="letter-body">Letter</Label>
               <Textarea
                 id="letter-body"
                 value={letterBody}
                 onChange={(e) => setLetterBody(e.target.value)}
-                className="min-h-[200px] text-sm"
+                className="flex-1 text-sm min-h-[120px]"
                 placeholder="Your letter content..."
               />
             </div>
