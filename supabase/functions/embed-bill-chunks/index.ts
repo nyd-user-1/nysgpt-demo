@@ -428,15 +428,13 @@ async function getStatus(supabase: any, sessionYear: number): Promise<any> {
     .select("*", { count: "exact", head: true })
     .eq("session_id", sessionYear);
 
-  // Distinct bills with embeddings
-  const { data: embeddedBills } = await supabase
-    .from("bill_chunks")
-    .select("bill_number")
-    .eq("session_id", sessionYear);
+  // Distinct bills with embeddings — use RPC for accurate count
+  // (default Supabase limit of 1000 rows truncates results)
+  const { data: distinctCount } = await supabase.rpc("count_embedded_bills", {
+    p_session_id: sessionYear,
+  });
 
-  const uniqueBills = new Set(
-    (embeddedBills || []).map((r: any) => r.bill_number)
-  ).size;
+  const uniqueBills = distinctCount || 0;
 
   // Total bills in database
   const { count: totalBills } = await supabase
