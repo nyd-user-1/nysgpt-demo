@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect, ReactNode } from "react";
-import { Mail, Users, ExternalLink, Loader2 } from "lucide-react";
+import { Mail, Users, Building2, ExternalLink, Loader2 } from "lucide-react";
+import { slugToNamePattern } from "@/utils/memberSlug";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,9 @@ export function EmailLetterSheet({
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(false);
   const [ccCoSponsors, setCcCoSponsors] = useState(false);
+  const [committeeMembers, setCommitteeMembers] = useState<{ name: string; email: string }[]>([]);
+  const [committeeName, setCommitteeName] = useState("");
+  const [ccCommitteeMembers, setCcCommitteeMembers] = useState(false);
   const [subject, setSubject] = useState("");
   const [letterBody, setLetterBody] = useState("");
 
@@ -69,16 +73,20 @@ export function EmailLetterSheet({
       fetchSponsors();
       setSubject(`Support for ${billNumber} - ${billTitle}`);
       setLetterBody(extractText(messageContent));
+    } else {
+      setCommitteeMembers([]);
+      setCommitteeName("");
+      setCcCommitteeMembers(false);
     }
   }, [isOpen, billNumber]);
 
   const fetchSponsors = async () => {
     setLoading(true);
     try {
-      // First get the bill_id from bill_number
+      // First get the bill_id and committee_id from bill_number
       const { data: billData } = await supabase
         .from("Bills")
-        .select("bill_id")
+        .select("bill_id, committee_id")
         .eq("bill_number", billNumber)
         .single();
 
@@ -115,6 +123,63 @@ export function EmailLetterSheet({
           setSponsors(sponsorsData);
         }
       }
+
+      // Fetch committee members if the bill has a committee
+      if (billData.committee_id) {
+        const { data: committeeData } = await supabase
+          .from("Committees")
+          .select("committee_name, committee_members")
+          .eq("committee_id", billData.committee_id)
+          .single();
+
+        if (committeeData && committeeData.committee_members) {
+          setCommitteeName(committeeData.committee_name || "");
+
+          const memberSlugs = committeeData.committee_members
+            .split(";")
+            .map((slug: string) => slug.trim())
+            .filter((slug: string) => slug.length > 0);
+
+          if (memberSlugs.length > 0) {
+            const memberPromises = memberSlugs.map(async (slug: string) => {
+              const searchName = slugToNamePattern(slug);
+              const nameParts = searchName.split(" ");
+              const firstName = nameParts[0];
+              const lastName = nameParts[nameParts.length - 1];
+
+              let { data: memberData } = await supabase
+                .from("People")
+                .select("name, email")
+                .ilike("name", `%${searchName}%`)
+                .limit(1)
+                .maybeSingle();
+
+              if (!memberData && nameParts.length >= 2) {
+                const { data: fallbackData } = await supabase
+                  .from("People")
+                  .select("name, email")
+                  .ilike("name", `%${firstName}%`)
+                  .ilike("name", `%${lastName}%`)
+                  .limit(1)
+                  .maybeSingle();
+                memberData = fallbackData;
+              }
+
+              return memberData;
+            });
+
+            const results = await Promise.all(memberPromises);
+            const resolvedMembers = results
+              .filter((m): m is { name: string; email: string } => m !== null && !!m.email && !!m.name);
+
+            // Deduplicate by email
+            const unique = Array.from(
+              new Map(resolvedMembers.map(m => [m.email, m])).values()
+            );
+            setCommitteeMembers(unique);
+          }
+        }
+      }
     } catch (error) {
       console.error("Error fetching sponsors:", error);
     } finally {
@@ -129,9 +194,20 @@ export function EmailLetterSheet({
   // Generate mailto link (using encodeURIComponent to avoid + for spaces)
   const generateMailtoLink = () => {
     const to = primarySponsor?.person?.email || "";
-    const cc = ccCoSponsors
-      ? coSponsors.map(s => s.person?.email).filter(Boolean).join(",")
-      : "";
+
+    const ccEmails: string[] = [];
+    if (ccCoSponsors) {
+      coSponsors.forEach(s => {
+        if (s.person?.email) ccEmails.push(s.person.email);
+      });
+    }
+    if (ccCommitteeMembers) {
+      committeeMembers.forEach(m => {
+        if (!ccEmails.includes(m.email)) ccEmails.push(m.email);
+      });
+    }
+
+    const cc = ccEmails.join(",");
 
     const params: string[] = [];
     if (cc) params.push(`cc=${encodeURIComponent(cc)}`);
@@ -215,6 +291,40 @@ export function EmailLetterSheet({
                       {coSponsors.map((sponsor) => (
                         <p key={sponsor.people_id} className="text-xs text-muted-foreground">
                           {sponsor.person?.name} ({sponsor.person?.email})
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CC Committee Members */}
+            {committeeMembers.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="cc-committee"
+                    checked={ccCommitteeMembers}
+                    onCheckedChange={(checked) => setCcCommitteeMembers(checked === true)}
+                  />
+                  <Label
+                    htmlFor="cc-committee"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    CC committee members ({committeeMembers.length})
+                  </Label>
+                </div>
+                {ccCommitteeMembers && (
+                  <div className="ml-6 p-3 bg-muted/30 rounded-lg max-h-32 overflow-y-auto">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
+                      {committeeName}
+                    </p>
+                    <div className="space-y-1">
+                      {committeeMembers.map((member) => (
+                        <p key={member.email} className="text-xs text-muted-foreground">
+                          {member.name} ({member.email})
                         </p>
                       ))}
                     </div>
