@@ -4,8 +4,8 @@
  */
 
 import { useState, ReactNode, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FileText, ThumbsUp, ThumbsDown, Copy, Check, Mail, BookOpenCheck, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ThumbsUp, ThumbsDown, Copy, Check, Mail, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen } from "lucide-react";
 import { useExcerptPersistence } from "@/hooks/useExcerptPersistence";
 import { useNotePersistence } from "@/hooks/useNotePersistence";
 import { useBillText } from "@/hooks/useBillText";
@@ -29,8 +29,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { PerplexityCitation } from "@/utils/citationParser";
-import { extractDomain } from "@/config/domainFilters";
-import { Badge } from "@/components/ui/badge";
 import { BillPDFSheet } from "@/components/features/bills/BillPDFSheet";
 import { EmailLetterSheet } from "@/components/features/bills/EmailLetterSheet";
 import { useToast } from "@/hooks/use-toast";
@@ -98,12 +96,10 @@ export function ChatResponseFooter({
   const [selectedBillNumber, setSelectedBillNumber] = useState<string>("");
   const [selectedBillTitle, setSelectedBillTitle] = useState<string>("");
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
-  const [showCitations, setShowCitations] = useState(false);
   const [showBillText, setShowBillText] = useState(false);
   const [copied, setCopied] = useState(false);
   const [emailSheetOpen, setEmailSheetOpen] = useState(false);
   const [feedbackState, setFeedbackState] = useState<'good' | 'bad' | null>(feedback ?? null);
-  const accordionRef = useRef<HTMLDivElement>(null);
   const billTextRef = useRef<HTMLDivElement>(null);
 
   // Lazy-fetch bill text only when accordion is toggled open
@@ -421,18 +417,6 @@ export function ChatResponseFooter({
     }
   };
 
-  // Auto-scroll to accordion when Citations is toggled on
-  useEffect(() => {
-    if (showCitations && accordionRef.current) {
-      setTimeout(() => {
-        accordionRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 100);
-    }
-  }, [showCitations]);
-
   // Auto-scroll to bill text when toggled on
   useEffect(() => {
     if (showBillText && billTextRef.current) {
@@ -455,24 +439,6 @@ export function ChatResponseFooter({
       {/* Action Buttons - Only show when NOT streaming */}
       {!isStreaming && (
         <div className="flex items-center gap-3 pt-4 border-t animate-in fade-in duration-300">
-          {/* Citations Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 ${showCitations
-                  ? "text-foreground bg-muted hover:bg-muted/80"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-                onClick={() => setShowCitations(!showCitations)}
-              >
-                <BookOpenCheck className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Citations</TooltipContent>
-          </Tooltip>
-
           {/* View Bill Text Toggle */}
           {hasBills && (
             <Tooltip>
@@ -609,157 +575,6 @@ export function ChatResponseFooter({
               </Tooltip>
             </div>
           )}
-        </div>
-      )}
-
-      {/* "More" Section - Accordion with References, Related, Resources */}
-      {!isStreaming && showCitations && (hasBills || hasRelated || hasSources) && (
-        <div ref={accordionRef} className="pt-4 animate-in fade-in duration-300">
-          <Accordion type="multiple" className="w-full">
-            {/* References Accordion */}
-            {hasBills && (
-              <AccordionItem value="references" className="border-b">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <span className="text-sm font-medium">References ({bills.length})</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-2">
-                  <div className="space-y-3">
-                    {bills.map((citation, idx) => (
-                      <div key={idx} className="relative">
-                        {/* PDF View Button - Top Right */}
-                        <button
-                          onClick={(e) => handlePDFView(citation.bill_number, citation.title, e)}
-                          className="absolute top-2 right-2 h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors z-10"
-                          title="View Full Text"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </button>
-
-                        <Link
-                          to={`/bills/${citation.bill_number}`}
-                          className="block p-4 pr-12 rounded-lg group"
-                        >
-                          {/* Bill Content */}
-                          <div className="space-y-2">
-                              {/* Bill Number */}
-                              <h3 className="font-semibold text-base text-foreground group-hover:underline">
-                                {citation.bill_number}
-                              </h3>
-
-                              {/* Bill Title */}
-                              <p className="text-sm text-foreground leading-snug">
-                                {citation.title}
-                              </p>
-
-                              {/* Metadata */}
-                              <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
-                                {citation.status_desc && (
-                                  <Badge variant="outline" className="font-normal text-xs">
-                                    {citation.status_desc}
-                                  </Badge>
-                                )}
-                                {citation.committee && (
-                                  <span>Committee: {citation.committee}</span>
-                                )}
-                              </div>
-                          </div>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-
-            {/* Related Bills Accordion */}
-            {hasRelated && (
-              <AccordionItem value="related" className="border-b">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <span className="text-sm font-medium">Related ({relatedBills.length})</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-2">
-                  <div className="space-y-3">
-                    {relatedBills.map((citation, idx) => (
-                      <div key={idx} className="relative">
-                        {/* PDF View Button - Top Right */}
-                        <button
-                          onClick={(e) => handlePDFView(citation.bill_number, citation.title, e)}
-                          className="absolute top-2 right-2 h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors z-10"
-                          title="View Full Text"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </button>
-
-                        <Link
-                          to={`/bills/${citation.bill_number}`}
-                          className="block p-4 pr-12 rounded-lg group"
-                        >
-                          {/* Bill Content */}
-                          <div className="space-y-2">
-                              {/* Bill Number */}
-                              <h3 className="font-semibold text-base text-foreground group-hover:underline">
-                                {citation.bill_number}
-                              </h3>
-
-                              {/* Bill Title */}
-                              <p className="text-sm text-foreground leading-snug">
-                                {citation.title}
-                              </p>
-
-                              {/* Metadata */}
-                              <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
-                                {citation.status_desc && (
-                                  <Badge variant="outline" className="font-normal text-xs">
-                                    {citation.status_desc}
-                                  </Badge>
-                                )}
-                                {citation.committee && (
-                                  <span>Committee: {citation.committee}</span>
-                                )}
-                              </div>
-                          </div>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-
-            {/* Resources Accordion */}
-            {hasSources && (
-              <AccordionItem value="resources" className="border-b">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <span className="text-sm font-medium">Resources ({sources.length})</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 pt-2">
-                  <div className="space-y-3">
-                    {sources.map((citation) => {
-                      const domain = extractDomain(citation.url);
-
-                      return (
-                        <a
-                          key={citation.number}
-                          href={citation.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                        >
-                          {/* Citation Content */}
-                          <div className="space-y-1">
-                            <h3 className="font-semibold text-sm leading-tight">
-                              {citation.title || domain}
-                            </h3>
-                            <p className="text-xs text-muted-foreground">{domain}</p>
-                          </div>
-                        </a>
-                      );
-                    })}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
         </div>
       )}
 
