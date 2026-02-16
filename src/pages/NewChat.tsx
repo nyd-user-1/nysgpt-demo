@@ -1846,12 +1846,12 @@ const NewChat = () => {
                     {message.isStreaming && (
                       <div className="prose prose-sm max-w-none dark:prose-invert">
                         {message.isPerplexityResponse ? (
-                        <ChatMarkdown>{stripCitations(message.streamedContent || '')}</ChatMarkdown>
+                        <ChatMarkdown bills={message.citations}>{stripCitations(message.streamedContent || '')}</ChatMarkdown>
                       ) : (
                         (() => {
                           const streamContent = message.isStreaming ? message.streamedContent || '' : message.content;
                           const { cleanContent } = stripClientsSection(streamContent);
-                          return <ChatMarkdown>{cleanContent}</ChatMarkdown>;
+                          return <ChatMarkdown bills={message.citations}>{cleanContent}</ChatMarkdown>;
                         })()
                       )}
                         <span className="inline-block w-1.5 h-4 bg-current animate-pulse ml-0.5">|</span>
@@ -1864,11 +1864,11 @@ const NewChat = () => {
                         isStreaming={message.isStreaming}
                         messageContent={
                           message.isPerplexityResponse ? (
-                            <ChatMarkdown>{stripCitations(message.content)}</ChatMarkdown>
+                            <ChatMarkdown bills={message.citations}>{stripCitations(message.content)}</ChatMarkdown>
                           ) : (
                             (() => {
                               const { mainContent } = parseClientsSection(message.content);
-                              return <ChatMarkdown>{mainContent}</ChatMarkdown>;
+                              return <ChatMarkdown bills={message.citations}>{mainContent}</ChatMarkdown>;
                             })()
                           )
                         }
