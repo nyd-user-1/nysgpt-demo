@@ -187,6 +187,7 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
 
   // Quick Notes - inline auto-saving plain text
   const [quickNoteText, setQuickNoteText] = useState("");
+  const [quickNoteSaveStatus, setQuickNoteSaveStatus] = useState<"" | "saving" | "saved">("");
   const quickNoteInitialized = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -203,15 +204,15 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
   const autoSaveQuickNote = useCallback((text: string) => {
     if (!bill?.bill_id) return;
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => {
+    setQuickNoteSaveStatus("saving");
+    autoSaveTimerRef.current = setTimeout(async () => {
       const trimmed = text.trim();
       if (notes.length > 0) {
-        // Update the first note with full content
-        updateNote(bill.bill_id, notes[0].id, trimmed);
+        await updateNote(bill.bill_id, notes[0].id, trimmed, true);
       } else if (trimmed) {
-        // Create a new note
-        addNote(bill.bill_id, trimmed);
+        await addNote(bill.bill_id, trimmed, true);
       }
+      setQuickNoteSaveStatus("saved");
     }, 1000);
   }, [bill?.bill_id, notes, updateNote, addNote]);
 
@@ -493,16 +494,23 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
                 {/* Quick Notes Section - inline auto-saving */}
                 <Card className="bg-card rounded-xl shadow-sm border">
                   <CardHeader className="px-6 py-4 border-b">
-                    <CardTitle className="text-lg font-semibold">
-                      Quick Notes
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold">
+                        Quick Notes
+                      </CardTitle>
+                      {quickNoteSaveStatus && (
+                        <span className="text-xs text-muted-foreground">
+                          {quickNoteSaveStatus === "saving" ? "Saving..." : "Saved"}
+                        </span>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     <textarea
                       value={quickNoteText}
                       onChange={(e) => handleQuickNoteChange(e.target.value)}
                       placeholder="Click here to add notes about this bill..."
-                      className="w-full min-h-[100px] p-6 text-sm bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/60"
+                      className="w-full min-h-[100px] max-h-[300px] overflow-y-auto p-6 text-sm bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/60"
                     />
                   </CardContent>
                 </Card>

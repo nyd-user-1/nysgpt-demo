@@ -286,7 +286,7 @@ export const useBillReviews = () => {
   }, [reviewsByBillId, toast]);
 
   // Add a new note to a bill
-  const addNote = useCallback(async (billId: number, content: string) => {
+  const addNote = useCallback(async (billId: number, content: string, silent?: boolean) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -344,22 +344,26 @@ export const useBillReviews = () => {
         setReviews(prev => [newReview, ...prev]);
       }
 
-      toast({
-        title: "Note added",
-        description: "Your note has been saved",
-      });
+      if (!silent) {
+        toast({
+          title: "Note added",
+          description: "Your note has been saved",
+        });
+      }
     } catch (error) {
       console.error("Failed to add note:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add note",
-        variant: "destructive",
-      });
+      if (!silent) {
+        toast({
+          title: "Error",
+          description: "Failed to add note",
+          variant: "destructive",
+        });
+      }
     }
   }, [reviewsByBillId, toast]);
 
   // Update an existing note
-  const updateNote = useCallback(async (billId: number, noteId: string, content: string) => {
+  const updateNote = useCallback(async (billId: number, noteId: string, content: string, silent?: boolean) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -398,17 +402,21 @@ export const useBillReviews = () => {
       setReviewsByBillId(prev => new Map(prev).set(billId, updatedReview));
       setReviews(prev => prev.map(r => r.id === existingReview.id ? updatedReview : r));
 
-      toast({
-        title: "Note updated",
-        description: "Your note has been updated",
-      });
+      if (!silent) {
+        toast({
+          title: "Note updated",
+          description: "Your note has been updated",
+        });
+      }
     } catch (error) {
       console.error("Failed to update note:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update note",
-        variant: "destructive",
-      });
+      if (!silent) {
+        toast({
+          title: "Error",
+          description: "Failed to update note",
+          variant: "destructive",
+        });
+      }
     }
   }, [reviewsByBillId, toast]);
 

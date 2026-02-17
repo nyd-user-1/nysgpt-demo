@@ -38,7 +38,7 @@ export const BillText = ({ billNumber, sessionId }: BillTextProps) => {
         </div>
       </CardHeader>
       {expanded && (
-        <CardContent className="p-6 max-h-[70vh] overflow-y-auto">
+        <CardContent className="p-6 max-h-[500px] overflow-y-auto">
           {isLoading ? (
             <div className="space-y-3">
               <Skeleton className="h-4 w-full" />
