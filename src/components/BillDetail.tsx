@@ -203,20 +203,13 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
     }
   };
 
-  const handleSaveNote = (status: ReviewStatus, noteContent: string) => {
+  const handleSaveNote = (_status: ReviewStatus, noteContent: string) => {
     if (!bill?.bill_id) return;
 
     if (editingNote) {
-      // Update existing note
       updateNote(bill.bill_id, editingNote.id, noteContent);
     } else {
-      // Add new note
       addNote(bill.bill_id, noteContent);
-    }
-
-    // Also save the review status if provided
-    if (status) {
-      saveReview(bill.bill_id, status, '');
     }
   };
 
