@@ -102,6 +102,16 @@ export function EmailLetterSheet({
     }
   }, [isOpen, billNumber]);
 
+  // Force cleanup of stuck Radix Dialog body styles after sheet close animation
+  useEffect(() => {
+    if (!isOpen) {
+      const cleanup = setTimeout(() => {
+        document.body.style.removeProperty('pointer-events');
+      }, 500);
+      return () => clearTimeout(cleanup);
+    }
+  }, [isOpen]);
+
   const fetchSponsors = async () => {
     setLoading(true);
     try {

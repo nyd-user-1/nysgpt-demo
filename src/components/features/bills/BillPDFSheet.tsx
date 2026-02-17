@@ -60,6 +60,15 @@ export const BillPDFSheet = ({ isOpen, onClose, billNumber, billTitle, bill }: B
     }
   }, [isOpen, bill]);
 
+  // Force cleanup of stuck Radix Dialog body styles after sheet close animation
+  useEffect(() => {
+    if (!isOpen) {
+      const cleanup = setTimeout(() => {
+        document.body.style.removeProperty('pointer-events');
+      }, 500);
+      return () => clearTimeout(cleanup);
+    }
+  }, [isOpen]);
 
   // Fetch PDF through CORS proxy when sheet opens, fall back to Google Docs Viewer
   useEffect(() => {
