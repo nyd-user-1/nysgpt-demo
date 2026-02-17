@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, User, Plus, ExternalLink, ChevronDown, Search } from "lucide-react";
+import { ArrowLeft, User, Plus, ExternalLink, ChevronDown, Search, NotebookPen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -219,6 +219,29 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
   const handleQuickNoteChange = (text: string) => {
     setQuickNoteText(text);
     autoSaveQuickNote(text);
+  };
+
+  const handleOpenAsNote = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !quickNoteText.trim()) return;
+
+      const { data, error } = await supabase
+        .from("chat_notes")
+        .insert({
+          user_id: user.id,
+          title: `Notes: ${bill.bill_number || "Bill"}`,
+          content: quickNoteText.trim(),
+          bill_id: bill.bill_id,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      navigate(`/n/${data.id}`);
+    } catch (error) {
+      console.error("Error creating note:", error);
+    }
   };
 
   const formatNoteDate = (dateString: string) => {
@@ -498,11 +521,20 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
                       <CardTitle className="text-lg font-semibold">
                         Quick Notes
                       </CardTitle>
-                      {quickNoteSaveStatus && (
-                        <span className="text-xs text-muted-foreground">
-                          {quickNoteSaveStatus === "saving" ? "Saving..." : "Saved"}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {quickNoteSaveStatus && (
+                          <span className="text-xs text-muted-foreground">
+                            {quickNoteSaveStatus === "saving" ? "Saving..." : "Saved"}
+                          </span>
+                        )}
+                        <button
+                          onClick={handleOpenAsNote}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          title="Open as Note"
+                        >
+                          <NotebookPen className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
