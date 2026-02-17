@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { PLATFORM_FEATURES_PROMPT } from '../_shared/platformFeatures.ts';
 
 const perplexityApiKey = Deno.env.get("PERPLEXITY_API_KEY");
 
@@ -48,8 +49,8 @@ serve(async (req) => {
     // Use frontend-composed systemContext if provided, otherwise fall back to
     // Perplexity's web-search-focused prompt
     const systemContent = context?.systemContext
-      ? `${context.systemContext}\n\n${getSystemPrompt()}`
-      : getSystemPrompt();
+      ? `${context.systemContext}\n\n${getSystemPrompt()}\n\n${PLATFORM_FEATURES_PROMPT}`
+      : `${getSystemPrompt()}\n\n${PLATFORM_FEATURES_PROMPT}`;
 
     const messages = [
       { role: "system", content: systemContent },

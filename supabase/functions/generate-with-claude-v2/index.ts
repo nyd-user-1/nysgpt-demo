@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getConstitutionalPrompt } from '../_shared/constitution.ts';
+import { PLATFORM_FEATURES_PROMPT } from '../_shared/platformFeatures.ts';
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -607,13 +608,13 @@ serve(async (req) => {
 
     // Build the enhanced system prompt with constitutional principles and legislative data
     const constitutionalContext = getConstitutionalPrompt(type || 'chat');
-    let enhancedSystemPrompt = `${constitutionalContext}\n\n${CLAUDE_SYSTEM_PROMPT}`;
+    let enhancedSystemPrompt = `${constitutionalContext}\n\n${CLAUDE_SYSTEM_PROMPT}\n\n${PLATFORM_FEATURES_PROMPT}`;
 
     // When frontend provides a composed systemContext (via systemPromptComposer),
     // use it as the primary prompt — only prepend constitutional principles.
     // Internal CLAUDE_SYSTEM_PROMPT is kept as fallback for requests without systemContext.
     if (context?.systemContext) {
-      enhancedSystemPrompt = `${constitutionalContext}\n\n${context.systemContext}`;
+      enhancedSystemPrompt = `${constitutionalContext}\n\n${context.systemContext}\n\n${PLATFORM_FEATURES_PROMPT}`;
       console.log('Using frontend-composed systemContext (replaced internal prompt)');
     }
 

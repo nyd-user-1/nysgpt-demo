@@ -168,6 +168,7 @@ export const BillPDFSheet = ({ isOpen, onClose, billNumber, billTitle, bill }: B
         side="right"
         className="p-0 flex flex-col gap-0"
         style={{ width: `${sheetWidth}px`, maxWidth: '95vw' }}
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         {/* Resize Handle - positioned on the border */}
         <div

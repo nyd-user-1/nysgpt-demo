@@ -271,12 +271,19 @@ export function EmailLetterSheet({
 
   const handleOpenEmailClient = () => {
     const mailtoLink = generateMailtoLink();
-    window.location.href = mailtoLink;
+    // Close sheet first, then trigger mailto after cleanup completes
+    onClose();
+    setTimeout(() => {
+      window.location.href = mailtoLink;
+    }, 300);
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col">
+      <SheetContent
+        className="w-full sm:max-w-lg flex flex-col"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5" />

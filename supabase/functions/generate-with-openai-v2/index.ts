@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { getConstitutionalPrompt } from '../_shared/constitution.ts';
+import { PLATFORM_FEATURES_PROMPT } from '../_shared/platformFeatures.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const nysApiKey = Deno.env.get('NYS_LEGISLATION_API_KEY');
@@ -786,12 +787,17 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
 
     let systemPrompt = getSystemPrompt(type, combinedContext ? { nysData: combinedContext } : context, entityData);
 
+    // Append platform features awareness for chat-type queries
+    if (type === 'chat' || type === 'default') {
+      systemPrompt += `\n\n${PLATFORM_FEATURES_PROMPT}`;
+    }
+
     // When frontend provides a composed systemContext (via systemPromptComposer),
     // use it as the primary prompt — only prepend constitutional principles.
     // Internal prompt building is kept as fallback for requests without systemContext.
     if (context?.systemContext) {
       const constitutionalContext = getConstitutionalPrompt(type);
-      systemPrompt = `${constitutionalContext}\n\n${context.systemContext}`;
+      systemPrompt = `${constitutionalContext}\n\n${context.systemContext}\n\n${PLATFORM_FEATURES_PROMPT}`;
       // Append backend-enriched data (keyword + semantic search results) so it's not lost
       if (combinedContext) {
         systemPrompt += `\n\nCURRENT NYS LEGISLATIVE DATA:\n${combinedContext}\n\nIMPORTANT: Use the specific bill data above to ground your response. Cite actual bill numbers, sponsors, and details from this data rather than relying on general knowledge.`;
