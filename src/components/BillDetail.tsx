@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,15 +13,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, User, Pencil, Plus, Trash2, ExternalLink, ChevronDown, Search } from "lucide-react";
+import { ArrowLeft, User, Plus, ExternalLink, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { BillSummary, BillKeyInformation, QuickReviewNoteDialog } from "./features/bills";
+import { BillSummary, BillKeyInformation } from "./features/bills";
 import { BillMilestones } from "./features/bills/BillMilestones";
 import { BillText } from "./features/bills/BillText";
-import { useBillReviews, ReviewStatus, BillNote } from "@/hooks/useBillReviews";
+import { useBillReviews, ReviewStatus } from "@/hooks/useBillReviews";
 import { useBillExtendedData } from "@/hooks/useBillExtendedData";
 
 type Bill = Tables<"Bills">;
@@ -153,8 +153,6 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
   const [rollCalls, setRollCalls] = useState<(RollCall & { votes?: (Vote & { person?: Person })[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
-  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<BillNote | null>(null);
   const [billChats, setBillChats] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [otherSessionBills, setOtherSessionBills] = useState<Array<{ session_id: number; bill_number: string; status_desc: string | null; bill_id: number }>>([]);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
@@ -177,7 +175,7 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const { getReviewForBill, saveReview, addNote, updateNote, deleteNote } = useBillReviews();
+  const { getReviewForBill, saveReview, addNote, updateNote } = useBillReviews();
   const billReview = getReviewForBill(bill.bill_id);
   const notes = billReview?.notes || [];
 
@@ -187,30 +185,39 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
     }
   };
 
-  const handleAddNote = () => {
-    setEditingNote(null);
-    setNoteDialogOpen(true);
-  };
+  // Quick Notes - inline auto-saving plain text
+  const [quickNoteText, setQuickNoteText] = useState("");
+  const quickNoteInitialized = useRef(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleEditNote = (note: BillNote) => {
-    setEditingNote(note);
-    setNoteDialogOpen(true);
-  };
-
-  const handleDeleteNote = (noteId: string) => {
-    if (bill?.bill_id) {
-      deleteNote(bill.bill_id, noteId);
+  // Initialize quick note text from existing notes
+  useEffect(() => {
+    if (notes.length > 0 && !quickNoteInitialized.current) {
+      setQuickNoteText(notes.map(n => n.content).join("\n\n"));
+      quickNoteInitialized.current = true;
+    } else if (notes.length === 0 && !quickNoteInitialized.current) {
+      quickNoteInitialized.current = true;
     }
-  };
+  }, [notes]);
 
-  const handleSaveNote = (_status: ReviewStatus, noteContent: string) => {
+  const autoSaveQuickNote = useCallback((text: string) => {
     if (!bill?.bill_id) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      const trimmed = text.trim();
+      if (notes.length > 0) {
+        // Update the first note with full content
+        updateNote(bill.bill_id, notes[0].id, trimmed);
+      } else if (trimmed) {
+        // Create a new note
+        addNote(bill.bill_id, trimmed);
+      }
+    }, 1000);
+  }, [bill?.bill_id, notes, updateNote, addNote]);
 
-    if (editingNote) {
-      updateNote(bill.bill_id, editingNote.id, noteContent);
-    } else {
-      addNote(bill.bill_id, noteContent);
-    }
+  const handleQuickNoteChange = (text: string) => {
+    setQuickNoteText(text);
+    autoSaveQuickNote(text);
   };
 
   const formatNoteDate = (dateString: string) => {
@@ -483,79 +490,20 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
                   lawCode={extendedData?.lawCode}
                 />
 
-                {/* Quick Notes Section */}
+                {/* Quick Notes Section - inline auto-saving */}
                 <Card className="bg-card rounded-xl shadow-sm border">
                   <CardHeader className="px-6 py-4 border-b">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CardTitle className="text-lg font-semibold">
-                          Quick Notes
-                        </CardTitle>
-                        {notes.length > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-                          </Badge>
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddNote}
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Note
-                      </Button>
-                    </div>
+                    <CardTitle className="text-lg font-semibold">
+                      Quick Notes
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6">
-                    {notes.length === 0 ? (
-                      <div className="bg-muted/30 rounded-lg p-4 text-sm">
-                        <span className="text-muted-foreground italic">Add your notes here.</span>
-                      </div>
-                    ) : (
-                      <Accordion type="single" collapsible className="w-full">
-                        {notes.map((note) => (
-                          <AccordionItem key={note.id} value={note.id} className="border-b last:border-b-0">
-                            <AccordionTrigger className="hover:no-underline py-3">
-                              <div className="flex items-center gap-3 text-left">
-                                <span className="text-xs text-muted-foreground">
-                                  {formatNoteDate(note.updated_at || note.created_at)}
-                                </span>
-                                <span className="text-sm truncate max-w-[300px]">
-                                  {note.content.substring(0, 50)}{note.content.length > 50 ? '...' : ''}
-                                </span>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="pb-4">
-                              <div className="bg-muted/30 rounded-lg p-4 text-sm whitespace-pre-wrap mb-3">
-                                {note.content}
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEditNote(note)}
-                                  className="gap-1"
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeleteNote(note.id)}
-                                  className="gap-1 text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    )}
+                  <CardContent className="p-0">
+                    <textarea
+                      value={quickNoteText}
+                      onChange={(e) => handleQuickNoteChange(e.target.value)}
+                      placeholder="Click here to add notes about this bill..."
+                      className="w-full min-h-[100px] p-6 text-sm bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/60"
+                    />
                   </CardContent>
                 </Card>
 
@@ -878,17 +826,6 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
         </div>
       </div>
 
-      {/* Quick Review Note Dialog */}
-      <QuickReviewNoteDialog
-        isOpen={noteDialogOpen}
-        onClose={() => {
-          setNoteDialogOpen(false);
-          setEditingNote(null);
-        }}
-        onSave={handleSaveNote}
-        initialStatus={billReview?.review_status}
-        initialNote={editingNote?.content || ''}
-      />
     </div>
   );
 };

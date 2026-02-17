@@ -126,15 +126,6 @@ const NoteView = () => {
   const chatContentRef = useRef<HTMLDivElement>(null);
   const snippetSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Scroll to bottom of document
-  const scrollToBottom = useCallback(() => {
-    if (documentContentRef.current) {
-      documentContentRef.current.scrollTo({
-        top: documentContentRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, []);
 
   // Scroll to bottom of chat
   const scrollChatToBottom = useCallback(() => {
@@ -865,14 +856,6 @@ const NoteView = () => {
               )}
             </div>
 
-            {/* Scroll to bottom button */}
-            <button
-              onClick={scrollToBottom}
-              className="sticky bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-background border rounded-full shadow-md flex items-center justify-center hover:bg-muted transition-colors z-10"
-              title="Scroll to bottom"
-            >
-              <ArrowDown className="h-4 w-4 text-muted-foreground" />
-            </button>
           </div>
 
           {/* Right Sidebar - Chat Panel */}
