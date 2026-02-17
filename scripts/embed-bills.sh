@@ -6,7 +6,7 @@
 SUPABASE_URL="https://kwyjohornlgujoqypyvu.supabase.co/functions/v1/embed-bill-chunks"
 ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3eWpvaG9ybmxndWpvcXlweXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MTAyODcsImV4cCI6MjA2NzE4NjI4N30.nPewQZse07MkYAK5W9wCEwYhnndHkA8pKmedgHkvD9M"
 SESSION_YEAR=2025
-BATCH_SIZE=10
+BATCH_SIZE=40
 OFFSET=${1:-0}
 
 echo "=== Bill Embedding Script ==="
@@ -75,5 +75,5 @@ while true; do
   OFFSET=$NEXT_OFFSET
 
   # Pause between batches (longer than resync since each bill hits NYS API + OpenAI)
-  sleep 3
+  sleep 1
 done

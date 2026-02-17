@@ -67,12 +67,35 @@ export function EmailLetterSheet({
     return '';
   };
 
+  // Clean up AI-generated text for email body
+  const cleanEmailBody = (text: string): string => {
+    let cleaned = text;
+    // Strip markdown link syntax [text](url) → text
+    cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    // Strip everything before "Dear " (AI preamble)
+    const dearIndex = cleaned.indexOf('Dear ');
+    if (dearIndex > 0) {
+      cleaned = cleaned.substring(dearIndex);
+    }
+    // Strip everything after "Sincerely," + name line (AI footer advice)
+    const sincerelyMatch = cleaned.match(/Sincerely,?\s*\n\s*\[?[^\]\n]+\]?\s*\n/);
+    if (sincerelyMatch) {
+      const endIndex = sincerelyMatch.index! + sincerelyMatch[0].length;
+      cleaned = cleaned.substring(0, endIndex);
+    }
+    // Remove "---" separators
+    cleaned = cleaned.replace(/^---\s*$/gm, '');
+    // Collapse excessive blank lines
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+    return cleaned.trim();
+  };
+
   // Fetch sponsors when sheet opens
   useEffect(() => {
     if (isOpen && billNumber) {
       fetchSponsors();
       setSubject(`Support for ${billNumber} - ${billTitle}`);
-      setLetterBody(extractText(messageContent));
+      setLetterBody(cleanEmailBody(extractText(messageContent)));
     } else {
       setCommitteeMembers([]);
       setCommitteeName("");
@@ -126,17 +149,40 @@ export function EmailLetterSheet({
 
       // Fetch committee members if the bill has a committee
       if (billData.committee) {
-        // Bills store "Senate Consumer Affairs and Protection" but Committees
-        // store "Consumer Affairs and Protection" (no chamber prefix)
+        // Bills store full NYS API name (e.g. "Senate Consumer Affairs and Protection")
+        // but Committees table may use a shorter name (e.g. "Consumer Protection").
+        // Try exact match first, then fall back to matching first+last key words.
         const strippedCommittee = billData.committee
           .replace(/^(Senate|Assembly)\s+/i, "");
+        const chamber = billData.committee.match(/^(Senate|Assembly)\s/i)?.[1] || "";
 
-        const { data: committeeData } = await supabase
+        let { data: committeeData } = await supabase
           .from("Committees")
           .select("committee_name, committee_members")
           .ilike("committee_name", `%${strippedCommittee}%`)
           .limit(1)
           .maybeSingle();
+
+        // Fallback: match on key words (first and last significant word)
+        if (!committeeData) {
+          const words = strippedCommittee.split(/\s+/)
+            .filter((w: string) => !["and", "of", "the", "on", "for", "in"].includes(w.toLowerCase()));
+          if (words.length >= 2) {
+            const firstWord = words[0];
+            const lastWord = words[words.length - 1];
+            let query = supabase
+              .from("Committees")
+              .select("committee_name, committee_members")
+              .ilike("committee_name", `%${firstWord}%`)
+              .ilike("committee_name", `%${lastWord}%`)
+              .limit(1);
+            if (chamber) {
+              query = query.ilike("chamber", `%${chamber}%`);
+            }
+            const { data: fallbackData } = await query.maybeSingle();
+            committeeData = fallbackData;
+          }
+        }
 
         if (committeeData && committeeData.committee_members) {
           setCommitteeName(committeeData.committee_name || "");

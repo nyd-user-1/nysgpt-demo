@@ -322,14 +322,14 @@ export function ChatResponseFooter({
   const handleSupportLetter = () => {
     if (onSendMessage && hasBills) {
       const billNumber = bills[0].bill_number;
-      onSendMessage(`Can you help me write a letter in support of ${billNumber}?`);
+      onSendMessage(`Write a brief email expressing support for ${billNumber}. Just the email body — start with "Dear [Sponsor Name]," and end with "Sincerely, [Your Name]". No address blocks, headers, or preamble.`);
     }
   };
 
   const handleOppositionLetter = () => {
     if (onSendMessage && hasBills) {
       const billNumber = bills[0].bill_number;
-      onSendMessage(`Can you help me write a letter opposing ${billNumber}?`);
+      onSendMessage(`Write a brief email expressing opposition to ${billNumber}. Just the email body — start with "Dear [Sponsor Name]," and end with "Sincerely, [Your Name]". No address blocks, headers, or preamble.`);
     }
   };
 
@@ -480,13 +480,13 @@ export function ChatResponseFooter({
               {hasBills && onSendMessage && (
                 <DropdownMenuItem onClick={handleSupportLetter} className="focus:bg-muted focus:text-foreground">
                   <ThumbsUp className="h-4 w-4 mr-2" />
-                  Write support letter
+                  Email support
                 </DropdownMenuItem>
               )}
               {hasBills && onSendMessage && (
                 <DropdownMenuItem onClick={handleOppositionLetter} className="focus:bg-muted focus:text-foreground">
                   <ThumbsDown className="h-4 w-4 mr-2" />
-                  Write opposition letter
+                  Email opposition
                 </DropdownMenuItem>
               )}
               {hasBills && (
