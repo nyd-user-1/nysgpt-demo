@@ -189,11 +189,21 @@ function formatNYSDataForContext(nysData: any) {
   if (nysData.bills) {
     contextText += 'CURRENT BILLS FROM NYS API:\n';
     nysData.bills.forEach((bill: any, index: number) => {
-      contextText += `${index + 1}. BILL ${bill.result?.printNo || bill.result?.basePrintNo}: ${bill.result?.title || 'No title'}\n`;
-      contextText += `   Current Status: ${bill.result?.status?.statusDesc || 'Unknown'}\n`;
-      contextText += `   Primary Sponsor: ${bill.result?.sponsor?.member?.shortName || 'Unknown'}\n`;
-      if (bill.result?.status?.committeeName) {
-        contextText += `   Committee: ${bill.result.status.committeeName}\n`;
+      const b = bill.result || bill;
+      contextText += `${index + 1}. BILL ${b.printNo || b.basePrintNo}: ${b.title || 'No title'}\n`;
+      contextText += `   Current Status: ${b.status?.statusDesc || 'Unknown'}\n`;
+      contextText += `   Primary Sponsor: ${b.sponsor?.member?.shortName || 'Unknown'}\n`;
+      if (b.status?.committeeName) {
+        contextText += `   Committee: ${b.status.committeeName}\n`;
+      }
+      // Extract companion/same-as bills from amendments
+      const amendments = b.amendments?.items;
+      if (amendments) {
+        const latestVersion = Object.keys(amendments).pop();
+        const sameAs = latestVersion ? amendments[latestVersion]?.sameAs?.items : null;
+        if (sameAs && sameAs.length > 0) {
+          contextText += `   Companion Bill(s) (Same-As): ${sameAs.map((s: any) => s.printNo || s.basePrintNo).join(', ')}\n`;
+        }
       }
       contextText += '\n';
     });
@@ -575,8 +585,9 @@ serve(async (req) => {
       console.log(`Direct bill chunks lookup found ${billChunksResults?.length || 0} chunks`);
     }
 
-    // For non-streaming, also wait for NYS API data
-    if (!stream && nysDataPromise) {
+    // Wait for NYS API data when: non-streaming, OR bill-specific query (for companion bill info)
+    const hasBillNumber = !!prompt.match(/[ASK]\d{1,}/gi);
+    if (nysDataPromise && (!stream || hasBillNumber)) {
       nysData = await nysDataPromise;
       console.log(`NYS API search found ${nysData?.bills?.length || 0} bills`);
     } else if (shouldSkipNYSData) {

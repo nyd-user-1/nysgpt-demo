@@ -281,8 +281,15 @@ function formatNYSDataForContext(nysData) {
       if (bill.status?.actionDate) {
         contextText += `   Last Action Date: ${bill.status.actionDate}\n`;
       }
-      if (bill.amendments?.items && Object.keys(bill.amendments.items).length > 0) {
-        contextText += `   Amendments: ${Object.keys(bill.amendments.items).join(', ')}\n`;
+      // Extract companion/same-as bills from amendments
+      if (bill.amendments?.items) {
+        const versionKeys = Object.keys(bill.amendments.items);
+        contextText += `   Amendments: ${versionKeys.join(', ')}\n`;
+        const latestVersion = versionKeys[versionKeys.length - 1];
+        const sameAs = latestVersion ? bill.amendments.items[latestVersion]?.sameAs?.items : null;
+        if (sameAs && sameAs.length > 0) {
+          contextText += `   Companion Bill(s) (Same-As): ${sameAs.map((s: any) => s.printNo || s.basePrintNo).join(', ')}\n`;
+        }
       }
       contextText += '\n';
     });
@@ -757,8 +764,9 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
       console.log(`Direct bill chunks lookup found ${billChunksResults?.length || 0} chunks`);
     }
 
-    // For non-streaming, also wait for NYS API data
-    if (!stream && nysDataPromise) {
+    // Wait for NYS API data when: non-streaming, OR bill-specific query (for companion bill info)
+    const hasBillNumber = !!searchQuery.match(/[ASK]\d{1,}/gi);
+    if (nysDataPromise && (!stream || hasBillNumber)) {
       nysData = await nysDataPromise;
       console.log(`NYS API search completed`);
     }
