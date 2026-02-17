@@ -52,6 +52,8 @@ serve(async (req) => {
       const batchSize = requestBody.batchSize || 50;
       const offset = requestBody.offset || 0;
       return await resyncExistingBills(sessionYear || getCurrentSessionYear(), batchSize, offset);
+    } else if (action === 'add-bill' && billNumber) {
+      return await addNewBill(billNumber, sessionYear || getCurrentSessionYear());
     } else if (action === 'resync-bill' && billNumber) {
       return await resyncSingleBill(billNumber, sessionYear || getCurrentSessionYear());
     } else if (action === 'get-progress') {
@@ -709,6 +711,41 @@ async function syncAllBillsForSession(supabase: any, sessionYear: number) {
     console.error("Full bill sync error:", error);
     throw error;
   }
+}
+
+// Add a brand-new bill by fetching it from the NYS API and upserting into the database
+async function addNewBill(billNumber: string, sessionYear: number) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  _peopleCache = null;
+
+  const normalized = normalizeBillNumber(billNumber);
+  sessionYear = sessionYear % 2 === 1 ? sessionYear : sessionYear - 1;
+
+  // Fetch full bill from NYS API
+  const billUrl = `https://legislation.nysenate.gov/api/3/bills/${sessionYear}/${normalized}?key=${nysApiKey}`;
+  console.log(`Adding new bill: ${normalized} (${sessionYear})`);
+  const billResponse = await fetch(billUrl);
+  if (!billResponse.ok) throw new Error(`NYS API error: ${billResponse.status}`);
+  const billData = await billResponse.json();
+  if (!billData.success || !billData.result) throw new Error("Invalid bill data from API");
+
+  const bill = billData.result;
+  const result = await upsertBill(supabase, bill, sessionYear);
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      billNumber: normalized,
+      sessionYear,
+      title: bill.title,
+      inserted: result.inserted,
+      updated: result.updated,
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
 }
 
 // Re-sync a single bill by bill number
