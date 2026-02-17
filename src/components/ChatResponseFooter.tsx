@@ -480,13 +480,13 @@ export function ChatResponseFooter({
               {hasBills && onSendMessage && (
                 <DropdownMenuItem onClick={handleSupportLetter} className="focus:bg-muted focus:text-foreground">
                   <ThumbsUp className="h-4 w-4 mr-2" />
-                  Email support
+                  Support Letter
                 </DropdownMenuItem>
               )}
               {hasBills && onSendMessage && (
                 <DropdownMenuItem onClick={handleOppositionLetter} className="focus:bg-muted focus:text-foreground">
                   <ThumbsDown className="h-4 w-4 mr-2" />
-                  Email opposition
+                  Opposition Letter
                 </DropdownMenuItem>
               )}
               {hasBills && (

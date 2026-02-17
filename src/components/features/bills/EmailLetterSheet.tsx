@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, ReactNode } from "react";
-import { Mail, Users, Building2, ExternalLink, Loader2 } from "lucide-react";
+import { Mail, Users, ExternalLink, Loader2 } from "lucide-react";
 import { slugToNamePattern } from "@/utils/memberSlug";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,11 +77,10 @@ export function EmailLetterSheet({
     if (dearIndex > 0) {
       cleaned = cleaned.substring(dearIndex);
     }
-    // Strip everything after "Sincerely," + name line (AI footer advice)
-    const sincerelyMatch = cleaned.match(/Sincerely,?\s*\n\s*\[?[^\]\n]+\]?\s*\n/);
-    if (sincerelyMatch) {
-      const endIndex = sincerelyMatch.index! + sincerelyMatch[0].length;
-      cleaned = cleaned.substring(0, endIndex);
+    // Strip everything after "Sincerely," (remove [Your Name] and any footer advice)
+    const sincerelyIndex = cleaned.indexOf('Sincerely');
+    if (sincerelyIndex >= 0) {
+      cleaned = cleaned.substring(0, sincerelyIndex + 'Sincerely,'.length);
     }
     // Remove "---" separators
     cleaned = cleaned.replace(/^---\s*$/gm, '');
@@ -364,7 +363,6 @@ export function EmailLetterSheet({
                     htmlFor="cc-committee"
                     className="flex items-center gap-2 cursor-pointer"
                   >
-                    <Building2 className="h-4 w-4" />
                     CC committee members ({committeeMembers.length})
                   </Label>
                 </div>
