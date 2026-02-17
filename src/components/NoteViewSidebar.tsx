@@ -33,6 +33,7 @@ import {
   CirclePlus,
   Sparkles,
   Briefcase,
+  Play,
   ArrowUpRight,
   Zap,
 } from "lucide-react";
@@ -941,6 +942,10 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
               <DropdownMenuItem onClick={() => { navigate('/use-cases'); onClose?.(); }}>
                 <Briefcase className="h-4 w-4 mr-2" />
                 Use Cases
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { navigate('/video'); onClose?.(); }}>
+                <Play className="h-4 w-4 mr-2" />
+                Video
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />

@@ -44,6 +44,7 @@ const Academy = lazyRetry(() => import("./pages/Academy"));
 const Features = lazyRetry(() => import("./pages/Features"));
 const AIFluency = lazyRetry(() => import("./pages/AIFluency"));
 const UseCases = lazyRetry(() => import("./pages/UseCases"));
+const Video = lazyRetry(() => import("./pages/Video"));
 const UseCasesBills = lazyRetry(() => import("./pages/UseCasesBills"));
 const UseCasesCommittees = lazyRetry(() => import("./pages/UseCasesCommittees"));
 const UseCasesMembers = lazyRetry(() => import("./pages/UseCasesMembers"));
@@ -170,6 +171,7 @@ const App = () => {
                   <Route path="/use-cases/members" element={<UseCasesMembers />} />
                   <Route path="/use-cases/policy" element={<UseCasesPolicy />} />
                   <Route path="/use-cases/departments" element={<UseCasesDepartments />} />
+                  <Route path="/video" element={<Video />} />
                   <Route path="/nonprofits" element={<Nonprofits />} />
                   <Route path="/nonprofits/economic-advocacy" element={<NonprofitEconomicAdvocacy />} />
                   <Route path="/nonprofits/environmental-advocacy" element={<NonprofitEnvironmentalAdvocacy />} />
