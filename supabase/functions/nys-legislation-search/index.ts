@@ -52,6 +52,8 @@ serve(async (req) => {
       const batchSize = requestBody.batchSize || 50;
       const offset = requestBody.offset || 0;
       return await resyncExistingBills(sessionYear || getCurrentSessionYear(), batchSize, offset);
+    } else if (action === 'diagnose-sync') {
+      return await diagnoseSyncEndpoints(sessionYear || getCurrentSessionYear());
     } else if (action === 'add-bill' && billNumber) {
       return await addNewBill(billNumber, sessionYear || getCurrentSessionYear());
     } else if (action === 'resync-bill' && billNumber) {
@@ -499,8 +501,11 @@ async function syncRecentBills(sessionYear: number) {
   let errorCount = 0;
   const errors: any[] = [];
 
+  // Normalize session year
+  sessionYear = sessionYear % 2 === 1 ? sessionYear : sessionYear - 1;
+
   try {
-    console.log(`Starting bill sync for session year ${sessionYear}...`);
+    console.log(`Starting incremental bill sync for session year ${sessionYear}...`);
 
     // Calculate time range for recent updates (last 24 hours to ensure no bills are missed)
     const toDateTime = new Date().toISOString().replace(/\.\d{3}Z$/, '');
@@ -508,35 +513,67 @@ async function syncRecentBills(sessionYear: number) {
     const fromDateTime = fromDate.toISOString().replace(/\.\d{3}Z$/, '');
 
     // Fetch recent bill updates from NYS API
-    const updatesUrl = `https://legislation.nysenate.gov/api/3/bills/${sessionYear}/updates/${fromDateTime}/${toDateTime}?key=${nysApiKey}&limit=1000`;
+    // Note: updates endpoint is NOT scoped by session year — it's /api/3/bills/updates/{from}/{to}
+    const updatesUrl = `https://legislation.nysenate.gov/api/3/bills/updates/${fromDateTime}/${toDateTime}?key=${nysApiKey}&limit=1000`;
     console.log("Fetching recent bill updates from:", updatesUrl.replace(nysApiKey!, "REDACTED"));
 
     const updatesResponse = await fetch(updatesUrl);
 
     if (!updatesResponse.ok) {
-      // If updates endpoint fails, fall back to fetching all bills
-      console.log("Updates endpoint failed, falling back to all bills...");
-      return await syncAllBillsForSession(supabase, sessionYear);
+      // Log the failure but do NOT fall back to syncing all 18K bills
+      const statusText = updatesResponse.statusText;
+      console.warn(`Updates endpoint returned ${updatesResponse.status} ${statusText}`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sessionYear,
+          method: "updates",
+          message: `Updates endpoint returned HTTP ${updatesResponse.status}. Will retry next hour.`,
+          processed: 0,
+          duration: `${(Date.now() - startTime) / 1000}s`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const updatesData = await updatesResponse.json();
 
     if (!updatesData.success) {
-      console.log("Updates API returned error, falling back to all bills...");
-      return await syncAllBillsForSession(supabase, sessionYear);
+      console.warn("Updates API returned error:", updatesData.message);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sessionYear,
+          method: "updates",
+          message: `Updates API error: ${updatesData.message}. Will retry next hour.`,
+          processed: 0,
+          duration: `${(Date.now() - startTime) / 1000}s`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const updates = updatesData.result?.items || [];
     console.log(`Found ${updates.length} recent bill updates`);
 
     if (updates.length === 0) {
-      // No recent updates, do a full sync of the first page
-      return await syncAllBillsForSession(supabase, sessionYear);
+      // No recent updates — this is normal, just report it
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sessionYear,
+          method: "updates",
+          message: "No bill updates in the last 24 hours.",
+          processed: 0,
+          duration: `${(Date.now() - startTime) / 1000}s`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Extract unique bill IDs from updates
     const billIds = [...new Set(updates.map((u: any) => u.id?.basePrintNo || u.basePrintNo).filter(Boolean))];
-    console.log(`Processing ${billIds.length} unique bills...`);
+    console.log(`Processing ${billIds.length} unique bills from updates...`);
 
     // Fetch and sync each updated bill
     for (const billId of billIds) {
@@ -585,7 +622,7 @@ async function syncRecentBills(sessionYear: number) {
         updated: updatedCount,
         errors: errorCount,
         duration: `${duration}s`,
-        errorDetails: errors.slice(0, 10) // Only return first 10 errors
+        errorDetails: errors.slice(0, 10)
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -711,6 +748,118 @@ async function syncAllBillsForSession(supabase: any, sessionYear: number) {
     console.error("Full bill sync error:", error);
     throw error;
   }
+}
+
+// Diagnose why sync endpoints might be failing
+async function diagnoseSyncEndpoints(sessionYear: number) {
+  sessionYear = sessionYear % 2 === 1 ? sessionYear : sessionYear - 1;
+  const results: any = {
+    sessionYear,
+    apiKeyPresent: !!nysApiKey,
+    apiKeyPrefix: nysApiKey ? nysApiKey.substring(0, 4) + '...' : null,
+    timestamp: new Date().toISOString(),
+    tests: {}
+  };
+
+  // Test 1: API health check (no key, should return 401 if API is reachable)
+  try {
+    const res = await fetch('https://legislation.nysenate.gov/api/3/bills/2025/S1');
+    results.tests.apiReachable = { status: res.status, reachable: true };
+  } catch (e) { results.tests.apiReachable = { reachable: false, error: e.message }; }
+
+  // Test 2: Direct bill lookup for S1 (session 2025)
+  try {
+    const url = `https://legislation.nysenate.gov/api/3/bills/${sessionYear}/S1?key=${nysApiKey}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    results.tests.directLookup_S1 = { status: res.status, ok: res.ok };
+    try {
+      const data = JSON.parse(text);
+      results.tests.directLookup_S1.success = data.success;
+      results.tests.directLookup_S1.billTitle = data.result?.title?.substring(0, 80);
+      results.tests.directLookup_S1.responseType = data.responseType;
+      if (!data.success) results.tests.directLookup_S1.message = data.message;
+    } catch { results.tests.directLookup_S1.rawBody = text.substring(0, 300); }
+  } catch (e) { results.tests.directLookup_S1 = { error: e.message }; }
+
+  // Test 3: Direct lookup for a high-numbered bill (S8616, recently added)
+  try {
+    const url = `https://legislation.nysenate.gov/api/3/bills/${sessionYear}/S8616?key=${nysApiKey}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    results.tests.directLookup_S8616 = { status: res.status, ok: res.ok };
+    try {
+      const data = JSON.parse(text);
+      results.tests.directLookup_S8616.success = data.success;
+      results.tests.directLookup_S8616.billTitle = data.result?.title?.substring(0, 80);
+      if (!data.success) results.tests.directLookup_S8616.message = data.message;
+    } catch { results.tests.directLookup_S8616.rawBody = text.substring(0, 300); }
+  } catch (e) { results.tests.directLookup_S8616 = { error: e.message }; }
+
+  // Test 4: Bills listing
+  try {
+    const url = `https://legislation.nysenate.gov/api/3/bills/${sessionYear}?key=${nysApiKey}&limit=3&offset=0`;
+    const res = await fetch(url);
+    const text = await res.text();
+    results.tests.billsListing = { status: res.status, ok: res.ok };
+    try {
+      const data = JSON.parse(text);
+      results.tests.billsListing.success = data.success;
+      results.tests.billsListing.totalItems = data.result?.size || data.result?.total || 0;
+      results.tests.billsListing.itemCount = data.result?.items?.length || 0;
+      results.tests.billsListing.firstItem = data.result?.items?.[0]?.basePrintNo || null;
+      if (!data.success) results.tests.billsListing.message = data.message;
+    } catch { results.tests.billsListing.rawBody = text.substring(0, 300); }
+  } catch (e) { results.tests.billsListing = { error: e.message }; }
+
+  // Test 5: Updates endpoint (this is what the cron uses)
+  // Correct URL: /api/3/bills/updates/{from}/{to} — NOT scoped by session year
+  try {
+    const to = new Date().toISOString().replace(/\.\d{3}Z$/, '');
+    const from = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, '');
+    const url = `https://legislation.nysenate.gov/api/3/bills/updates/${from}/${to}?key=${nysApiKey}&limit=5`;
+    const res = await fetch(url);
+    const text = await res.text();
+    results.tests.updatesEndpoint = { status: res.status, ok: res.ok, from, to };
+    try {
+      const data = JSON.parse(text);
+      results.tests.updatesEndpoint.success = data.success;
+      results.tests.updatesEndpoint.totalItems = data.result?.size || data.result?.total || 0;
+      results.tests.updatesEndpoint.itemCount = data.result?.items?.length || 0;
+      if (!data.success) results.tests.updatesEndpoint.message = data.message;
+    } catch { results.tests.updatesEndpoint.rawBody = text.substring(0, 300); }
+  } catch (e) { results.tests.updatesEndpoint = { error: e.message }; }
+
+  // Test 6: Search endpoint (alternative way to find bills)
+  try {
+    const url = `https://legislation.nysenate.gov/api/3/bills/${sessionYear}/search?term=*&limit=3&key=${nysApiKey}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    results.tests.searchEndpoint = { status: res.status, ok: res.ok };
+    try {
+      const data = JSON.parse(text);
+      results.tests.searchEndpoint.success = data.success;
+      results.tests.searchEndpoint.totalItems = data.total || data.result?.size || 0;
+      results.tests.searchEndpoint.itemCount = data.result?.items?.length || 0;
+      if (!data.success) results.tests.searchEndpoint.message = data.message;
+    } catch { results.tests.searchEndpoint.rawBody = text.substring(0, 300); }
+  } catch (e) { results.tests.searchEndpoint = { error: e.message }; }
+
+  // Test 7: Try session 2023 to see if older data works
+  try {
+    const url = `https://legislation.nysenate.gov/api/3/bills/2023/S1?key=${nysApiKey}`;
+    const res = await fetch(url);
+    results.tests.directLookup_2023_S1 = { status: res.status, ok: res.ok };
+    if (res.ok) {
+      const data = await res.json();
+      results.tests.directLookup_2023_S1.success = data.success;
+      results.tests.directLookup_2023_S1.billTitle = data.result?.title?.substring(0, 80);
+    }
+  } catch (e) { results.tests.directLookup_2023_S1 = { error: e.message }; }
+
+  return new Response(JSON.stringify(results, null, 2), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
 // Add a brand-new bill by fetching it from the NYS API and upserting into the database
@@ -939,16 +1088,31 @@ async function upsertBill(supabase: any, bill: any, sessionYear: number): Promis
   const status = bill.status || {};
   const currentCommittee = status.committeeName || bill.currentCommittee?.name || null;
 
-  // Generate a unique bill_id from the basePrintNo and session
-  // Using a hash approach: session * 1000000 + numeric part of basePrintNo
-  const billNumberMatch = bill.basePrintNo?.match(/[A-Z]?(\d+)/);
-  const billNumericPart = billNumberMatch ? parseInt(billNumberMatch[1], 10) : 0;
-  const generatedBillId = sessionYear * 1000000 + billNumericPart;
-
   const normalizedBillNumber = normalizeBillNumber(bill.basePrintNo || bill.printNo);
 
+  // Look up existing bill by the REAL unique key: (bill_number, session_id)
+  const { data: existing } = await supabase
+    .from("Bills")
+    .select("bill_id")
+    .eq("bill_number", normalizedBillNumber)
+    .eq("session_id", sessionYear)
+    .single();
+
+  // Use existing bill_id if the bill is already in the DB, otherwise generate one
+  // Generation accounts for chamber: S bills use base, A bills add 500000 offset
+  let billId: number;
+  if (existing) {
+    billId = existing.bill_id;
+  } else {
+    const billNumberMatch = bill.basePrintNo?.match(/^([A-Z])(\d+)/);
+    const prefix = billNumberMatch ? billNumberMatch[1] : '';
+    const numericPart = billNumberMatch ? parseInt(billNumberMatch[2], 10) : 0;
+    const chamberOffset = prefix === 'A' ? 500000 : 0;
+    billId = sessionYear * 1000000 + chamberOffset + numericPart;
+  }
+
   const billRecord = {
-    bill_id: generatedBillId,
+    bill_id: billId,
     bill_number: normalizedBillNumber,
     title: bill.title || "Untitled Bill",
     description: bill.summary || bill.title || null,
@@ -964,14 +1128,7 @@ async function upsertBill(supabase: any, bill: any, sessionYear: number): Promis
     status_date: status.actionDate || null
   };
 
-  // Check if bill exists
-  const { data: existing } = await supabase
-    .from("Bills")
-    .select("bill_id")
-    .eq("bill_id", generatedBillId)
-    .single();
-
-  // Upsert bill record
+  // Upsert using bill_id (which now matches the existing row if one exists)
   const { error } = await supabase
     .from("Bills")
     .upsert(billRecord, { onConflict: "bill_id" });
@@ -981,9 +1138,9 @@ async function upsertBill(supabase: any, bill: any, sessionYear: number): Promis
   }
 
   // Sync sponsors, history, and votes from the API response
-  await syncSponsors(supabase, bill, generatedBillId);
-  await syncHistory(supabase, bill, generatedBillId);
-  await syncVotes(supabase, bill, generatedBillId);
+  await syncSponsors(supabase, bill, billId);
+  await syncHistory(supabase, bill, billId);
+  await syncVotes(supabase, bill, billId);
 
   console.log(`✓ Synced bill ${bill.basePrintNo}: ${bill.title?.substring(0, 50)}...`);
 
