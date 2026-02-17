@@ -127,6 +127,9 @@ export type Database = {
           bill_id: number | null
           member_id: number | null
           committee_id: number | null
+          is_published: boolean
+          messages: unknown | null
+          description: string | null
           created_at: string
           updated_at: string
         }
@@ -140,6 +143,9 @@ export type Database = {
           bill_id?: number | null
           member_id?: number | null
           committee_id?: number | null
+          is_published?: boolean
+          messages?: unknown | null
+          description?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -153,6 +159,9 @@ export type Database = {
           bill_id?: number | null
           member_id?: number | null
           committee_id?: number | null
+          is_published?: boolean
+          messages?: unknown | null
+          description?: string | null
           created_at?: string
           updated_at?: string
         }

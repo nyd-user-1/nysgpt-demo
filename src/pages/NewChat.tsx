@@ -1961,6 +1961,7 @@ const NewChat = () => {
                         messageId={message.id}
                         feedback={message.feedback}
                         onFeedback={handleFeedback}
+                        allMessages={messages.filter(m => !m.isStreaming).map(m => ({ role: m.role, content: m.content }))}
                       />
                     )}
                   </div>

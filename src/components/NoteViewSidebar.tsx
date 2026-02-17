@@ -36,6 +36,7 @@ import {
   Play,
   ArrowUpRight,
   Zap,
+  Newspaper,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -946,6 +947,10 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
               <DropdownMenuItem onClick={() => { navigate('/video'); onClose?.(); }}>
                 <Play className="h-4 w-4 mr-2" />
                 Video
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { navigate('/blog'); onClose?.(); }}>
+                <Newspaper className="h-4 w-4 mr-2" />
+                Blog
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />

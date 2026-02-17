@@ -5,7 +5,8 @@
 
 import { useState, ReactNode, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThumbsUp, ThumbsDown, Copy, Check, Mail, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Copy, Check, Mail, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen, Newspaper } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useExcerptPersistence } from "@/hooks/useExcerptPersistence";
 import { useNotePersistence } from "@/hooks/useNotePersistence";
 import { useBillText } from "@/hooks/useBillText";
@@ -28,6 +29,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { PerplexityCitation } from "@/utils/citationParser";
 import { BillPDFSheet } from "@/components/features/bills/BillPDFSheet";
 import { EmailLetterSheet } from "@/components/features/bills/EmailLetterSheet";
@@ -64,6 +75,8 @@ interface ChatResponseFooterProps {
   messageId?: string;
   feedback?: 'good' | 'bad' | null;
   onFeedback?: (messageId: string, feedback: 'good' | 'bad' | null) => void;
+  // All messages in the session (for blog publish)
+  allMessages?: Array<{ role: string; content: string }>;
 }
 
 export function ChatResponseFooter({
@@ -81,16 +94,23 @@ export function ChatResponseFooter({
   onExcerptCreated,
   messageId,
   feedback,
-  onFeedback
+  onFeedback,
+  allMessages
 }: ChatResponseFooterProps) {
   const hasBills = bills && bills.length > 0;
   const hasSources = sources && sources.length > 0;
   const hasRelated = relatedBills && relatedBills.length > 0;
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { createExcerpt, loading: excerptLoading } = useExcerptPersistence();
+  const { isAdmin } = useAuth();
+  const { createExcerpt, publishChatAsBlog, loading: excerptLoading } = useExcerptPersistence();
   const { createNote, loading: noteLoading } = useNotePersistence();
   const [excerptSaved, setExcerptSaved] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [publishSaved, setPublishSaved] = useState(false);
+  const [publishTitle, setPublishTitle] = useState('');
+  const [publishDescription, setPublishDescription] = useState('');
 
   const [pdfOpen, setPdfOpen] = useState(false);
   const [selectedBillNumber, setSelectedBillNumber] = useState<string>("");
@@ -417,6 +437,45 @@ export function ChatResponseFooter({
     }
   };
 
+  const handleOpenPublishDialog = () => {
+    // Pre-fill title from first user message (truncated to 80 chars)
+    const firstUserMsg = allMessages?.find(m => m.role === 'user')?.content || userMessage || '';
+    const defaultTitle = firstUserMsg.length > 80 ? firstUserMsg.substring(0, 80) + '...' : firstUserMsg;
+
+    // Pre-fill description from first assistant message (truncated to 200 chars)
+    const firstAssistantMsg = allMessages?.find(m => m.role === 'assistant')?.content || assistantMessageText || '';
+    const defaultDesc = firstAssistantMsg.length > 200 ? firstAssistantMsg.substring(0, 200) + '...' : firstAssistantMsg;
+
+    setPublishTitle(defaultTitle);
+    setPublishDescription(defaultDesc);
+    setPublishDialogOpen(true);
+  };
+
+  const handlePublishBlog = async () => {
+    if (!allMessages || allMessages.length === 0) {
+      toast({ title: "Cannot publish", description: "No messages to publish", variant: "destructive" });
+      return;
+    }
+
+    setPublishLoading(true);
+    const post = await publishChatAsBlog({
+      parentSessionId,
+      title: publishTitle,
+      description: publishDescription,
+      messages: allMessages,
+    });
+    setPublishLoading(false);
+
+    if (post) {
+      setPublishSaved(true);
+      setPublishDialogOpen(false);
+      toast({ title: "Published!", description: "Chat published as blog post" });
+      setTimeout(() => setPublishSaved(false), 3000);
+    } else {
+      toast({ title: "Failed to publish", description: "Please try again", variant: "destructive" });
+    }
+  };
+
   // Auto-scroll to bill text when toggled on
   useEffect(() => {
     if (showBillText && billTextRef.current) {
@@ -505,6 +564,18 @@ export function ChatResponseFooter({
                 )}
                 {excerptSaved ? "Excerpt saved" : "Create Excerpt"}
               </DropdownMenuItem>
+              {isAdmin && allMessages && allMessages.length > 0 && (
+                <DropdownMenuItem onClick={handleOpenPublishDialog} disabled={publishLoading || publishSaved} className="focus:bg-muted focus:text-foreground">
+                  {publishLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : publishSaved ? (
+                    <Check className="h-4 w-4 mr-2 text-green-600" />
+                  ) : (
+                    <Newspaper className="h-4 w-4 mr-2" />
+                  )}
+                  {publishSaved ? "Published" : "Publish as Blog"}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={handleOpenAsNote} disabled={noteLoading} className="focus:bg-muted focus:text-foreground">
                 {noteLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -641,6 +712,46 @@ export function ChatResponseFooter({
           messageContent={messageContent}
         />
       )}
+
+      {/* Publish Blog Dialog */}
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Publish as Blog Post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="publish-title">Title</Label>
+              <Input
+                id="publish-title"
+                value={publishTitle}
+                onChange={(e) => setPublishTitle(e.target.value)}
+                placeholder="Blog post title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="publish-description">Description</Label>
+              <Textarea
+                id="publish-description"
+                value={publishDescription}
+                onChange={(e) => setPublishDescription(e.target.value)}
+                placeholder="Short summary for the listing card"
+                rows={3}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This will publish the full chat ({allMessages?.length || 0} messages) as a public blog post.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handlePublishBlog} disabled={publishLoading || !publishTitle.trim()}>
+              {publishLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Publish
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
