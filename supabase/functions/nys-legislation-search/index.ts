@@ -500,9 +500,9 @@ async function syncRecentBills(sessionYear: number) {
   try {
     console.log(`Starting bill sync for session year ${sessionYear}...`);
 
-    // Calculate time range for recent updates (last 2 hours to catch any missed updates)
+    // Calculate time range for recent updates (last 24 hours to ensure no bills are missed)
     const toDateTime = new Date().toISOString().replace(/\.\d{3}Z$/, '');
-    const fromDate = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours ago
+    const fromDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
     const fromDateTime = fromDate.toISOString().replace(/\.\d{3}Z$/, '');
 
     // Fetch recent bill updates from NYS API
