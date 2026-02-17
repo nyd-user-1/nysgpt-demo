@@ -122,7 +122,7 @@ export const BillSummary = ({
   };
 
   return (
-    <Card className="card bg-card rounded-xl shadow-sm border overflow-hidden">
+    <Card className="group card bg-card rounded-xl shadow-sm border overflow-hidden">
       <CardHeader className="card-header px-6 py-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -152,7 +152,7 @@ export const BillSummary = ({
           {onSendToChat && (
             <button
               onClick={onSendToChat}
-              className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-foreground text-background hover:bg-foreground/80 transition-colors"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-foreground text-background hover:bg-foreground/80 transition-all opacity-0 group-hover:opacity-100"
               title="Send to chat"
             >
               <ArrowUp className="h-4 w-4" />
