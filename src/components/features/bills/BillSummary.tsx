@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
 import { generateMemberSlug } from "@/utils/memberSlug";
-import { ThumbsUp, ThumbsDown, Minus, StickyNote, List } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Minus, StickyNote, ArrowUp } from "lucide-react";
 import { ReviewStatus } from "@/hooks/useBillReviews";
 
 type Bill = Tables<"Bills">;
@@ -17,13 +16,15 @@ interface BillSummaryProps {
   sponsors: Sponsor[];
   reviewStatus?: ReviewStatus;
   hasNotes?: boolean;
+  onSendToChat?: (e: React.MouseEvent) => void;
 }
 
 export const BillSummary = ({
   bill,
   sponsors,
   reviewStatus,
-  hasNotes = false
+  hasNotes = false,
+  onSendToChat
 }: BillSummaryProps) => {
   // Determine chamber from bill number (S = Senate, A = Assembly)
   const getChamberFromBillNumber = (billNumber: string | null): 'senate' | 'assembly' | null => {
@@ -148,12 +149,15 @@ export const BillSummary = ({
               )}
             </div>
           </div>
-          <Link to="/bills">
-            <Button variant="outline" size="sm" className="gap-2">
-              <List className="h-4 w-4" />
-              All Bills
-            </Button>
-          </Link>
+          {onSendToChat && (
+            <button
+              onClick={onSendToChat}
+              className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-foreground text-background hover:bg-foreground/80 transition-colors"
+              title="Send to chat"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="card-body p-6">

@@ -485,6 +485,7 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
             sponsors={sponsors}
             reviewStatus={billReview?.review_status}
             hasNotes={notes.length > 0}
+            onSendToChat={handleAIAnalysis}
           />
 
 
