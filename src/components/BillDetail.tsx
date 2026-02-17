@@ -507,10 +507,21 @@ export const BillDetail = ({ bill, onBack }: BillDetailProps) => {
                   </CardHeader>
                   <CardContent className="p-0">
                     <textarea
+                      ref={(el) => {
+                        if (el) {
+                          el.style.height = 'auto';
+                          el.style.height = Math.min(el.scrollHeight, 400) + 'px';
+                        }
+                      }}
                       value={quickNoteText}
-                      onChange={(e) => handleQuickNoteChange(e.target.value)}
+                      onChange={(e) => {
+                        handleQuickNoteChange(e.target.value);
+                        const el = e.target;
+                        el.style.height = 'auto';
+                        el.style.height = Math.min(el.scrollHeight, 400) + 'px';
+                      }}
                       placeholder="Click here to add notes about this bill..."
-                      className="w-full min-h-[100px] max-h-[300px] overflow-y-auto p-6 text-sm bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/60"
+                      className="w-full min-h-[100px] max-h-[400px] overflow-y-auto p-6 text-sm bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/60"
                     />
                   </CardContent>
                 </Card>
