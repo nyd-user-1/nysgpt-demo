@@ -361,6 +361,26 @@ function BillCitationPill({ bill, to }: BillCitationPillProps) {
   );
 }
 
+function slugify(text: string): string {
+  const str = typeof text === 'string' ? text : String(text ?? '');
+  return str
+    .replace(/[*_`]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-');
+}
+
+function extractText(node: ReactNode): string {
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (!node) return '';
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (isValidElement(node)) {
+    return extractText((node.props as { children?: ReactNode }).children);
+  }
+  return '';
+}
+
 interface ChatMarkdownProps {
   children: string;
   bills?: BillCitationData[];
@@ -412,7 +432,7 @@ export function ChatMarkdown({ children, bills }: ChatMarkdownProps) {
           </h1>
         ),
         h2: ({ children }) => (
-          <h2 className="text-lg font-semibold mb-2 text-foreground">
+          <h2 id={slugify(extractText(children))} className="text-lg font-semibold mb-2 text-foreground">
             {children}
           </h2>
         ),
