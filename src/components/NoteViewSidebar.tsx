@@ -417,18 +417,15 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
         {/* Research Navigation */}
         <div className="px-2 space-y-1">
             {/* Civic Tier Section */}
-            <Collapsible className="group/civic" defaultOpen>
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <Shield className="h-4 w-4" />
-                  <span>Civic Tier</span>
-                </div>
+            <Collapsible className="group/civic">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm font-light text-muted-foreground hover:text-foreground transition-colors">
                 <div className="flex items-center gap-2">
+                  <span>Civic Tier</span>
                   <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">
                     Free
                   </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]/civic:rotate-90" />
                 </div>
+                <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]/civic:rotate-90" />
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 mt-1">
                 <Tooltip>
@@ -530,12 +527,9 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
 
             {/* Pro Tier Section */}
             <Collapsible className="group/pro">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <CirclePlus className="h-4 w-4" />
-                  <span>Pro Tier</span>
-                </div>
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm font-light text-muted-foreground hover:text-foreground transition-colors">
                 <div className="flex items-center gap-2">
+                  <span>Pro Tier</span>
                   <span
                     role="button"
                     onClick={(e) => { e.stopPropagation(); navigate('/plans'); onClose?.(); }}
@@ -543,8 +537,8 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                   >
                     Upgrade
                   </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]/pro:rotate-90" />
                 </div>
+                <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]/pro:rotate-90" />
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 mt-1">
                 {/* Notes */}
