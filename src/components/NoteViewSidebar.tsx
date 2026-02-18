@@ -685,12 +685,12 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
 
         </div>
 
-        {/* Your Notes Section - ABOVE chats */}
+        {/* Notes Section */}
         {recentNotes.length > 0 && (
           <Collapsible className="group/notes mt-4">
             <div className="px-2">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
-                Your Notes
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Notes
                 <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/notes:rotate-90" />
               </CollapsibleTrigger>
             </div>
@@ -777,12 +777,12 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
           </Collapsible>
         )}
 
-        {/* Your Excerpts Section - ABOVE chats */}
+        {/* Excerpts Section */}
         {recentExcerpts.length > 0 && (
           <Collapsible className="group/excerpts mt-2">
             <div className="px-2">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
-                Your Excerpts
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Excerpts
                 <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/excerpts:rotate-90" />
               </CollapsibleTrigger>
             </div>
@@ -807,9 +807,9 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
 
         {/* Your Chats Section - AT BOTTOM for infinite scroll */}
         {recentChats.length > 0 && (
-          <Collapsible className="group/chats mt-2" defaultOpen>
+          <Collapsible className="group/chats mt-2">
             <div className="px-2">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Your Chats
                 <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/chats:rotate-90" />
               </CollapsibleTrigger>
