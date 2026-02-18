@@ -1,34 +1,35 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock3Icon, ArrowRightIcon, Newspaper } from 'lucide-react';
 import { ChatHeader } from '@/components/ChatHeader';
-import { useExcerptPersistence } from '@/hooks/useExcerptPersistence';
+import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { EDITORIAL_POSTS } from '@/data/editorialPosts';
 
-type Excerpt = Tables<'chat_excerpts'>;
+type BlogPost = Tables<'blog_posts'>;
 
 export default function Blog() {
   const navigate = useNavigate();
-  const { fetchPublishedPosts } = useExcerptPersistence();
-  const [posts, setPosts] = useState<Excerpt[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const data = await fetchPublishedPosts();
-      setPosts(data);
+      const { data } = await supabase
+        .from('blog_posts')
+        .select('id, slug, title, description, content, author_name, author_avatar, published_at, created_at, is_published, updated_at')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false });
+      setPosts(data ?? []);
       setLoading(false);
     };
     load();
-  }, [fetchPublishedPosts]);
+  }, []);
 
-  const allPosts = useMemo(() => [...posts, ...EDITORIAL_POSTS], [posts]);
-
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -36,8 +37,8 @@ export default function Blog() {
     });
   };
 
-  const estimateReadTime = (post: Excerpt): string => {
-    const text = post.assistant_message || post.description || '';
+  const estimateReadTime = (post: BlogPost): string => {
+    const text = post.content || post.description || '';
     const words = text.split(/\s+/).length;
     const minutes = Math.max(1, Math.ceil(words / 200));
     return `${minutes} min read`;
@@ -72,7 +73,7 @@ export default function Blog() {
                 </div>
               ))}
             </div>
-          ) : allPosts.length === 0 ? (
+          ) : posts.length === 0 ? (
             <div className="py-12 text-center">
               <Newspaper className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
               <p className="text-muted-foreground">
@@ -81,15 +82,15 @@ export default function Blog() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-              {allPosts.map((post) => (
+              {posts.map((post) => (
                 <article key={post.id} className="space-y-3">
                   <span className="text-muted-foreground text-sm">
-                    {formatDate(post.created_at)}
+                    {formatDate(post.published_at)}
                   </span>
 
                   <h3 className="hover:text-primary text-lg font-semibold tracking-tight transition-colors sm:text-xl">
                     <button
-                      onClick={() => navigate(`/blog/${post.id}`)}
+                      onClick={() => navigate(`/blog/${post.slug}`)}
                       className="text-left"
                     >
                       {post.title}
@@ -112,7 +113,7 @@ export default function Blog() {
                       variant="ghost"
                       size="sm"
                       className="hover:text-primary hover:bg-transparent"
-                      onClick={() => navigate(`/blog/${post.id}`)}
+                      onClick={() => navigate(`/blog/${post.slug}`)}
                     >
                       Continue Reading
                       <ArrowRightIcon className="ml-1 h-4 w-4" />

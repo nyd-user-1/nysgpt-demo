@@ -1,18 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useExcerptPersistence } from "@/hooks/useExcerptPersistence";
+import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { ChevronRight, Home } from "lucide-react";
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatMarkdown } from "@/components/shared/ChatMarkdown";
-import { findEditorialPost } from "@/data/editorialPosts";
 
-type Excerpt = Tables<"chat_excerpts">;
-
-interface BlogMessage {
-  role: string;
-  content: string;
-}
+type BlogPost = Tables<"blog_posts">;
 
 // Simple SVG share icons
 function FacebookIcon({ className }: { className?: string }) {
@@ -42,9 +36,8 @@ function XIcon({ className }: { className?: string }) {
 export default function BlogPost() {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
-  const { fetchPublishedPostById } = useExcerptPersistence();
 
-  const [post, setPost] = useState<Excerpt | null>(null);
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<string>("");
 
@@ -53,23 +46,21 @@ export default function BlogPost() {
       if (!postId) return;
       setLoading(true);
 
-      // Check editorial posts first
-      const editorial = findEditorialPost(postId);
-      if (editorial) {
-        setPost(editorial);
-        setLoading(false);
-        return;
-      }
+      const { data } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .eq("slug", postId)
+        .eq("is_published", true)
+        .single();
 
-      // Fall back to Supabase
-      const data = await fetchPublishedPostById(postId);
       setPost(data);
       setLoading(false);
     };
     load();
-  }, [postId, fetchPublishedPostById]);
+  }, [postId]);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "";
     return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -77,23 +68,7 @@ export default function BlogPost() {
     });
   };
 
-  // Build article body content from messages or description
-  const articleContent = useMemo(() => {
-    if (!post) return "";
-    const messages: BlogMessage[] = Array.isArray(post.messages)
-      ? (post.messages as BlogMessage[])
-      : [];
-
-    if (messages.length > 0) {
-      // Concatenate assistant messages as article body
-      return messages
-        .filter((m) => m.role === "assistant")
-        .map((m) => m.content)
-        .join("\n\n");
-    }
-
-    return post.assistant_message || post.description || "";
-  }, [post]);
+  const articleContent = post?.content || "";
 
   // Extract h2 headings from content for table of contents
   const headings = useMemo(() => {
@@ -123,7 +98,6 @@ export default function BlogPost() {
       { rootMargin: "-80px 0px -60% 0px", threshold: 0.1 }
     );
 
-    // Small delay to let markdown render
     const timer = setTimeout(() => {
       headings.forEach((h) => {
         const el = document.getElementById(h.id);
@@ -190,10 +164,7 @@ export default function BlogPost() {
         <div className="container mx-auto max-w-[1200px] px-4 md:px-6">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
-            <Link
-              to="/"
-              className="hover:text-foreground transition-colors"
-            >
+            <Link to="/" className="hover:text-foreground transition-colors">
               <Home className="h-4 w-4" />
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
@@ -217,15 +188,15 @@ export default function BlogPost() {
           {/* Author + Date */}
           <div className="flex items-center gap-3 mb-10">
             <img
-              src="/nysgpt-avatar.png"
-              alt="NYSgpt"
+              src={post.author_avatar || "/nysgpt-avatar.png"}
+              alt={post.author_name}
               className="h-10 w-10 rounded-full shrink-0"
             />
             <p className="text-muted-foreground text-sm">
               <span className="text-foreground font-medium">
-                NYSgpt Editorial
+                {post.author_name}
               </span>{" "}
-              on {formatDate(post.created_at)}
+              on {formatDate(post.published_at)}
             </p>
           </div>
 
@@ -239,74 +210,72 @@ export default function BlogPost() {
             </article>
 
             {/* Sticky sidebar — desktop only */}
-            {(headings.length > 0 || true) && (
-              <aside className="hidden lg:block w-[220px] shrink-0">
-                <div className="sticky top-[120px] space-y-6">
-                  {headings.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">
-                        On this page
-                      </p>
-                      <ul className="space-y-2">
-                        {headings.map((h) => (
-                          <li key={h.id}>
-                            <a
-                              href={`#${h.id}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                document
-                                  .getElementById(h.id)
-                                  ?.scrollIntoView({ behavior: "smooth" });
-                              }}
-                              className={`text-sm leading-snug transition-colors block ${
-                                activeSection === h.id
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground hover:text-foreground"
-                              }`}
-                            >
-                              {h.text}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Share buttons */}
+            <aside className="hidden lg:block w-[220px] shrink-0">
+              <div className="sticky top-[120px] space-y-6">
+                {headings.length > 0 && (
                   <div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Share this article:
+                    <p className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">
+                      On this page
                     </p>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={shareLinks.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                      >
-                        <FacebookIcon className="h-4 w-4" />
-                      </a>
-                      <a
-                        href={shareLinks.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                      >
-                        <LinkedInIcon className="h-4 w-4" />
-                      </a>
-                      <a
-                        href={shareLinks.x}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                      >
-                        <XIcon className="h-4 w-4" />
-                      </a>
-                    </div>
+                    <ul className="space-y-2">
+                      {headings.map((h) => (
+                        <li key={h.id}>
+                          <a
+                            href={`#${h.id}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              document
+                                .getElementById(h.id)
+                                ?.scrollIntoView({ behavior: "smooth" });
+                            }}
+                            className={`text-sm leading-snug transition-colors block ${
+                              activeSection === h.id
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {h.text}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Share buttons */}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Share this article:
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={shareLinks.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                    >
+                      <FacebookIcon className="h-4 w-4" />
+                    </a>
+                    <a
+                      href={shareLinks.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                    >
+                      <LinkedInIcon className="h-4 w-4" />
+                    </a>
+                    <a
+                      href={shareLinks.x}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-9 w-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </a>
                   </div>
                 </div>
-              </aside>
-            )}
+              </div>
+            </aside>
           </div>
         </div>
       </main>
