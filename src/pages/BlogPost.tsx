@@ -92,7 +92,7 @@ export default function BlogPost() {
         .join("\n\n");
     }
 
-    return post.description || "";
+    return post.assistant_message || post.description || "";
   }, [post]);
 
   // Extract h2 headings from content for table of contents
