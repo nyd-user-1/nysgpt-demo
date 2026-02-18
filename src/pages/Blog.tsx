@@ -4,7 +4,6 @@ import { Clock3Icon, ArrowRight, Newspaper } from 'lucide-react';
 import { ChatHeader } from '@/components/ChatHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 type BlogPost = Tables<'blog_posts'>;
 
@@ -61,18 +60,9 @@ export default function Blog() {
 
           {/* Posts Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardHeader className="pb-3">
-                    <div className="h-4 bg-muted rounded w-1/4" />
-                    <div className="h-6 bg-muted rounded w-3/4 mt-2" />
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="h-4 bg-muted rounded w-full" />
-                    <div className="h-4 bg-muted rounded w-2/3 mt-2" />
-                  </CardContent>
-                </Card>
+                <div key={i} className="h-48 bg-muted/30 rounded-2xl animate-pulse" />
               ))}
             </div>
           ) : posts.length === 0 ? (
@@ -83,43 +73,37 @@ export default function Blog() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {posts.map((post) => (
-                <Card
+                <div
                   key={post.id}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="group bg-muted/30 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col"
                   onClick={() => navigate(`/blog/${post.slug}`)}
                 >
-                  <CardHeader className="pb-3">
-                    <span className="text-muted-foreground text-sm">
-                      {formatDate(post.published_at)}
-                    </span>
-                    <h3 className="font-semibold text-lg leading-tight tracking-tight sm:text-xl pt-1">
-                      {post.title}
-                    </h3>
-                  </CardHeader>
+                  <span className="text-muted-foreground text-sm">
+                    {formatDate(post.published_at)}
+                  </span>
+                  <h3 className="font-semibold text-lg leading-tight tracking-tight sm:text-xl mt-2">
+                    {post.title}
+                  </h3>
 
-                  <CardContent className="pt-0">
-                    <div className="space-y-4">
-                      {post.description && (
-                        <p className="text-muted-foreground text-sm line-clamp-3">
-                          {post.description}
-                        </p>
-                      )}
+                  {post.description && (
+                    <p className="text-muted-foreground text-sm line-clamp-3 mt-3">
+                      {post.description}
+                    </p>
+                  )}
 
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <div className="text-muted-foreground flex items-center text-sm">
-                          <Clock3Icon className="mr-1 h-3 w-3" />
-                          <span>{estimateReadTime(post)}</span>
-                        </div>
-
-                        <div className="h-8 w-8 rounded-full bg-foreground flex items-center justify-center">
-                          <ArrowRight className="h-4 w-4 text-background" />
-                        </div>
-                      </div>
+                  <div className="flex items-center justify-between mt-auto pt-4">
+                    <div className="text-muted-foreground flex items-center text-sm">
+                      <Clock3Icon className="mr-1 h-3 w-3" />
+                      <span>{estimateReadTime(post)}</span>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="w-10 h-10 bg-foreground text-background rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}
