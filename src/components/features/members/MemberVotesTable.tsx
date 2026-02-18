@@ -82,7 +82,7 @@ export const MemberVotesTable = ({ member }: MemberVotesTableProps) => {
 
   const exportPDF = async () => {
     const { default: jsPDF } = await import("jspdf");
-    await import("jspdf-autotable");
+    const { default: autoTable } = await import("jspdf-autotable");
 
     const doc = new jsPDF();
     const memberName = member.name || `${member.first_name || ""} ${member.last_name || ""}`.trim() || "Member";
@@ -94,7 +94,7 @@ export const MemberVotesTable = ({ member }: MemberVotesTableProps) => {
     doc.text(`${filteredAndSorted.length} votes${searchQuery ? ` (filtered: "${searchQuery}")` : ""}`, 14, 25);
     doc.text(`Generated ${new Date().toLocaleDateString()}`, 14, 30);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 36,
       head: [["Bill", "Description", "Date", "Vote"]],
       body: filteredAndSorted.map((v) => [
