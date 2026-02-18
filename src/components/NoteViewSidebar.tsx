@@ -506,6 +506,25 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                     <p>View elected officials</p>
                   </TooltipContent>
                 </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/blog"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/blog") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <Newspaper className="h-4 w-4" />
+                      <span>Journal</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Legislative insights & analysis</p>
+                  </TooltipContent>
+                </Tooltip>
               </CollapsibleContent>
             </Collapsible>
 
