@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock3Icon, ArrowRightIcon, Newspaper } from 'lucide-react';
+import { Clock3Icon, ArrowRight, Newspaper } from 'lucide-react';
 import { ChatHeader } from '@/components/ChatHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 type BlogPost = Tables<'blog_posts'>;
 
@@ -62,15 +61,18 @@ export default function Blog() {
 
           {/* Posts Grid */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="space-y-4 animate-pulse">
-                  <div className="h-4 bg-muted rounded w-1/4" />
-                  <div className="h-6 bg-muted rounded w-3/4" />
-                  <div className="h-4 bg-muted rounded w-full" />
-                  <div className="h-4 bg-muted rounded w-2/3" />
-                  <Separator className="mt-6" />
-                </div>
+                <Card key={i} className="animate-pulse">
+                  <CardHeader className="pb-3">
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-6 bg-muted rounded w-3/4 mt-2" />
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="h-4 bg-muted rounded w-full" />
+                    <div className="h-4 bg-muted rounded w-2/3 mt-2" />
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : posts.length === 0 ? (
@@ -81,47 +83,43 @@ export default function Blog() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {posts.map((post) => (
-                <article key={post.id} className="space-y-3">
-                  <span className="text-muted-foreground text-sm">
-                    {formatDate(post.published_at)}
-                  </span>
-
-                  <h3 className="hover:text-primary text-lg font-semibold tracking-tight transition-colors sm:text-xl">
-                    <button
-                      onClick={() => navigate(`/blog/${post.slug}`)}
-                      className="text-left"
-                    >
+                <Card
+                  key={post.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/blog/${post.slug}`)}
+                >
+                  <CardHeader className="pb-3">
+                    <span className="text-muted-foreground text-sm">
+                      {formatDate(post.published_at)}
+                    </span>
+                    <h3 className="font-semibold text-lg leading-tight tracking-tight sm:text-xl pt-1">
                       {post.title}
-                    </button>
-                  </h3>
+                    </h3>
+                  </CardHeader>
 
-                  {post.description && (
-                    <p className="text-muted-foreground text-sm line-clamp-3">
-                      {post.description}
-                    </p>
-                  )}
+                  <CardContent className="pt-0">
+                    <div className="space-y-4">
+                      {post.description && (
+                        <p className="text-muted-foreground text-sm line-clamp-3">
+                          {post.description}
+                        </p>
+                      )}
 
-                  <div className="flex items-center justify-between pt-3">
-                    <div className="text-muted-foreground flex items-center text-sm">
-                      <Clock3Icon className="mr-1 h-3 w-3" />
-                      <span>{estimateReadTime(post)}</span>
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <div className="text-muted-foreground flex items-center text-sm">
+                          <Clock3Icon className="mr-1 h-3 w-3" />
+                          <span>{estimateReadTime(post)}</span>
+                        </div>
+
+                        <div className="h-8 w-8 rounded-full bg-foreground flex items-center justify-center">
+                          <ArrowRight className="h-4 w-4 text-background" />
+                        </div>
+                      </div>
                     </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:text-primary hover:bg-transparent"
-                      onClick={() => navigate(`/blog/${post.slug}`)}
-                    >
-                      Continue Reading
-                      <ArrowRightIcon className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <Separator className="mt-4" />
-                </article>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
