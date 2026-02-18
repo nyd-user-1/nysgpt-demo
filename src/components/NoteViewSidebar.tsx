@@ -31,6 +31,7 @@ import {
   BookCheck,
   BarChart3,
   CirclePlus,
+  Shield,
   Sparkles,
   Briefcase,
   Play,
@@ -413,94 +414,107 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
 
       {/* Scrollable Content Area - flows behind sticky header/footer */}
       <div className="flex-1 py-2">
-        {/* Research Navigation - No collapsible */}
+        {/* Research Navigation */}
         <div className="px-2 space-y-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <NavLink
-                  to="/bills"
-                  onClick={onClose}
-                  className={cn(
-                    "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
-                    isActive("/bills") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
-                  )}
-                >
-                  <ScrollText className="h-4 w-4" />
-                  <span className="flex-1">Bills</span>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </NavLink>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Browse legislative bills</p>
-              </TooltipContent>
-            </Tooltip>
+            {/* Civic Tier Section */}
+            <Collapsible className="group/civic" defaultOpen>
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-4 w-4" />
+                  <span>Civic Tier</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">
+                    Free
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]/civic:rotate-90" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/bills"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/bills") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <ScrollText className="h-4 w-4" />
+                      <span>Bills</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Browse legislative bills</p>
+                  </TooltipContent>
+                </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <NavLink
-                  to="/committees"
-                  onClick={onClose}
-                  className={cn(
-                    "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
-                    isActive("/committees") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
-                  )}
-                >
-                  <Landmark className="h-4 w-4" />
-                  <span className="flex-1">Committees</span>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </NavLink>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Explore legislative committees</p>
-              </TooltipContent>
-            </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/committees"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/committees") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <Landmark className="h-4 w-4" />
+                      <span>Committees</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Explore legislative committees</p>
+                  </TooltipContent>
+                </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <NavLink
-                  to="/departments"
-                  onClick={onClose}
-                  className={cn(
-                    "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
-                    isActive("/departments") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
-                  )}
-                >
-                  <BookCheck className="h-4 w-4" />
-                  <span className="flex-1">Departments</span>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </NavLink>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Explore NYS departments & agencies</p>
-              </TooltipContent>
-            </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/departments"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/departments") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <BookCheck className="h-4 w-4" />
+                      <span>Departments</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Explore NYS departments & agencies</p>
+                  </TooltipContent>
+                </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <NavLink
-                  to="/members"
-                  onClick={onClose}
-                  className={cn(
-                    "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
-                    isActive("/members") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
-                  )}
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="flex-1">Members</span>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </NavLink>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>View elected officials</p>
-              </TooltipContent>
-            </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/members"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/members") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <Users className="h-4 w-4" />
+                      <span>Members</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>View elected officials</p>
+                  </TooltipContent>
+                </Tooltip>
+              </CollapsibleContent>
+            </Collapsible>
 
-            {/* Pro Plan Section */}
+            {/* Pro Tier Section */}
             <Collapsible className="group/pro">
               <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <CirclePlus className="h-4 w-4" />
-                  <span>Pro Plan</span>
+                  <span>Pro Tier</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
