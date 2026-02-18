@@ -216,9 +216,11 @@ export default function BlogPost() {
 
           {/* Author + Date */}
           <div className="flex items-center gap-3 mb-10">
-            <div className="h-10 w-10 rounded-full bg-foreground flex items-center justify-center text-background font-bold text-sm shrink-0">
-              NY
-            </div>
+            <img
+              src="/nysgpt-avatar.png"
+              alt="NYSgpt"
+              className="h-10 w-10 rounded-full shrink-0"
+            />
             <p className="text-muted-foreground text-sm">
               <span className="text-foreground font-medium">
                 NYSgpt Editorial
