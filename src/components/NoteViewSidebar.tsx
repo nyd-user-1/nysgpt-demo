@@ -689,7 +689,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
         {recentNotes.length > 0 && (
           <Collapsible className="group/notes mt-4">
             <div className="px-2">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm font-light text-muted-foreground hover:text-foreground transition-colors">
                 Notes
                 <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/notes:rotate-90" />
               </CollapsibleTrigger>
@@ -781,7 +781,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
         {recentExcerpts.length > 0 && (
           <Collapsible className="group/excerpts mt-2">
             <div className="px-2">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm font-light text-muted-foreground hover:text-foreground transition-colors">
                 Excerpts
                 <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/excerpts:rotate-90" />
               </CollapsibleTrigger>
@@ -809,7 +809,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
         {recentChats.length > 0 && (
           <Collapsible className="group/chats mt-2">
             <div className="px-2">
-              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-sm font-light text-muted-foreground hover:text-foreground transition-colors">
                 Your Chats
                 <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]/chats:rotate-90" />
               </CollapsibleTrigger>
