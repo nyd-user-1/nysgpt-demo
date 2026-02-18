@@ -92,7 +92,7 @@ export const MemberVotesTable = ({ member }: MemberVotesTableProps) => {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`${filteredAndSorted.length} votes${searchQuery ? ` (filtered: "${searchQuery}")` : ""}`, 14, 25);
-    doc.text(`Generated ${new Date().toLocaleDateString()} by NYSgpt`, 14, 30);
+    doc.text(`Generated ${new Date().toLocaleDateString()} by NYSgpt.com`, 14, 30);
 
     autoTable(doc, {
       startY: 36,
