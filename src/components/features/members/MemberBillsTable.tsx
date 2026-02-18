@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, HelpCircle } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Search, HelpCircle, Download } from "lucide-react";
 import { useMemberBills } from "@/hooks/useMemberBills";
 import { Tables } from "@/integrations/supabase/types";
 import { formatDate } from "@/utils/dateUtils";
@@ -103,15 +103,59 @@ export const MemberBillsTable = ({ member }: MemberBillsTableProps) => {
     return filtered;
   }, [bills, searchQuery, sortField, sortDirection]);
 
+  const exportPDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
+
+    const doc = new jsPDF({ orientation: "landscape" });
+    const memberName = member.name || `${member.first_name || ""} ${member.last_name || ""}`.trim() || "Member";
+
+    doc.setFontSize(16);
+    doc.text(`${memberName} - Sponsored Bills`, 14, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`${filteredAndSortedBills.length} bills${searchQuery ? ` (filtered: "${searchQuery}")` : ""}`, 14, 25);
+    doc.text(`Generated ${new Date().toLocaleDateString()} by NYSgpt`, 14, 30);
+
+    autoTable(doc, {
+      startY: 36,
+      head: [["Bill", "Committee", "Description", "Status", "Last Action", "Action Date"]],
+      body: filteredAndSortedBills.map((b) => [
+        b.bill_number || "—",
+        b.committee || "N/A",
+        b.title || "No title",
+        b.status_desc || "Unknown",
+        b.last_action || "—",
+        b.last_action_date ? formatDate(b.last_action_date) : "—",
+      ]),
+      styles: { fontSize: 7, cellPadding: 2 },
+      headStyles: { fillColor: [30, 30, 30] },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 100 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 55 },
+        5: { cellWidth: 25 },
+      },
+    });
+
+    const slug = memberName.toLowerCase().replace(/\s+/g, "-");
+    doc.save(`${slug}-bills.pdf`);
+  };
+
   return (
     <TooltipProvider>
       <Card>
         <CardHeader className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <CardTitle>Member Bills</CardTitle>
-            <Button variant="outline" size="sm">
-              View All Bills
-            </Button>
+            {filteredAndSortedBills.length > 0 && (
+              <Button variant="outline" size="sm" onClick={exportPDF}>
+                <Download className="h-4 w-4 mr-1.5" />
+                Export PDF
+              </Button>
+            )}
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
