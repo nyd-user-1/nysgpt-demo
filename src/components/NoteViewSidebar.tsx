@@ -434,12 +434,13 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                       to="/bills"
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                         isActive("/bills") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
                       )}
                     >
                       <ScrollText className="h-4 w-4" />
-                      <span>Bills</span>
+                      <span className="flex-1">Bills</span>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </NavLink>
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -453,12 +454,13 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                       to="/committees"
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                         isActive("/committees") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
                       )}
                     >
                       <Landmark className="h-4 w-4" />
-                      <span>Committees</span>
+                      <span className="flex-1">Committees</span>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </NavLink>
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -472,12 +474,13 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                       to="/departments"
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                         isActive("/departments") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
                       )}
                     >
                       <BookCheck className="h-4 w-4" />
-                      <span>Departments</span>
+                      <span className="flex-1">Departments</span>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </NavLink>
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -491,12 +494,13 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                       to="/members"
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                         isActive("/members") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
                       )}
                     >
                       <Users className="h-4 w-4" />
-                      <span>Members</span>
+                      <span className="flex-1">Members</span>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </NavLink>
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -510,12 +514,13 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                       to="/blog"
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                         isActive("/blog") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
                       )}
                     >
                       <Newspaper className="h-4 w-4" />
-                      <span>Journal</span>
+                      <span className="flex-1">Journal</span>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </NavLink>
                   </TooltipTrigger>
                   <TooltipContent side="right">
