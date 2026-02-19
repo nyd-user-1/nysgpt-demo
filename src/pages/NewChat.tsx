@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChatPersistence } from "@/hooks/useChatPersistence";
-import { ArrowUp, ArrowDown, Square, Search as SearchIcon, FileText, Users, Building2, Wallet, Paperclip, X, PanelLeft, HandCoins, Lightbulb, Check, Plus, ChevronRight, ArrowLeft } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { ArrowUp, ArrowDown, Square, Search as SearchIcon, FileText, Users, Building2, Wallet, Paperclip, X, PanelLeft, HandCoins, Lightbulb, Check, Plus, ChevronRight, ArrowLeft, DollarSign, GraduationCap } from "lucide-react";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { Contract } from "@/types/contracts";
 import { Button } from "@/components/ui/button";
@@ -362,7 +363,7 @@ const NewChat = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { sessionId: routeSessionId } = useParams<{ sessionId: string }>();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { setOpen: setSidebarOpen } = useSidebarSafe();
   const { addWordsUsed, isLimitExceeded } = useAIUsage();
   const { toast } = useToast();
@@ -377,6 +378,9 @@ const NewChat = () => {
     clearSession,
     setCurrentSessionId,
   } = useChatPersistence();
+
+  const { subscription } = useSubscription();
+  const isProfessional = isAdmin || ['professional', 'enterprise', 'government'].includes(subscription.subscription_tier);
 
   // Only show ChatHeader on root page (public), not on /new-chat (authenticated)
   const isPublicPage = location.pathname === "/";
@@ -916,6 +920,10 @@ const NewChat = () => {
   // Lobbying data for mobile drawer
   const [mobileDrawerLobbyists, setMobileDrawerLobbyists] = useState<any[]>([]);
   const [mobileDrawerLoading, setMobileDrawerLoading] = useState(false);
+  // Budget data for mobile drawer
+  const [mobileDrawerBudget, setMobileDrawerBudget] = useState<any[]>([]);
+  // School funding data for mobile drawer
+  const [mobileDrawerSchools, setMobileDrawerSchools] = useState<any[]>([]);
 
   // Fetch data when mobile drawer category opens
   useEffect(() => {
@@ -933,6 +941,30 @@ const NewChat = () => {
         .limit(50)
         .then(({ data }) => {
           setMobileDrawerLobbyists(data || []);
+          setMobileDrawerLoading(false);
+        });
+    }
+    if (mobileDrawerCategory === 'budget' && mobileDrawerBudget.length === 0) {
+      setMobileDrawerLoading(true);
+      supabase
+        .from('budget_2027-aprops')
+        .select('"Agency Name", "Program Name", "Appropriation Category", "Appropriations Recommended 2026-27"')
+        .order('Agency Name', { ascending: true })
+        .limit(50)
+        .then(({ data }) => {
+          setMobileDrawerBudget(data || []);
+          setMobileDrawerLoading(false);
+        });
+    }
+    if (mobileDrawerCategory === 'schools' && mobileDrawerSchools.length === 0) {
+      setMobileDrawerLoading(true);
+      supabase
+        .from('school_funding_totals')
+        .select('id, district, county, enacted_budget, total_school_year, total_change, percent_change')
+        .order('district', { ascending: true })
+        .limit(50)
+        .then(({ data }) => {
+          setMobileDrawerSchools(data || []);
           setMobileDrawerLoading(false);
         });
     }
@@ -2201,6 +2233,12 @@ const NewChat = () => {
                             { key: 'bills', label: 'Bills', icon: <FileText className="h-4 w-4" /> },
                             { key: 'committees', label: 'Committees', icon: <Building2 className="h-4 w-4" /> },
                             { key: 'members', label: 'Members', icon: <Users className="h-4 w-4" /> },
+                            ...(isProfessional ? [
+                              { key: 'contracts', label: 'Contracts', icon: <Wallet className="h-4 w-4" /> },
+                              { key: 'lobbying', label: 'Lobbyists', icon: <HandCoins className="h-4 w-4" /> },
+                              { key: 'budget', label: 'Budget', icon: <DollarSign className="h-4 w-4" /> },
+                              { key: 'schools', label: 'School Funding', icon: <GraduationCap className="h-4 w-4" /> },
+                            ] : []),
                           ].map((item, idx) => (
                             <button
                               key={item.key}
@@ -3017,6 +3055,85 @@ const NewChat = () => {
                               {lobbyist.type_of_lobbyist && (
                                 <span className="text-muted-foreground ml-2">{lobbyist.type_of_lobbyist}</span>
                               )}
+                            </button>
+                          ))
+                        )
+                      )}
+
+                      {/* Budget */}
+                      {mobileDrawerCategory === 'budget' && (
+                        mobileDrawerLoading ? (
+                          <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading budget data...</div>
+                        ) : (
+                          mobileDrawerBudget.map((item, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                const amount = item['Appropriations Recommended 2026-27']
+                                  ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                  : '';
+                                setQuery(`Tell me about the ${item['Agency Name']} budget${item['Program Name'] ? ` for ${item['Program Name']}` : ''}${amount ? ` with ${amount} recommended` : ''}. What are the key appropriations and spending trends?`);
+                                setMobileDrawerCategory(null);
+                                textareaRef.current?.focus();
+                              }}
+                              className={cn(
+                                "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
+                                idx > 0 && "border-t border-border/40"
+                              )}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium truncate">{item['Agency Name']}</span>
+                                <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">
+                                  {item['Appropriations Recommended 2026-27']
+                                    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                    : ''}
+                                </span>
+                              </div>
+                              {item['Program Name'] && (
+                                <p className="text-muted-foreground text-xs mt-0.5 truncate">{item['Program Name']}</p>
+                              )}
+                            </button>
+                          ))
+                        )
+                      )}
+
+                      {/* School Funding */}
+                      {mobileDrawerCategory === 'schools' && (
+                        mobileDrawerLoading ? (
+                          <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading school funding...</div>
+                        ) : (
+                          mobileDrawerSchools.map((record, idx) => (
+                            <button
+                              key={record.id}
+                              type="button"
+                              onClick={() => {
+                                const change = record.total_change
+                                  ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(record.total_change)
+                                  : '';
+                                setQuery(`Analyze school funding for ${record.district}${record.county ? ` in ${record.county} County` : ''} for the ${record.enacted_budget} budget year.${change ? ` Total change: ${change}.` : ''} What should I know about this district's funding?`);
+                                setMobileDrawerCategory(null);
+                                textareaRef.current?.focus();
+                              }}
+                              className={cn(
+                                "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
+                                idx > 0 && "border-t border-border/40"
+                              )}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium truncate">{record.district}</span>
+                                <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">{record.county}</span>
+                              </div>
+                              <p className="text-muted-foreground text-xs mt-0.5">
+                                {record.total_school_year
+                                  ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(record.total_school_year)
+                                  : ''}
+                                {record.percent_change != null && (
+                                  <span className={record.percent_change >= 0 ? 'text-green-600 ml-2' : 'text-red-600 ml-2'}>
+                                    {record.percent_change >= 0 ? '+' : ''}{record.percent_change.toFixed(1)}%
+                                  </span>
+                                )}
+                              </p>
                             </button>
                           ))
                         )
