@@ -2207,9 +2207,9 @@ const NewChat = () => {
 
                       {/* Mobile drawer - shows after selecting from menu */}
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
-                        <div className="absolute bottom-full left-0 -mb-[22px] w-80 max-h-[400px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50">
+                        <div className="fixed left-3 right-3 bottom-[64px] max-h-[calc(100dvh-120px)] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50 flex flex-col">
                           {/* Header */}
-                          <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
                             <span className="text-sm font-medium">
                               {mobileDrawerCategory === 'prompts' ? 'Sample Prompts' : mobileDrawerCategory.charAt(0).toUpperCase() + mobileDrawerCategory.slice(1)}
                             </span>
@@ -2224,7 +2224,7 @@ const NewChat = () => {
 
                           {/* Content */}
                           <div
-                            className="max-h-[320px] overflow-y-auto"
+                            className="flex-1 overflow-y-auto"
                             onScroll={(e) => {
                               if (mobileDrawerCategory === 'bills') handlePopoverScroll(e, () => fetchBillsForSelection(availableBills.length), billsHasMore, billsLoading);
                               if (mobileDrawerCategory === 'members') handlePopoverScroll(e, () => fetchMembersForSelection(availableMembers.length), membersHasMore, membersLoading);
