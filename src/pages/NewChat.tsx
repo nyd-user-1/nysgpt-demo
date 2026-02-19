@@ -2228,20 +2228,29 @@ const NewChat = () => {
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
                         <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] sm:absolute sm:bottom-full sm:left-0 sm:right-auto sm:w-80 sm:-mb-[22px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
                           {/* Header */}
-                          <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMobileDrawerCategory(null);
+                                  setMobilePlusMenuOpen(true);
+                                }}
+                                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              >
+                                <ArrowLeft className="h-4 w-4" />
+                              </button>
+                              <span className="text-sm font-medium">
+                                {mobileDrawerCategory === 'prompts' ? 'Sample Prompts' : mobileDrawerCategory.charAt(0).toUpperCase() + mobileDrawerCategory.slice(1)}
+                              </span>
+                            </div>
                             <button
                               type="button"
-                              onClick={() => {
-                                setMobileDrawerCategory(null);
-                                setMobilePlusMenuOpen(true);
-                              }}
+                              onClick={() => setMobileDrawerCategory(null)}
                               className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                             >
-                              <ArrowLeft className="h-4 w-4" />
+                              <X className="h-4 w-4" />
                             </button>
-                            <span className="text-sm font-medium">
-                              {mobileDrawerCategory === 'prompts' ? 'Sample Prompts' : mobileDrawerCategory.charAt(0).toUpperCase() + mobileDrawerCategory.slice(1)}
-                            </span>
                           </div>
 
                           {/* Content */}
