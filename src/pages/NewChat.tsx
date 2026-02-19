@@ -2171,7 +2171,7 @@ const NewChat = () => {
 
                       {/* Click-outside backdrop for drawer */}
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
-                        <div className="fixed inset-0 z-40" onClick={() => setMobileDrawerCategory(null)} />
+                        <div className="fixed inset-0 z-[55]" onClick={() => setMobileDrawerCategory(null)} />
                       )}
 
                       {/* Mobile plus menu */}
@@ -2207,7 +2207,7 @@ const NewChat = () => {
 
                       {/* Mobile drawer - shows after selecting from menu */}
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
-                        <div className="fixed left-3 right-3 bottom-[64px] max-h-[calc(100dvh-120px)] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50 flex flex-col">
+                        <div className="fixed left-3 right-3 bottom-[64px] max-h-[calc(100dvh-120px)] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
                           {/* Header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
                             <span className="text-sm font-medium">
