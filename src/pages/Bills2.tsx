@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, X, FileText, ArrowUp, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -189,9 +190,7 @@ const Bills2 = () => {
       )}
 
       {/* Main Container with padding */}
-      <div className="h-full md:p-2 bg-muted/30">
-        {/* Inner container with rounded corners and border */}
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -367,8 +366,7 @@ const Bills2 = () => {
               </>
             )}
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 };

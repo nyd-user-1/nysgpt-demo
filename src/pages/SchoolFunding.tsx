@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { useSchoolFundingSearch, formatCurrency, formatPercent } from '@/hooks/useSchoolFundingSearch';
 import { SchoolFundingTotals } from '@/types/schoolFunding';
 import { supabase } from '@/integrations/supabase/client';
@@ -155,9 +156,7 @@ const SchoolFundingPage = () => {
       )}
 
       {/* Main Container with padding */}
-      <div className="h-full md:p-2 bg-muted/30">
-        {/* Inner container with rounded corners and border */}
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -319,8 +318,7 @@ const SchoolFundingPage = () => {
               </>
             )}
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 };

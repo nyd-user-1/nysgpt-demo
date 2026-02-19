@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarIcon, PlayCircleIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { MobileMenuIcon } from '@/components/MobileMenuButton';
 
@@ -98,9 +99,7 @@ export default function Video() {
       </div>
 
       {/* Main Content Container */}
-      <div className="h-full md:p-2 bg-muted/30">
-        {/* Inner container - rounded with border */}
-        <div className="h-full flex flex-col relative md:rounded-2xl md:border bg-background overflow-hidden">
+      <InsetPanel>
           {/* Header with sidebar toggle and NYSgpt */}
           <div className="flex items-center justify-between px-4 py-3 bg-background flex-shrink-0">
             {/* Left side: Sidebar toggle */}
@@ -215,8 +214,7 @@ export default function Video() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 }

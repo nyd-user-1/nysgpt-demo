@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { ArrowLeft, Plus, ExternalLink, DollarSign } from "lucide-react";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
+import { InsetPanel } from "@/components/ui/inset-panel";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { LobbyingSpend, LobbyistCompensation, LobbyistClient } from "@/types/lobbying";
@@ -319,8 +320,7 @@ const LobbyingDetail = () => {
       <div className="fixed inset-0 overflow-hidden">
         {renderSidebar()}
 
-        <div className="h-full md:p-2 bg-muted/30">
-          <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+        <InsetPanel>
             {renderHeader()}
 
             {/* Scrollable Content */}
@@ -472,8 +472,7 @@ const LobbyingDetail = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </InsetPanel>
       </div>
     );
   }
@@ -484,8 +483,7 @@ const LobbyingDetail = () => {
       <div className="fixed inset-0 overflow-hidden">
         {renderSidebar()}
 
-        <div className="h-full md:p-2 bg-muted/30">
-          <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+        <InsetPanel>
             {renderHeader()}
 
             {/* Scrollable Content */}
@@ -604,8 +602,7 @@ const LobbyingDetail = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </InsetPanel>
       </div>
     );
   }

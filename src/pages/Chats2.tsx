@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useChatSessions } from '@/pages/chats/hooks/useChatSessions';
 import { ChatSession } from '@/pages/chats/types';
+import { InsetPanel } from '@/components/ui/inset-panel';
 
 type ChatType = 'all' | 'bill' | 'member' | 'committee' | 'school-funding' | 'contract' | 'general';
 
@@ -163,9 +164,7 @@ const Chats2 = () => {
       )}
 
       {/* Main Container with padding */}
-      <div className="h-full md:p-2 bg-muted/30">
-        {/* Inner container with rounded corners and border */}
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -287,8 +286,7 @@ const Chats2 = () => {
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </InsetPanel>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

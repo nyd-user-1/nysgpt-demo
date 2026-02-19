@@ -4,6 +4,7 @@ import { Search, ChevronRight, ChevronLeft, ArrowUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { MobileMenuIcon } from '@/components/MobileMenuButton';
 
@@ -252,9 +253,7 @@ export default function Prompts() {
 
 
       {/* Main Content Container */}
-      <div className="h-full md:p-2 bg-muted/30">
-        {/* Inner container - rounded with border */}
-        <div className="h-full flex flex-col relative md:rounded-2xl md:border bg-background overflow-hidden">
+      <InsetPanel className="relative">
           {/* Header with sidebar toggle and model selector */}
           <div className="flex items-center justify-between px-4 py-3 bg-background flex-shrink-0">
             {/* Left side: Sidebar toggle */}
@@ -491,8 +490,7 @@ export default function Prompts() {
               )}
             </div>
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 }

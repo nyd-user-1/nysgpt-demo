@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, ChevronDown, ArrowUp, MessageSquare, X, LayoutGrid, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Button } from '@/components/ui/button';
@@ -275,8 +276,7 @@ const ContractsDashboard = () => {
       )}
 
       {/* Main Container */}
-      <div className="h-full md:p-2 bg-muted/30">
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background border-b">
             <div className="px-4 py-4 md:px-6">
@@ -925,8 +925,7 @@ const ContractsDashboard = () => {
               </div>
             ) : null}
           </div>
-        </div>
-      </div>
+      </InsetPanel>
 
       {/* Contracts Chat Drawer */}
       <ContractsChatDrawer

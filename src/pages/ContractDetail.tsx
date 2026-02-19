@@ -18,6 +18,7 @@ import { Contract } from "@/types/contracts";
 import { formatCurrency, formatContractDate } from "@/hooks/useContractsSearch";
 import { useContractNotes } from "@/hooks/useContractNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
+import { InsetPanel } from '@/components/ui/inset-panel';
 
 const ContractDetail = () => {
   const navigate = useNavigate();
@@ -183,8 +184,7 @@ const ContractDetail = () => {
       )}
 
       {/* Main Container with padding */}
-      <div className="h-full md:p-2 bg-muted/30">
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -475,8 +475,7 @@ const ContractDetail = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      </InsetPanel>
 
       {/* Note Dialog */}
       <NoteDialog

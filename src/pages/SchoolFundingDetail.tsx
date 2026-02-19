@@ -18,6 +18,7 @@ import { SchoolFundingTotals, SchoolFunding } from "@/types/schoolFunding";
 import { formatCurrency, formatPercent } from "@/hooks/useSchoolFundingSearch";
 import { useSchoolFundingNotes } from "@/hooks/useSchoolFundingNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
+import { InsetPanel } from '@/components/ui/inset-panel';
 
 const SchoolFundingDetail = () => {
   const navigate = useNavigate();
@@ -224,8 +225,7 @@ const SchoolFundingDetail = () => {
       )}
 
       {/* Main Container with padding */}
-      <div className="h-full md:p-2 bg-muted/30">
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -551,8 +551,7 @@ const SchoolFundingDetail = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+      </InsetPanel>
 
       {/* Note Dialog */}
       <NoteDialog

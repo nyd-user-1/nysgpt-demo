@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, HandCoins, ArrowUp, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -152,9 +153,7 @@ List ALL the client names provided above as bullet points between these markers.
       )}
 
       {/* Main Container with padding */}
-      <div className="h-full md:p-2 bg-muted/30">
-        {/* Inner container with rounded corners and border */}
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -336,8 +335,7 @@ List ALL the client names provided above as bullet points between these markers.
               </>
             )}
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 };

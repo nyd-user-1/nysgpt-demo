@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { InsetPanel } from '@/components/ui/inset-panel';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { MobileMenuIcon } from '@/components/MobileMenuButton';
 import { departmentPrompts, agencyPrompts, authorityPrompts } from '@/pages/Prompts';
@@ -187,8 +188,7 @@ export default function DepartmentDetail() {
       )}
 
       {/* Main Content */}
-      <div className="h-full md:p-2 bg-muted/30">
-        <div className="h-full flex flex-col relative md:rounded-2xl md:border bg-background overflow-hidden">
+      <InsetPanel className="relative">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-background flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -504,8 +504,7 @@ export default function DepartmentDetail() {
               )}
             </div>
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 }

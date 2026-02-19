@@ -2176,7 +2176,7 @@ const NewChat = () => {
 
                       {/* Mobile plus menu */}
                       {mobilePlusMenuOpen && (
-                        <div className="absolute bottom-full left-0 mb-2 w-56 rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50">
+                        <div className="absolute bottom-full left-0 -mb-[22px] w-56 rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50">
                           {[
                             { key: 'prompts', label: 'Samples', icon: <Lightbulb className="h-4 w-4" /> },
                             { key: 'bills', label: 'Bills', icon: <FileText className="h-4 w-4" /> },
@@ -2207,7 +2207,7 @@ const NewChat = () => {
 
                       {/* Mobile drawer - shows after selecting from menu */}
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
-                        <div className="absolute bottom-full left-0 mb-2 w-80 max-h-[400px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50">
+                        <div className="absolute bottom-full left-0 -mb-[22px] w-80 max-h-[400px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50">
                           {/* Header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
                             <span className="text-sm font-medium">
@@ -2773,14 +2773,14 @@ const NewChat = () => {
                   ))}
                 </div>
 
-                {/* Click-outside backdrop for drawer */}
+                {/* Click-outside backdrop for drawer (desktop only — mobile uses its own in the + menu) */}
                 {mobileDrawerCategory && (
-                  <div className="fixed inset-0 z-40" onClick={() => setMobileDrawerCategory(null)} />
+                  <div className="fixed inset-0 z-40 hidden sm:block" onClick={() => setMobileDrawerCategory(null)} />
                 )}
 
-                {/* Drawer card - drops down below pills */}
+                {/* Drawer card - drops down below pills (desktop only — mobile uses drawer above input) */}
                 {mobileDrawerCategory && (
-                  <div className="absolute top-full left-0 right-0 mt-3 mx-1 rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50">
+                  <div className="absolute top-full left-0 right-0 mt-3 mx-1 rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-50 hidden sm:block">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3">
                       <span className="text-sm font-medium text-foreground">

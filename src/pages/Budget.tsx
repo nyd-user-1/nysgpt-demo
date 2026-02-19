@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useBudgetSearch, formatBudgetAmount, reformatAgencyName, type BudgetTab } from '@/hooks/useBudgetSearch';
 import { departmentPrompts, agencyPrompts, authorityPrompts } from '@/pages/Prompts';
+import { InsetPanel } from '@/components/ui/inset-panel';
 
 const tabs: { id: BudgetTab; label: string }[] = [
   { id: 'appropriations', label: 'Appropriations' },
@@ -176,8 +177,7 @@ const Budget = () => {
       )}
 
       {/* Main Container */}
-      <div className="h-full md:p-2 bg-muted/30">
-        <div className="w-full h-full md:rounded-2xl md:border bg-background overflow-hidden flex flex-col">
+      <InsetPanel>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -395,8 +395,7 @@ const Budget = () => {
               </>
             )}
           </div>
-        </div>
-      </div>
+      </InsetPanel>
     </div>
   );
 };
