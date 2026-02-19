@@ -2478,8 +2478,8 @@ const NewChat = () => {
                                     key={idx}
                                     type="button"
                                     onClick={() => {
-                                      const amount = item['Appropriations Recommended 2026-27']
-                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                      const amount = Number(item['Appropriations Recommended 2026-27'])
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(item['Appropriations Recommended 2026-27']))
                                         : '';
                                       setQuery(`Tell me about the ${item['Agency Name']} budget${item['Program Name'] ? ` for ${item['Program Name']}` : ''}${amount ? ` with ${amount} recommended` : ''}. What are the key appropriations and spending trends?`);
                                       setMobileDrawerCategory(null);
@@ -2493,8 +2493,8 @@ const NewChat = () => {
                                     <div className="flex items-center justify-between">
                                       <span className="font-medium truncate">{item['Agency Name']}</span>
                                       <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">
-                                        {item['Appropriations Recommended 2026-27']
-                                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                        {Number(item['Appropriations Recommended 2026-27'])
+                                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(item['Appropriations Recommended 2026-27']))
                                           : ''}
                                       </span>
                                     </div>
@@ -3233,8 +3233,8 @@ const NewChat = () => {
                               key={idx}
                               type="button"
                               onClick={() => {
-                                const amount = item['Appropriations Recommended 2026-27']
-                                  ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                const amount = Number(item['Appropriations Recommended 2026-27'])
+                                  ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(item['Appropriations Recommended 2026-27']))
                                   : '';
                                 setQuery(`Tell me about the ${item['Agency Name']} budget${item['Program Name'] ? ` for ${item['Program Name']}` : ''}${amount ? ` with ${amount} recommended` : ''}. What are the key appropriations and spending trends?`);
                                 setMobileDrawerCategory(null);
@@ -3248,8 +3248,8 @@ const NewChat = () => {
                               <div className="flex items-center justify-between">
                                 <span className="font-medium truncate">{item['Agency Name']}</span>
                                 <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">
-                                  {item['Appropriations Recommended 2026-27']
-                                    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                  {Number(item['Appropriations Recommended 2026-27'])
+                                    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(item['Appropriations Recommended 2026-27']))
                                     : ''}
                                 </span>
                               </div>
