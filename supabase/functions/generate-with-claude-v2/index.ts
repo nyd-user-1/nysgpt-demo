@@ -61,7 +61,7 @@ async function searchNYSgptDatabase(query: string, sessionYear?: number) {
 
     // If no results yet, do keyword search
     if (results.length === 0) {
-      const stopWords = ['the', 'a', 'an', 'in', 'on', 'at', 'for', 'to', 'of', 'and', 'or', 'but', 'bills', 'bill', 'legislation', 'about', 'tell', 'me', 'any', 'introduced', 'great', 'now'];
+      const stopWords = ['the', 'a', 'an', 'in', 'on', 'at', 'for', 'to', 'of', 'and', 'or', 'but', 'bills', 'bill', 'legislation', 'about', 'tell', 'me', 'any', 'introduced', 'great', 'now', 'what', 'does', 'their', 'this', 'that', 'with', 'from', 'have', 'been', 'they', 'member', 'assembly', 'senate', 'senator', 'legislator', 'representative'];
 
       // Extract keywords (filter out stop words, take top 3)
       const keywordArray = query
@@ -92,6 +92,71 @@ async function searchNYSgptDatabase(query: string, sessionYear?: number) {
           console.log(`Found ${data.length} bills for keywords: ${keywordArray.join(', ')}`);
         } else if (error) {
           console.error('Keyword search error:', error);
+        }
+      }
+
+      // If still no bills found, try member-based search (find bills by sponsor name)
+      if (results.length === 0 && keywordArray.length > 0) {
+        const nameConditions = keywordArray
+          .filter(k => k.length > 3)
+          .map(k => `name.ilike.%${k}%`)
+          .join(',');
+
+        if (nameConditions) {
+          const { data: memberData } = await supabase
+            .from('People')
+            .select('people_id, name, party, chamber, district')
+            .or(nameConditions)
+            .limit(5);
+
+          if (memberData && memberData.length > 0) {
+            console.log(`Found ${memberData.length} members matching keywords, fetching their bills`);
+            const peopleIds = memberData.map(m => m.people_id);
+
+            const { data: sponsorData } = await supabase
+              .from('Sponsors')
+              .select('bill_id, people_id')
+              .in('people_id', peopleIds)
+              .eq('position', 1)
+              .limit(30);
+
+            if (sponsorData && sponsorData.length > 0) {
+              const billIds = sponsorData.map(s => s.bill_id).filter(Boolean);
+              const { data: memberBills } = await supabase
+                .from('Bills')
+                .select('*')
+                .in('bill_id', billIds)
+                .order('session_id', { ascending: false })
+                .limit(10);
+
+              if (memberBills && memberBills.length > 0) {
+                results = memberBills;
+                console.log(`Found ${results.length} bills sponsored by matched members`);
+              }
+            }
+          }
+        }
+      }
+
+      // If still no bills found, try committee-based search
+      if (results.length === 0 && keywordArray.length > 0) {
+        const committeeConditions = keywordArray
+          .filter(k => k.length > 3)
+          .map(k => `committee.ilike.%${k}%`)
+          .join(',');
+
+        if (committeeConditions) {
+          const { data: committeeBills } = await supabase
+            .from('Bills')
+            .select('*')
+            .or(committeeConditions)
+            .order('session_id', { ascending: false })
+            .limit(10);
+
+          if (committeeBills && committeeBills.length > 0) {
+            results = committeeBills;
+            console.log(`Found ${results.length} bills by committee match`);
+          }
         }
       }
     }
@@ -360,6 +425,20 @@ function formatBillChunksForContext(chunks: any[]): string {
   }
 
   return contextText;
+}
+
+// Format conversation history for Claude messages array
+function formatConversationHistory(previousMessages: any[]): { role: string; content: string }[] {
+  if (!previousMessages || !Array.isArray(previousMessages) || previousMessages.length === 0) {
+    return [];
+  }
+
+  return previousMessages
+    .filter(msg => msg && msg.role && msg.content)
+    .map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
 }
 
 // Format semantic search results for LLM context
@@ -638,6 +717,16 @@ serve(async (req) => {
       ? `${prompt}\n\n[IMPORTANT: Use the comprehensive legislative database information provided in your system context to give specific, detailed answers with exact bill numbers, titles, and current information.]`
       : prompt;
 
+    // Build conversation history from previous messages
+    const conversationHistory = formatConversationHistory(context?.previousMessages || []);
+    console.log(`Including ${conversationHistory.length} previous messages for context`);
+
+    // Build the complete messages array with conversation history
+    const messages = [
+      ...conversationHistory,
+      { role: 'user', content: userMessage }
+    ];
+
     // Call Claude API with correct authentication header
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -649,10 +738,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: model,
         max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: userMessage
-        }],
+        messages: messages,  // Full conversation history + current message
         system: enhancedSystemPrompt,  // Send enhanced system prompt with legislative data
         temperature: 0.7,
         stream: stream,  // Enable streaming

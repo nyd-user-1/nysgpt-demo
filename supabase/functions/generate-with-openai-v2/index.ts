@@ -359,7 +359,7 @@ async function searchNYSgptDatabase(query: string, sessionYear?: number) {
     // If no specific bills found or no bill numbers mentioned, do keyword search
     if (billsData.length === 0) {
       // Extract keywords from query (remove common words and split into array)
-      const stopWords = ['the', 'a', 'an', 'in', 'on', 'at', 'for', 'to', 'of', 'and', 'or', 'but', 'bills', 'bill', 'legislation', 'about', 'tell', 'me', 'any', 'introduced', 'great', 'now'];
+      const stopWords = ['the', 'a', 'an', 'in', 'on', 'at', 'for', 'to', 'of', 'and', 'or', 'but', 'bills', 'bill', 'legislation', 'about', 'tell', 'me', 'any', 'introduced', 'great', 'now', 'what', 'does', 'their', 'this', 'that', 'with', 'from', 'have', 'been', 'they', 'member', 'assembly', 'senate', 'senator', 'legislator', 'representative'];
       const keywordArray = query
         .toLowerCase()
         .replace(/[^\w\s]/g, ' ')
@@ -384,6 +384,71 @@ async function searchNYSgptDatabase(query: string, sessionYear?: number) {
         if (data && !error) {
           billsData = data;
           console.log(`Found ${billsData.length} bills for keywords: ${keywordArray.join(', ')}`);
+        }
+      }
+
+      // If still no bills found, try member-based search (find bills by sponsor name)
+      if (billsData.length === 0 && keywordArray.length > 0) {
+        const nameConditions = keywordArray
+          .filter(k => k.length > 3)
+          .map(k => `name.ilike.%${k}%`)
+          .join(',');
+
+        if (nameConditions) {
+          const { data: memberData } = await supabase
+            .from('People')
+            .select('people_id, name, party, chamber, district')
+            .or(nameConditions)
+            .limit(5);
+
+          if (memberData && memberData.length > 0) {
+            console.log(`Found ${memberData.length} members matching keywords, fetching their bills`);
+            const peopleIds = memberData.map(m => m.people_id);
+
+            const { data: sponsorData } = await supabase
+              .from('Sponsors')
+              .select('bill_id, people_id')
+              .in('people_id', peopleIds)
+              .eq('position', 1)
+              .limit(30);
+
+            if (sponsorData && sponsorData.length > 0) {
+              const billIds = sponsorData.map(s => s.bill_id).filter(Boolean);
+              const { data: memberBills } = await supabase
+                .from('Bills')
+                .select('*')
+                .in('bill_id', billIds)
+                .order('session_id', { ascending: false })
+                .limit(10);
+
+              if (memberBills && memberBills.length > 0) {
+                billsData = memberBills;
+                console.log(`Found ${billsData.length} bills sponsored by matched members`);
+              }
+            }
+          }
+        }
+      }
+
+      // If still no bills found, try committee-based search
+      if (billsData.length === 0 && keywordArray.length > 0) {
+        const committeeConditions = keywordArray
+          .filter(k => k.length > 3)
+          .map(k => `committee.ilike.%${k}%`)
+          .join(',');
+
+        if (committeeConditions) {
+          const { data: committeeBills } = await supabase
+            .from('Bills')
+            .select('*')
+            .or(committeeConditions)
+            .order('session_id', { ascending: false })
+            .limit(10);
+
+          if (committeeBills && committeeBills.length > 0) {
+            billsData = committeeBills;
+            console.log(`Found ${billsData.length} bills by committee match`);
+          }
         }
       }
     }
