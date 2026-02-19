@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChatPersistence } from "@/hooks/useChatPersistence";
+import { generateMemberSlug } from "@/utils/memberSlug";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ArrowUp, ArrowDown, Square, Search as SearchIcon, FileText, Users, Building2, Wallet, Paperclip, X, PanelLeft, HandCoins, Lightbulb, Check, Plus, ChevronRight, ArrowLeft, DollarSign, GraduationCap } from "lucide-react";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
@@ -320,6 +321,61 @@ const formatCommitteeMembers = (committee: any): string => {
   const committeeName = `${chamberPrefix}${committee.committee_name || 'Committee'}`;
   const chair = committee.chair_name ? `Chair: ${committee.chair_name}\n` : '';
   return `Current members of the ${committeeName}:\n${chair}Members (${names.length}): ${names.join(', ')}`;
+};
+
+/** Fetch a member's sponsored bills + committee memberships for AI context */
+const fetchMemberContext = async (member: any): Promise<string> => {
+  const parts: string[] = [];
+  try {
+    // Fetch sponsored bills via Sponsors → Bills join
+    const { data: sponsorData } = await supabase
+      .from("Sponsors")
+      .select("bill_id")
+      .eq("people_id", member.people_id)
+      .eq("position", 1);
+
+    const billIds = (sponsorData || []).map(s => s.bill_id).filter(Boolean);
+    if (billIds.length > 0) {
+      const { data: bills } = await supabase
+        .from("Bills")
+        .select("bill_number, title, status_desc, committee, last_action, last_action_date")
+        .in("bill_id", billIds)
+        .order("bill_number", { ascending: true });
+
+      if (bills && bills.length > 0) {
+        parts.push(`SPONSORED LEGISLATION (${bills.length} bills):`);
+        for (const b of bills) {
+          const status = b.status_desc ? ` [${b.status_desc}]` : '';
+          const committee = b.committee ? ` (${b.committee})` : '';
+          parts.push(`- ${b.bill_number}: ${b.title || 'No title'}${status}${committee}`);
+        }
+      }
+    }
+    if (billIds.length === 0) {
+      parts.push('SPONSORED LEGISLATION: No bills found as primary sponsor.');
+    }
+
+    // Fetch committee memberships
+    const slug = generateMemberSlug(member);
+    if (slug) {
+      const { data: committees } = await supabase
+        .from("Committees")
+        .select("committee_name, chamber, chair_name")
+        .ilike("committee_members", `%${slug}%`);
+
+      if (committees && committees.length > 0) {
+        parts.push(`\nCOMMITTEE MEMBERSHIPS (${committees.length}):`);
+        for (const c of committees) {
+          const chamberPrefix = c.chamber ? `${c.chamber} ` : '';
+          const isChair = c.chair_name?.toLowerCase().includes(slug.split('-').pop() || '');
+          parts.push(`- ${chamberPrefix}${c.committee_name}${isChair ? ' (Chair)' : ''}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching member context:', err);
+  }
+  return parts.join('\n');
 };
 
 const NewChat = () => {
@@ -2380,9 +2436,10 @@ const NewChat = () => {
                                   <button
                                     key={member.people_id}
                                     type="button"
-                                    onClick={() => {
+                                    onClick={async () => {
                                       setMobileDrawerCategory(null);
-                                      handleSubmit(null, buildMemberPrompt(member), composeSystemPrompt({ entityType: 'member', entityName: member.name }));
+                                      const dataContext = await fetchMemberContext(member);
+                                      handleSubmit(null, buildMemberPrompt(member), composeSystemPrompt({ entityType: 'member', entityName: member.name, dataContext }));
                                     }}
                                     className={cn(
                                       "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
@@ -3103,9 +3160,10 @@ const NewChat = () => {
                             <button
                               key={member.people_id}
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 setMobileDrawerCategory(null);
-                                handleSubmit(null, buildMemberPrompt(member), composeSystemPrompt({ entityType: 'member', entityName: member.name }));
+                                const dataContext = await fetchMemberContext(member);
+                                handleSubmit(null, buildMemberPrompt(member), composeSystemPrompt({ entityType: 'member', entityName: member.name, dataContext }));
                               }}
                               className={cn(
                                 "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
