@@ -237,11 +237,11 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
 
       <nav className="fixed top-0 left-0 right-0 z-50 px-5 py-2 bg-background/80 backdrop-blur-md">
         <div className="flex items-center justify-between">
-          {/* Left side - Logs menu icon */}
+          {/* Left side: NYSgpt on mobile, Logs button on desktop */}
           <div className="flex items-center space-x-1">
             <button
               onClick={handleOpenSidebar}
-              className="inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
+              className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
               aria-label="Open menu"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -249,6 +249,12 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
                 <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
                 <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
               </svg>
+            </button>
+            <button
+              onClick={handleHeartClick}
+              className="md:hidden inline-flex items-center justify-center h-10 rounded-md px-3 text-black hover:bg-muted transition-colors font-semibold text-xl"
+            >
+              NYSgpt
             </button>
           </div>
 
@@ -332,14 +338,14 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
             </div>
           </div>
 
-          {/* Right side - Controls */}
+          {/* Right side: NYSgpt on desktop, Logs button on mobile */}
           <div className="flex items-center gap-2">
-            {/* NYSgpt button */}
+            {/* NYSgpt button (desktop only) */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={handleHeartClick}
-                  className="inline-flex items-center justify-center h-10 rounded-md px-3 text-black hover:bg-muted transition-colors font-semibold text-xl"
+                  className="hidden md:inline-flex items-center justify-center h-10 rounded-md px-3 text-black hover:bg-muted transition-colors font-semibold text-xl"
                 >
                   NYSgpt
                 </button>
@@ -348,6 +354,18 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
                 What is NYSgpt?
               </TooltipContent>
             </Tooltip>
+            {/* Logs button (mobile only) */}
+            <button
+              onClick={handleOpenSidebar}
+              className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
+              aria-label="Open menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+              </svg>
+            </button>
           </div>
         </div>
       </nav>
