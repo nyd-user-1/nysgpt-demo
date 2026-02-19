@@ -924,9 +924,12 @@ const NewChat = () => {
   const [mobileDrawerBudget, setMobileDrawerBudget] = useState<any[]>([]);
   // School funding data for mobile drawer
   const [mobileDrawerSchools, setMobileDrawerSchools] = useState<any[]>([]);
+  // Search within drawer
+  const [drawerSearch, setDrawerSearch] = useState("");
 
   // Fetch data when mobile drawer category opens
   useEffect(() => {
+    setDrawerSearch("");
     if (!mobileDrawerCategory) return;
     if (mobileDrawerCategory === 'bills' && availableBills.length === 0) fetchBillsForSelection();
     if (mobileDrawerCategory === 'members' && availableMembers.length === 0) fetchMembersForSelection();
@@ -2266,24 +2269,34 @@ const NewChat = () => {
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
                         <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] sm:absolute sm:bottom-full sm:left-0 sm:right-auto sm:w-80 sm:-mb-[22px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
                           {/* Header */}
-                          <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
+                          <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40 flex-shrink-0">
                             <button
                               type="button"
                               onClick={() => {
                                 setMobileDrawerCategory(null);
                                 setMobilePlusMenuOpen(true);
                               }}
-                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
                             >
                               <ArrowLeft className="h-4 w-4" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setMobileDrawerCategory(null)}
-                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
+                            <input
+                              type="text"
+                              value={drawerSearch}
+                              onChange={(e) => setDrawerSearch(e.target.value)}
+                              placeholder="Search..."
+                              className="flex-1 min-w-0 text-sm bg-transparent outline-none placeholder:text-muted-foreground/60"
+                              autoFocus
+                            />
+                            {drawerSearch && (
+                              <button
+                                type="button"
+                                onClick={() => setDrawerSearch("")}
+                                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </div>
 
                           {/* Content */}
@@ -2298,7 +2311,7 @@ const NewChat = () => {
                           >
                             {/* Sample Prompts */}
                             {mobileDrawerCategory === 'prompts' && (
-                              samplePrompts.map((item, idx) => (
+                              samplePrompts.filter(item => !drawerSearch || item.title.toLowerCase().includes(drawerSearch.toLowerCase()) || item.prompt.toLowerCase().includes(drawerSearch.toLowerCase())).map((item, idx) => (
                                 <button
                                   key={idx}
                                   type="button"
@@ -2332,7 +2345,7 @@ const NewChat = () => {
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading bills...</div>
                               ) : (
                                 <>
-                                {availableBills.map((bill, idx) => (
+                                {availableBills.filter(bill => !drawerSearch || bill.bill_number?.toLowerCase().includes(drawerSearch.toLowerCase()) || bill.title?.toLowerCase().includes(drawerSearch.toLowerCase())).map((bill, idx) => (
                                   <button
                                     key={`${bill.bill_number}-${bill.session_id}`}
                                     type="button"
@@ -2363,7 +2376,7 @@ const NewChat = () => {
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading members...</div>
                               ) : (
                                 <>
-                                {availableMembers.map((member, idx) => (
+                                {availableMembers.filter(member => !drawerSearch || member.name?.toLowerCase().includes(drawerSearch.toLowerCase())).map((member, idx) => (
                                   <button
                                     key={member.people_id}
                                     type="button"
@@ -2391,7 +2404,7 @@ const NewChat = () => {
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading contracts...</div>
                               ) : (
                                 <>
-                                {availableContracts.map((contract, idx) => {
+                                {availableContracts.filter(c => !drawerSearch || c.vendor_name?.toLowerCase().includes(drawerSearch.toLowerCase()) || c.department_facility?.toLowerCase().includes(drawerSearch.toLowerCase())).map((contract, idx) => {
                                   const vendor = contract.vendor_name || 'Unknown vendor';
                                   const dept = contract.department_facility ? ` (${contract.department_facility})` : '';
                                   const amount = contract.current_contract_amount
@@ -2432,7 +2445,7 @@ const NewChat = () => {
                               mobileDrawerLoading ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading lobbyists...</div>
                               ) : (
-                                mobileDrawerLobbyists.map((lobbyist, idx) => (
+                                mobileDrawerLobbyists.filter(l => !drawerSearch || l.name?.toLowerCase().includes(drawerSearch.toLowerCase())).map((lobbyist, idx) => (
                                   <button
                                     key={lobbyist.id}
                                     type="button"
@@ -2460,7 +2473,7 @@ const NewChat = () => {
                               mobileDrawerLoading ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading budget data...</div>
                               ) : (
-                                mobileDrawerBudget.map((item, idx) => (
+                                mobileDrawerBudget.filter(item => !drawerSearch || item['Agency Name']?.toLowerCase().includes(drawerSearch.toLowerCase()) || item['Program Name']?.toLowerCase().includes(drawerSearch.toLowerCase())).map((item, idx) => (
                                   <button
                                     key={idx}
                                     type="button"
@@ -2498,7 +2511,7 @@ const NewChat = () => {
                               mobileDrawerLoading ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading school funding...</div>
                               ) : (
-                                mobileDrawerSchools.map((record, idx) => (
+                                mobileDrawerSchools.filter(r => !drawerSearch || r.district?.toLowerCase().includes(drawerSearch.toLowerCase()) || r.county?.toLowerCase().includes(drawerSearch.toLowerCase())).map((record, idx) => (
                                   <button
                                     key={record.id}
                                     type="button"
@@ -2540,7 +2553,7 @@ const NewChat = () => {
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading committees...</div>
                               ) : (
                                 <>
-                                {availableCommittees.map((committee, idx) => {
+                                {availableCommittees.filter(c => !drawerSearch || c.committee_name?.toLowerCase().includes(drawerSearch.toLowerCase())).map((committee, idx) => {
                                   const prefix = committee.chamber === 'Senate' ? 'Senate ' : committee.chamber === 'Assembly' ? 'Assembly ' : '';
                                   return (
                                   <button
