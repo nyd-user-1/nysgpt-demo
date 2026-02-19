@@ -2293,6 +2293,7 @@ const NewChat = () => {
                               if (mobileDrawerCategory === 'bills') handlePopoverScroll(e, () => fetchBillsForSelection(availableBills.length), billsHasMore, billsLoading);
                               if (mobileDrawerCategory === 'members') handlePopoverScroll(e, () => fetchMembersForSelection(availableMembers.length), membersHasMore, membersLoading);
                               if (mobileDrawerCategory === 'committees') handlePopoverScroll(e, () => fetchCommitteesForSelection(availableCommittees.length), committeesHasMore, committeesLoading);
+                              if (mobileDrawerCategory === 'contracts') handlePopoverScroll(e, () => fetchContractsForSelection(availableContracts.length), contractsHasMore, contractsLoading);
                             }}
                           >
                             {/* Sample Prompts */}
@@ -2381,6 +2382,155 @@ const NewChat = () => {
                                 ))}
                                 {membersLoading && <div className="px-4 py-3 text-center text-xs text-muted-foreground">Loading...</div>}
                                 </>
+                              )
+                            )}
+
+                            {/* Contracts */}
+                            {mobileDrawerCategory === 'contracts' && (
+                              contractsLoading && availableContracts.length === 0 ? (
+                                <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading contracts...</div>
+                              ) : (
+                                <>
+                                {availableContracts.map((contract, idx) => {
+                                  const vendor = contract.vendor_name || 'Unknown vendor';
+                                  const dept = contract.department_facility ? ` (${contract.department_facility})` : '';
+                                  const amount = contract.current_contract_amount
+                                    ? ` valued at ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(contract.current_contract_amount)}`
+                                    : '';
+                                  const desc = contract.contract_description ? ` Description: "${contract.contract_description}".` : '';
+                                  const contractPrompt = `Tell me about the contract with ${vendor}${dept}${amount}.${desc} What are the contract details, spending status, and related contracts?`;
+                                  return (
+                                  <button
+                                    key={contract.contract_number}
+                                    type="button"
+                                    onClick={() => {
+                                      setMobileDrawerCategory(null);
+                                      setSelectedContracts([contract]);
+                                      handleSubmit(null, contractPrompt, composeSystemPrompt({ entityType: 'contract', entityName: vendor, scope: 'vendor' }));
+                                    }}
+                                    className={cn(
+                                      "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
+                                      idx > 0 && "border-t border-border/40"
+                                    )}
+                                  >
+                                    <span className="font-medium">{contract.vendor_name || 'N/A'}</span>
+                                    <span className="text-muted-foreground ml-2">
+                                      {contract.current_contract_amount
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(contract.current_contract_amount)
+                                        : ''}
+                                    </span>
+                                  </button>
+                                  );
+                                })}
+                                {contractsLoading && <div className="px-4 py-3 text-center text-xs text-muted-foreground">Loading...</div>}
+                                </>
+                              )
+                            )}
+
+                            {/* Lobbying */}
+                            {mobileDrawerCategory === 'lobbying' && (
+                              mobileDrawerLoading ? (
+                                <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading lobbyists...</div>
+                              ) : (
+                                mobileDrawerLobbyists.map((lobbyist, idx) => (
+                                  <button
+                                    key={lobbyist.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setQuery(`Tell me about lobbyist ${lobbyist.name}`);
+                                      setMobileDrawerCategory(null);
+                                      textareaRef.current?.focus();
+                                    }}
+                                    className={cn(
+                                      "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
+                                      idx > 0 && "border-t border-border/40"
+                                    )}
+                                  >
+                                    <span className="font-medium">{lobbyist.name}</span>
+                                    {lobbyist.type_of_lobbyist && (
+                                      <span className="text-muted-foreground ml-2">{lobbyist.type_of_lobbyist}</span>
+                                    )}
+                                  </button>
+                                ))
+                              )
+                            )}
+
+                            {/* Budget */}
+                            {mobileDrawerCategory === 'budget' && (
+                              mobileDrawerLoading ? (
+                                <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading budget data...</div>
+                              ) : (
+                                mobileDrawerBudget.map((item, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => {
+                                      const amount = item['Appropriations Recommended 2026-27']
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                        : '';
+                                      setQuery(`Tell me about the ${item['Agency Name']} budget${item['Program Name'] ? ` for ${item['Program Name']}` : ''}${amount ? ` with ${amount} recommended` : ''}. What are the key appropriations and spending trends?`);
+                                      setMobileDrawerCategory(null);
+                                      textareaRef.current?.focus();
+                                    }}
+                                    className={cn(
+                                      "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
+                                      idx > 0 && "border-t border-border/40"
+                                    )}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium truncate">{item['Agency Name']}</span>
+                                      <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">
+                                        {item['Appropriations Recommended 2026-27']
+                                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(item['Appropriations Recommended 2026-27'])
+                                          : ''}
+                                      </span>
+                                    </div>
+                                    {item['Program Name'] && (
+                                      <p className="text-muted-foreground text-xs mt-0.5 truncate">{item['Program Name']}</p>
+                                    )}
+                                  </button>
+                                ))
+                              )
+                            )}
+
+                            {/* School Funding */}
+                            {mobileDrawerCategory === 'schools' && (
+                              mobileDrawerLoading ? (
+                                <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading school funding...</div>
+                              ) : (
+                                mobileDrawerSchools.map((record, idx) => (
+                                  <button
+                                    key={record.id}
+                                    type="button"
+                                    onClick={() => {
+                                      const change = record.total_change
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(record.total_change)
+                                        : '';
+                                      setQuery(`Analyze school funding for ${record.district}${record.county ? ` in ${record.county} County` : ''} for the ${record.enacted_budget} budget year.${change ? ` Total change: ${change}.` : ''} What should I know about this district's funding?`);
+                                      setMobileDrawerCategory(null);
+                                      textareaRef.current?.focus();
+                                    }}
+                                    className={cn(
+                                      "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
+                                      idx > 0 && "border-t border-border/40"
+                                    )}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium truncate">{record.district}</span>
+                                      <span className="text-muted-foreground text-xs ml-2 flex-shrink-0">{record.county}</span>
+                                    </div>
+                                    <p className="text-muted-foreground text-xs mt-0.5">
+                                      {record.total_school_year
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(record.total_school_year)
+                                        : ''}
+                                      {record.percent_change != null && (
+                                        <span className={record.percent_change >= 0 ? 'text-green-600 ml-2' : 'text-red-600 ml-2'}>
+                                          {record.percent_change >= 0 ? '+' : ''}{record.percent_change.toFixed(1)}%
+                                        </span>
+                                      )}
+                                    </p>
+                                  </button>
+                                ))
                               )
                             )}
 
