@@ -378,6 +378,144 @@ const fetchMemberContext = async (member: any): Promise<string> => {
   return parts.join('\n');
 };
 
+/** Fetch budget appropriations, capital, and spending data for an agency */
+const fetchBudgetContext = async (agencyName: string, programName?: string): Promise<string> => {
+  const parts: string[] = [];
+  try {
+    // Fetch appropriations
+    let apQuery = supabase
+      .from('budget_2027-aprops')
+      .select('*')
+      .ilike('Agency Name', `%${agencyName}%`);
+    if (programName) {
+      apQuery = apQuery.ilike('Program Name', `%${programName}%`);
+    }
+    const { data: aprops } = await apQuery.limit(50);
+
+    if (aprops && aprops.length > 0) {
+      parts.push(`APPROPRIATIONS DATA (${aprops.length} line items):`);
+      for (const row of aprops) {
+        const prog = row['Program Name'] ? ` — ${row['Program Name']}` : '';
+        const cat = row['Appropriation Category'] || '';
+        const avail = Number(row['Appropriations Available 2025-26'] || 0);
+        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
+        const reapp = Number(row['Reappropriations Recommended 2026-27'] || 0);
+        const fund = row['Fund Name'] || '';
+        const fundType = row['Fund Type'] || '';
+        parts.push(`- ${row['Agency Name']}${prog} | Category: ${cat} | Fund: ${fund} (${fundType}) | Available 2025-26: $${avail.toLocaleString()} | Recommended 2026-27: $${rec.toLocaleString()} | Reappropriations: $${reapp.toLocaleString()}`);
+      }
+    }
+
+    // Fetch capital appropriations
+    const { data: capAprops } = await supabase
+      .from('budget_2027_capital_aprops')
+      .select('*')
+      .ilike('Agency Name', `%${agencyName}%`)
+      .limit(30);
+
+    if (capAprops && capAprops.length > 0) {
+      parts.push(`\nCAPITAL APPROPRIATIONS (${capAprops.length} items):`);
+      for (const row of capAprops) {
+        const desc = row['Description'] || 'No description';
+        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
+        const reapp = Number(row['Reappropriations Recommended 2026-27'] || 0);
+        const source = row['Financing Source'] || '';
+        parts.push(`- ${desc} | Recommended: $${rec.toLocaleString()} | Reappropriations: $${reapp.toLocaleString()} | Source: ${source}`);
+      }
+    }
+
+    // Fetch spending history (recent years only)
+    const { data: spending } = await supabase
+      .from('budget_2027_spending')
+      .select('"Agency", "Function", "FP Category", "Fund", "Fund Type", "2022-23 Actuals", "2023-24 Actuals", "2024-25 Actuals", "2025-26 Estimates", "2026-27 Estimates"')
+      .ilike('Agency', `%${agencyName}%`)
+      .limit(30);
+
+    if (spending && spending.length > 0) {
+      parts.push(`\nSPENDING HISTORY (${spending.length} line items):`);
+      for (const row of spending) {
+        const fn = row['Function'] || '';
+        const fpCat = row['FP Category'] || '';
+        const fund = row['Fund'] || '';
+        const y2223 = Number(row['2022-23 Actuals'] || 0);
+        const y2324 = Number(row['2023-24 Actuals'] || 0);
+        const y2425 = Number(row['2024-25 Actuals'] || 0);
+        const y2526 = Number(row['2025-26 Estimates'] || 0);
+        const y2627 = Number(row['2026-27 Estimates'] || 0);
+        parts.push(`- ${fn} | ${fpCat} | ${fund} | 2022-23: $${y2223.toLocaleString()} | 2023-24: $${y2324.toLocaleString()} | 2024-25: $${y2425.toLocaleString()} | 2025-26 Est: $${y2526.toLocaleString()} | 2026-27 Est: $${y2627.toLocaleString()}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching budget context:', err);
+  }
+  return parts.join('\n');
+};
+
+/** Fetch lobbying data for a lobbyist */
+const fetchLobbyingContext = async (lobbyistName: string): Promise<string> => {
+  const parts: string[] = [];
+  try {
+    const { data: lobbyData } = await supabase
+      .from('2025_lobbyist_dataset')
+      .select('*')
+      .ilike('principal_lobbyist', `%${lobbyistName}%`)
+      .limit(20);
+
+    if (lobbyData && lobbyData.length > 0) {
+      parts.push(`LOBBYING ACTIVITY DATA (${lobbyData.length} records):`);
+      for (const row of lobbyData) {
+        const client = row.beneficial_client || row.contractual_client || 'N/A';
+        const comp = Number(row.compensation || 0);
+        const expenses = Number(row.total_expenses || 0);
+        const type = row.type_of_lobbyist || '';
+        parts.push(`- Client: ${client} | Type: ${type} | Compensation: $${comp.toLocaleString()} | Total Expenses: $${expenses.toLocaleString()}`);
+      }
+    }
+
+    const { data: individualData } = await supabase
+      .from('Individual_Lobbyists')
+      .select('*')
+      .ilike('principal_lobbyist_name', `%${lobbyistName}%`)
+      .limit(20);
+
+    if (individualData && individualData.length > 0) {
+      parts.push(`\nINDIVIDUAL LOBBYISTS (${individualData.length}):`);
+      for (const row of individualData) {
+        parts.push(`- ${row.individual_lobbyist} | ${row.city || ''}, ${row.state || ''} | Phone: ${row.phone_number || 'N/A'}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching lobbying context:', err);
+  }
+  return parts.join('\n');
+};
+
+/** Fetch school funding data for a district */
+const fetchSchoolFundingDetailContext = async (district: string, budgetYear?: string): Promise<string> => {
+  const parts: string[] = [];
+  try {
+    let query = supabase
+      .from('school_funding_totals')
+      .select('*')
+      .eq('district', district);
+    if (budgetYear) {
+      query = query.eq('enacted_budget', budgetYear);
+    }
+    const { data } = await query.order('enacted_budget', { ascending: false }).limit(10);
+
+    if (data && data.length > 0) {
+      parts.push(`SCHOOL FUNDING DATA FOR ${district}:`);
+      for (const row of data) {
+        const pct = row.percent_change != null ? `${row.percent_change >= 0 ? '+' : ''}${row.percent_change.toFixed(1)}%` : 'N/A';
+        parts.push(`- Budget Year: ${row.enacted_budget} | County: ${row.county || 'N/A'} | Total School Year: $${(row.total_school_year || 0).toLocaleString()} | Total Base Year: $${(row.total_base_year || 0).toLocaleString()} | Change: $${(row.total_change || 0).toLocaleString()} (${pct}) | Categories: ${row.category_count || 0}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching school funding context:', err);
+  }
+  return parts.join('\n');
+};
+
 const NewChat = () => {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -697,6 +835,10 @@ const NewChat = () => {
       const params = new URLSearchParams();
       params.set('prompt', promptParam);
       if (contextParam) params.set('context', contextParam);
+      const ba = searchParams.get('budgetAgency');
+      const bp = searchParams.get('budgetProgram');
+      if (ba) params.set('budgetAgency', ba);
+      if (bp) params.set('budgetProgram', bp);
       navigate(`/new-chat?${params.toString()}`, { replace: true });
       return;
     }
@@ -743,6 +885,20 @@ const NewChat = () => {
             }
           } catch (err) {
             console.error('[NewChat] Failed to fetch URL content:', err);
+          }
+        }
+
+        // If budget agency param is present, fetch budget data context
+        const budgetAgencyParam = searchParams.get('budgetAgency');
+        const budgetProgramParam = searchParams.get('budgetProgram');
+        if (budgetAgencyParam && !finalContext) {
+          try {
+            const budgetData = await fetchBudgetContext(budgetAgencyParam, budgetProgramParam || undefined);
+            if (budgetData) {
+              finalContext = composeSystemPrompt({ entityType: 'budget', entityName: budgetAgencyParam, dataContext: budgetData });
+            }
+          } catch (err) {
+            console.error('[NewChat] Failed to fetch budget context:', err);
           }
         }
 
@@ -2506,10 +2662,10 @@ const NewChat = () => {
                                   <button
                                     key={lobbyist.id}
                                     type="button"
-                                    onClick={() => {
-                                      setQuery(`Tell me about lobbyist ${lobbyist.name}`);
+                                    onClick={async () => {
                                       setMobileDrawerCategory(null);
-                                      textareaRef.current?.focus();
+                                      const dataContext = await fetchLobbyingContext(lobbyist.name);
+                                      handleSubmit(null, `Tell me about lobbyist ${lobbyist.name}`, composeSystemPrompt({ entityType: 'lobbying', entityName: lobbyist.name, dataContext, scope: 'lobbyist' }));
                                     }}
                                     className={cn(
                                       "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
@@ -2534,13 +2690,16 @@ const NewChat = () => {
                                   <button
                                     key={idx}
                                     type="button"
-                                    onClick={() => {
+                                    onClick={async () => {
+                                      setMobileDrawerCategory(null);
+                                      const agencyName = item['Agency Name'];
+                                      const programName = item['Program Name'];
                                       const amount = Number(item['Appropriations Recommended 2026-27'])
                                         ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(item['Appropriations Recommended 2026-27']))
                                         : '';
-                                      setQuery(`Tell me about the ${item['Agency Name']} budget${item['Program Name'] ? ` for ${item['Program Name']}` : ''}${amount ? ` with ${amount} recommended` : ''}. What are the key appropriations and spending trends?`);
-                                      setMobileDrawerCategory(null);
-                                      textareaRef.current?.focus();
+                                      const prompt = `Tell me about the ${agencyName} budget${programName ? ` for ${programName}` : ''}${amount ? ` with ${amount} recommended` : ''}. What are the key appropriations and spending trends?`;
+                                      const dataContext = await fetchBudgetContext(agencyName, programName || undefined);
+                                      handleSubmit(null, prompt, composeSystemPrompt({ entityType: 'budget', entityName: agencyName, dataContext }));
                                     }}
                                     className={cn(
                                       "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",
@@ -2572,13 +2731,14 @@ const NewChat = () => {
                                   <button
                                     key={record.id}
                                     type="button"
-                                    onClick={() => {
+                                    onClick={async () => {
+                                      setMobileDrawerCategory(null);
                                       const change = record.total_change
                                         ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(record.total_change)
                                         : '';
-                                      setQuery(`Analyze school funding for ${record.district}${record.county ? ` in ${record.county} County` : ''} for the ${record.enacted_budget} budget year.${change ? ` Total change: ${change}.` : ''} What should I know about this district's funding?`);
-                                      setMobileDrawerCategory(null);
-                                      textareaRef.current?.focus();
+                                      const prompt = `Analyze school funding for ${record.district}${record.county ? ` in ${record.county} County` : ''} for the ${record.enacted_budget} budget year.${change ? ` Total change: ${change}.` : ''} What should I know about this district's funding?`;
+                                      const dataContext = await fetchSchoolFundingDetailContext(record.district, record.enacted_budget);
+                                      handleSubmit(null, prompt, composeSystemPrompt({ entityType: 'schoolFunding', entityName: record.district, dataContext }));
                                     }}
                                     className={cn(
                                       "w-full text-left px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors",

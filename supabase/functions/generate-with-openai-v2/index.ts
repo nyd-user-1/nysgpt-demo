@@ -686,6 +686,65 @@ function formatSemanticResultsForContext(chunks: any[]): string {
   return contextText;
 }
 
+// Search budget tables for agency/program data
+async function searchBudgetData(query: string): Promise<string> {
+  if (!supabaseUrl || !supabaseServiceKey) return '';
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const stopWords = ['tell', 'about', 'budget', 'appropriation', 'spending', 'what', 'this', 'funding', 'used', 'from', 'prior', 'year', 'recent', 'years', 'changed', 'trends', 'capital', 'project'];
+    const keywords = query
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !stopWords.includes(w))
+      .slice(0, 3);
+
+    if (keywords.length === 0) return '';
+
+    const parts: string[] = [];
+
+    // Search appropriations
+    const agencyConditions = keywords.map(k => `"Agency Name".ilike.%${k}%`).join(',');
+    const { data: aprops } = await supabase
+      .from('budget_2027-aprops')
+      .select('*')
+      .or(agencyConditions)
+      .limit(20);
+
+    if (aprops && aprops.length > 0) {
+      parts.push(`\n\nBUDGET APPROPRIATIONS DATA (${aprops.length} records from NYSgpt database):`);
+      for (const row of aprops) {
+        const prog = row['Program Name'] ? ` — ${row['Program Name']}` : '';
+        const avail = Number(row['Appropriations Available 2025-26'] || 0);
+        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
+        parts.push(`- ${row['Agency Name']}${prog} | ${row['Appropriation Category'] || ''} | Fund: ${row['Fund Name'] || ''} (${row['Fund Type'] || ''}) | Available 2025-26: $${avail.toLocaleString()} | Recommended 2026-27: $${rec.toLocaleString()}`);
+      }
+    }
+
+    // Search spending
+    const spendConditions = keywords.map(k => `"Agency".ilike.%${k}%`).join(',');
+    const { data: spending } = await supabase
+      .from('budget_2027_spending')
+      .select('"Agency", "Function", "FP Category", "Fund", "2022-23 Actuals", "2023-24 Actuals", "2024-25 Actuals", "2025-26 Estimates", "2026-27 Estimates"')
+      .or(spendConditions)
+      .limit(15);
+
+    if (spending && spending.length > 0) {
+      parts.push(`\n\nBUDGET SPENDING HISTORY (${spending.length} records):`);
+      for (const row of spending) {
+        parts.push(`- ${row['Agency']} | ${row['Function'] || ''} | ${row['FP Category'] || ''} | 2023-24: $${Number(row['2023-24 Actuals'] || 0).toLocaleString()} | 2024-25: $${Number(row['2024-25 Actuals'] || 0).toLocaleString()} | 2025-26 Est: $${Number(row['2025-26 Estimates'] || 0).toLocaleString()} | 2026-27 Est: $${Number(row['2026-27 Estimates'] || 0).toLocaleString()}`);
+      }
+    }
+
+    console.log(`Budget search found ${aprops?.length || 0} appropriations, ${spending?.length || 0} spending records`);
+    return parts.join('\n');
+  } catch (error) {
+    console.error('Error searching budget data:', error);
+    return '';
+  }
+}
+
 // Format conversation history for OpenAI messages array
 // This helper can be reused across OpenAI, Claude, and Perplexity edge functions
 function formatConversationHistory(previousMessages: any[]): { role: string; content: string }[] {
@@ -743,6 +802,7 @@ serve(async (req) => {
     let nysgptDataPromise: Promise<any> | null = null;
     let semanticSearchPromise: Promise<any[] | null> | null = null;
     let billChunksPromise: Promise<any[] | null> | null = null;
+    let budgetDataPromise: Promise<string> | null = null;
 
     // Build comprehensive search query based on entity context
     let searchQuery = prompt;
@@ -805,6 +865,12 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
       }
     }
 
+    // Start budget data search in parallel for budget-related queries
+    const budgetKeywords = /budget|appropriat|spending|fiscal|funding|agency/i;
+    if ((type === 'chat' || type === 'default') && budgetKeywords.test(searchQuery)) {
+      budgetDataPromise = searchBudgetData(searchQuery);
+    }
+
     // Start NYS API search if appropriate
     if (enhanceWithNYSData && nysApiKey && !shouldSkipNYSData && type !== 'media' && context !== 'landing_page') {
       nysDataPromise = searchNYSData(searchQuery, entityContext?.type, entityId);
@@ -856,6 +922,13 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
     // Add full bill text when a specific bill number was queried
     if (billChunksResults && billChunksResults.length > 0) {
       combinedContext += formatBillChunksForContext(billChunksResults);
+    }
+    // Add budget data if searched
+    if (budgetDataPromise) {
+      const budgetData = await budgetDataPromise;
+      if (budgetData) {
+        combinedContext += budgetData;
+      }
     }
 
     let systemPrompt = getSystemPrompt(type, combinedContext ? { nysData: combinedContext } : context, entityData);

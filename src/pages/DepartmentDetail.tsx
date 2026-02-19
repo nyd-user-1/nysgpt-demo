@@ -341,11 +341,12 @@ export default function DepartmentDetail() {
                             const amount = row['Appropriations Recommended 2026-27'];
                             const agency = reformatAgencyName(row['Agency Name'] || '');
                             const promptText = `Tell me about the NYS budget appropriation for ${agency} for "${program}"${amount ? ` with a recommended appropriation of ${formatBudgetAmount(amount)}` : ''}. What is this funding used for?`;
+                            const chatParams = new URLSearchParams({ prompt: promptText, budgetAgency: row['Agency Name'] || '', budgetProgram: row['Program Name'] || '' });
                             return (
                               <CarouselItem key={idx} className="pl-4 sm:basis-1/2 md:basis-1/3">
                                 <div
                                   className="group bg-muted/30 hover:bg-muted/50 rounded-2xl p-5 cursor-pointer transition-all duration-200 h-full"
-                                  onClick={() => navigate(`/new-chat?prompt=${encodeURIComponent(promptText)}`)}
+                                  onClick={() => navigate(`/new-chat?${chatParams.toString()}`)}
                                 >
                                   <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-semibold text-sm line-clamp-2">{program}</h3>
@@ -387,11 +388,12 @@ export default function DepartmentDetail() {
                             const amount = row['Appropriations Recommended 2026-27'];
                             const agency = reformatAgencyName(row['Agency Name'] || '');
                             const promptText = `Tell me about the NYS capital appropriation for ${agency} described as "${description}"${amount ? ` with a recommended amount of ${formatBudgetAmount(amount)}` : ''}. What is this capital project about?`;
+                            const chatParams = new URLSearchParams({ prompt: promptText, budgetAgency: row['Agency Name'] || '' });
                             return (
                               <CarouselItem key={idx} className="pl-4 sm:basis-1/2 md:basis-1/3">
                                 <div
                                   className="group bg-muted/30 hover:bg-muted/50 rounded-2xl p-5 cursor-pointer transition-all duration-200 h-full"
-                                  onClick={() => navigate(`/new-chat?prompt=${encodeURIComponent(promptText)}`)}
+                                  onClick={() => navigate(`/new-chat?${chatParams.toString()}`)}
                                 >
                                   <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-semibold text-sm line-clamp-2">{description}</h3>
@@ -433,11 +435,12 @@ export default function DepartmentDetail() {
                             const estimate = row['2026-27 Estimates'];
                             const agency = reformatAgencyName(row['Agency'] || '');
                             const promptText = `Tell me about NYS spending by ${agency} under the "${fn}" function${estimate ? ` with estimated spending of ${formatBudgetAmount(estimate)}` : ''}. How has this spending changed over recent years?`;
+                            const chatParams = new URLSearchParams({ prompt: promptText, budgetAgency: row['Agency'] || '' });
                             return (
                               <CarouselItem key={idx} className="pl-4 sm:basis-1/2 md:basis-1/3">
                                 <div
                                   className="group bg-muted/30 hover:bg-muted/50 rounded-2xl p-5 cursor-pointer transition-all duration-200 h-full"
-                                  onClick={() => navigate(`/new-chat?prompt=${encodeURIComponent(promptText)}`)}
+                                  onClick={() => navigate(`/new-chat?${chatParams.toString()}`)}
                                 >
                                   <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-semibold text-sm line-clamp-2">{fn}</h3>

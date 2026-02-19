@@ -113,22 +113,28 @@ const Budget = () => {
 
   const handleChatClick = (item: any) => {
     let prompt = '';
+    let budgetAgency = '';
+    let budgetProgram = '';
     if (activeTab === 'appropriations') {
-      const agency = reformatAgencyName(item['Agency Name'] || 'this agency');
-      const program = item['Program Name'] ? ` for "${item['Program Name']}"` : '';
+      budgetAgency = item['Agency Name'] || '';
+      budgetProgram = item['Program Name'] || '';
+      const agency = reformatAgencyName(budgetAgency || 'this agency');
+      const program = budgetProgram ? ` for "${budgetProgram}"` : '';
       const amount = item['Appropriations Recommended 2026-27']
         ? ` with a recommended appropriation of ${formatBudgetAmount(item['Appropriations Recommended 2026-27'])}`
         : '';
       prompt = `Tell me about the NYS budget appropriation for ${agency}${program}${amount}. What is this funding used for and how has it changed from the prior year?`;
     } else if (activeTab === 'capital') {
-      const agency = reformatAgencyName(item['Agency Name'] || 'this agency');
+      budgetAgency = item['Agency Name'] || '';
+      const agency = reformatAgencyName(budgetAgency || 'this agency');
       const desc = item['Description'] ? ` described as "${item['Description']}"` : '';
       const amount = item['Appropriations Recommended 2026-27']
         ? ` with a recommended amount of ${formatBudgetAmount(item['Appropriations Recommended 2026-27'])}`
         : '';
       prompt = `Tell me about the NYS capital appropriation for ${agency}${desc}${amount}. What is this capital project about?`;
     } else {
-      const agency = reformatAgencyName(item['Agency'] || 'this agency');
+      budgetAgency = item['Agency'] || '';
+      const agency = reformatAgencyName(budgetAgency || 'this agency');
       const fn = item['Function'] ? ` under the "${item['Function']}" function` : '';
       const selectedYearCol = yearFilter || '2026-27 Estimates';
       const fyLabel = selectedYearCol.replace(/\s+(Actuals|Estimates)$/i, '');
@@ -137,7 +143,10 @@ const Budget = () => {
         : '';
       prompt = `Tell me about NYS spending by ${agency}${fn}${amount}. How has this spending changed over recent years?`;
     }
-    navigate(`/new-chat?prompt=${encodeURIComponent(prompt)}`);
+    const params = new URLSearchParams({ prompt });
+    if (budgetAgency) params.set('budgetAgency', budgetAgency);
+    if (budgetProgram) params.set('budgetProgram', budgetProgram);
+    navigate(`/new-chat?${params.toString()}`);
   };
 
   const handleCardClick = (item: any) => {

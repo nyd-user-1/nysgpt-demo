@@ -427,6 +427,61 @@ function formatBillChunksForContext(chunks: any[]): string {
   return contextText;
 }
 
+// Search budget tables for agency/program data
+async function searchBudgetData(query: string): Promise<string> {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const stopWords = ['tell', 'about', 'budget', 'appropriation', 'spending', 'what', 'this', 'funding', 'used', 'from', 'prior', 'year', 'recent', 'years', 'changed', 'trends', 'capital', 'project'];
+    const keywords = query
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !stopWords.includes(w))
+      .slice(0, 3);
+
+    if (keywords.length === 0) return '';
+
+    const parts: string[] = [];
+
+    const agencyConditions = keywords.map(k => `"Agency Name".ilike.%${k}%`).join(',');
+    const { data: aprops } = await supabase
+      .from('budget_2027-aprops')
+      .select('*')
+      .or(agencyConditions)
+      .limit(20);
+
+    if (aprops && aprops.length > 0) {
+      parts.push(`\n\nBUDGET APPROPRIATIONS DATA (${aprops.length} records from NYSgpt database):`);
+      for (const row of aprops) {
+        const prog = row['Program Name'] ? ` — ${row['Program Name']}` : '';
+        const avail = Number(row['Appropriations Available 2025-26'] || 0);
+        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
+        parts.push(`- ${row['Agency Name']}${prog} | ${row['Appropriation Category'] || ''} | Fund: ${row['Fund Name'] || ''} (${row['Fund Type'] || ''}) | Available 2025-26: $${avail.toLocaleString()} | Recommended 2026-27: $${rec.toLocaleString()}`);
+      }
+    }
+
+    const spendConditions = keywords.map(k => `"Agency".ilike.%${k}%`).join(',');
+    const { data: spending } = await supabase
+      .from('budget_2027_spending')
+      .select('"Agency", "Function", "FP Category", "Fund", "2022-23 Actuals", "2023-24 Actuals", "2024-25 Actuals", "2025-26 Estimates", "2026-27 Estimates"')
+      .or(spendConditions)
+      .limit(15);
+
+    if (spending && spending.length > 0) {
+      parts.push(`\n\nBUDGET SPENDING HISTORY (${spending.length} records):`);
+      for (const row of spending) {
+        parts.push(`- ${row['Agency']} | ${row['Function'] || ''} | ${row['FP Category'] || ''} | 2023-24: $${Number(row['2023-24 Actuals'] || 0).toLocaleString()} | 2024-25: $${Number(row['2024-25 Actuals'] || 0).toLocaleString()} | 2025-26 Est: $${Number(row['2025-26 Estimates'] || 0).toLocaleString()} | 2026-27 Est: $${Number(row['2026-27 Estimates'] || 0).toLocaleString()}`);
+      }
+    }
+
+    console.log(`Budget search found ${aprops?.length || 0} appropriations, ${spending?.length || 0} spending records`);
+    return parts.join('\n');
+  } catch (error) {
+    console.error('Error searching budget data:', error);
+    return '';
+  }
+}
+
 // Format conversation history for Claude messages array
 function formatConversationHistory(previousMessages: any[]): { role: string; content: string }[] {
   if (!previousMessages || !Array.isArray(previousMessages) || previousMessages.length === 0) {
@@ -630,6 +685,8 @@ serve(async (req) => {
     let nysDataPromise: Promise<any> | null = null;
     const nysgptDataPromise = searchNYSgptDatabase(prompt, getCurrentSessionYear());
     const semanticSearchPromise = searchSemanticBillChunks(prompt);
+    const budgetKeywords = /budget|appropriat|spending|fiscal|funding|agency|department/i;
+    const budgetDataPromise = budgetKeywords.test(prompt) ? searchBudgetData(prompt) : null;
 
     // Fetch full bill text: from current query OR from recent conversation history
     let billLookupQuery = prompt;
@@ -694,6 +751,15 @@ serve(async (req) => {
     // Add full bill text when a specific bill number was queried
     if (billChunksResults && billChunksResults.length > 0) {
       legislativeContext += formatBillChunksForContext(billChunksResults);
+    }
+
+    // Add budget data when query is budget-related
+    if (budgetDataPromise) {
+      const budgetData = await budgetDataPromise;
+      if (budgetData) {
+        legislativeContext += budgetData;
+        console.log('Budget data appended to legislative context');
+      }
     }
 
     // Build the enhanced system prompt with constitutional principles and legislative data
