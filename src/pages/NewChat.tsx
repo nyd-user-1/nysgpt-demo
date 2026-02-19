@@ -2168,7 +2168,7 @@ const NewChat = () => {
                   {/* Left Side - Sample prompts icon + Filter Buttons */}
                   <div className="flex items-center gap-1">
                     {/* Mobile-only "+" button with menu and drawer */}
-                    <div className="relative sm:hidden">
+                    <div className={cn("relative", (!chatStarted || isPublicPage) && "sm:hidden")}>
                       <button
                         type="button"
                         onClick={() => {
@@ -2226,7 +2226,7 @@ const NewChat = () => {
 
                       {/* Mobile drawer - shows after selecting from menu */}
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
-                        <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
+                        <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] sm:max-w-sm rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
                           {/* Header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
                             <span className="text-sm font-medium">
@@ -2375,7 +2375,7 @@ const NewChat = () => {
                     </div>
 
                     {/* Sample prompts selector (lightbulb) - hidden on mobile */}
-                    <div className="relative hidden sm:block">
+                    <div className={cn("relative", chatStarted && !isPublicPage ? "hidden" : "hidden sm:block")}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
@@ -2446,7 +2446,7 @@ const NewChat = () => {
                     </div>
 
                     {/* Filter Buttons (only shown when chat has started) */}
-                    {chatStarted && (
+                    {chatStarted && isPublicPage && (
                     <>
                     {/* Click-outside backdrop for any open popover */}
                     {(membersDialogOpen || committeesDialogOpen || billsDialogOpen || contractsDialogOpen) && (
