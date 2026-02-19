@@ -2226,7 +2226,7 @@ const NewChat = () => {
 
                       {/* Mobile drawer - shows after selecting from menu */}
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
-                        <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] sm:max-w-sm rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
+                        <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] sm:absolute sm:bottom-full sm:left-0 sm:right-auto sm:w-80 sm:-mb-[22px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
                           {/* Header */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
                             <span className="text-sm font-medium">
