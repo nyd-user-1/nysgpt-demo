@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChatPersistence } from "@/hooks/useChatPersistence";
-import { ArrowUp, ArrowDown, Square, Search as SearchIcon, FileText, Users, Building2, Wallet, Paperclip, X, PanelLeft, HandCoins, Lightbulb, Check, Plus, ChevronRight } from "lucide-react";
+import { ArrowUp, ArrowDown, Square, Search as SearchIcon, FileText, Users, Building2, Wallet, Paperclip, X, PanelLeft, HandCoins, Lightbulb, Check, Plus, ChevronRight, ArrowLeft } from "lucide-react";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { Contract } from "@/types/contracts";
 import { Button } from "@/components/ui/button";
@@ -2228,17 +2228,20 @@ const NewChat = () => {
                       {mobileDrawerCategory && !mobilePlusMenuOpen && (
                         <div className="fixed left-3 right-3 bottom-[44px] max-h-[320px] sm:absolute sm:bottom-full sm:left-0 sm:right-auto sm:w-80 sm:-mb-[22px] rounded-2xl border border-border/60 bg-background shadow-lg overflow-hidden z-[60] flex flex-col">
                           {/* Header */}
-                          <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
+                          <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMobileDrawerCategory(null);
+                                setMobilePlusMenuOpen(true);
+                              }}
+                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              <ArrowLeft className="h-4 w-4" />
+                            </button>
                             <span className="text-sm font-medium">
                               {mobileDrawerCategory === 'prompts' ? 'Sample Prompts' : mobileDrawerCategory.charAt(0).toUpperCase() + mobileDrawerCategory.slice(1)}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setMobileDrawerCategory(null)}
-                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
                           </div>
 
                           {/* Content */}
