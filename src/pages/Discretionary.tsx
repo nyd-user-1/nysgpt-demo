@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDiscretionarySearch } from '@/hooks/useDiscretionarySearch';
-import { Discretionary as DiscretionaryType, formatGrantAmount } from '@/types/discretionary';
+import { Discretionary as DiscretionaryType, formatGrantAmount, cleanGranteeName } from '@/types/discretionary';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Discretionary = () => {
@@ -149,7 +149,7 @@ const Discretionary = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     ref={searchInputRef}
-                    placeholder="Search grants..."
+                    placeholder="Search discretionary..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 h-12 text-base"
@@ -239,7 +239,7 @@ const Discretionary = () => {
             ) : grants.length === 0 ? (
               <div className="text-center py-12">
                 <Banknote className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No discretionary grants found matching your criteria.</p>
+                <p className="text-muted-foreground">No discretionary records found matching your criteria.</p>
                 {hasActiveFilters && (
                   <Button variant="link" onClick={clearFilters} className="mt-2">
                     Clear filters
@@ -266,7 +266,7 @@ const Discretionary = () => {
                 {!isAuthenticated && (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                      Please log in to view all discretionary grants.
+                      Please log in to view all discretionary records.
                     </p>
                     <Button variant="ghost" onClick={() => navigate('/auth-4')}
                       className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">
@@ -300,7 +300,7 @@ function GrantCard({ grant, onClick, onChatClick }: GrantCardProps) {
       className="group bg-muted/30 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg"
     >
       <h3 className="font-semibold text-base mb-3">
-        {grant.Grantee || 'Unknown Grantee'}
+        {cleanGranteeName(grant.Grantee)}
       </h3>
       {grant["Description of Grant"] && (
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3">

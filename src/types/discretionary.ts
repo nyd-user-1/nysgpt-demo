@@ -17,6 +17,12 @@ export interface Discretionary {
   year: number | null;
 }
 
+// Strip leading/trailing brackets from grantee names (data artifact)
+export function cleanGranteeName(name: string | null): string {
+  if (!name) return 'Unknown Grantee';
+  return name.replace(/^\[|\]$/g, '').trim() || 'Unknown Grantee';
+}
+
 // Format a dollar amount string (e.g. "1,500,000" → "$1,500,000")
 export function formatGrantAmount(amount: string | null): string {
   if (!amount || amount.trim() === '') return 'N/A';

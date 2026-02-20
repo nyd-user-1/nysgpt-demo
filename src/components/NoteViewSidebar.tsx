@@ -675,7 +675,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                       )}
                     >
                       <Banknote className="h-4 w-4" />
-                      <span>Grants</span>
+                      <span>Discretionary</span>
                     </NavLink>
                   </TooltipTrigger>
                   <TooltipContent side="right">

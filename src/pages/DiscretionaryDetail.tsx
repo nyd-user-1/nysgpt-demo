@@ -14,7 +14,7 @@ import { ArrowLeft, Plus, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { Discretionary, formatGrantAmount } from "@/types/discretionary";
+import { Discretionary, formatGrantAmount, cleanGranteeName } from "@/types/discretionary";
 import { useContractNotes } from "@/hooks/useContractNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
 import { InsetPanel } from '@/components/ui/inset-panel';
@@ -141,11 +141,11 @@ const DiscretionaryDetail = () => {
         <div className="max-w-[1300px] mx-auto">
           <Button variant="outline" onClick={handleBack} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Grants
+            Back to Discretionary
           </Button>
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">Grant record not found.</p>
+              <p className="text-muted-foreground">Discretionary record not found.</p>
             </CardContent>
           </Card>
         </div>
@@ -212,7 +212,7 @@ const DiscretionaryDetail = () => {
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Grants</span>
+              <span className="hidden sm:inline">Back to Discretionary</span>
               <span className="sm:hidden">Back</span>
             </Button>
 
@@ -222,7 +222,7 @@ const DiscretionaryDetail = () => {
                 <div className="space-y-6 relative">
                   <div className="pb-4 border-b">
                     <h1 className="text-2xl font-semibold text-foreground">
-                      {grant.Grantee || 'Unknown Grantee'}
+                      {cleanGranteeName(grant.Grantee)}
                     </h1>
                     <div className="flex flex-wrap items-center gap-2 mt-2">
                       {grant.fund_type && (
