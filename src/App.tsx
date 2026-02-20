@@ -70,6 +70,8 @@ const LobbyingDashboard = lazyRetry(() => import("./pages/LobbyingDashboard"));
 const ContractsDashboard = lazyRetry(() => import("./pages/ContractsDashboard"));
 const VotesDashboard = lazyRetry(() => import("./pages/VotesDashboard"));
 const LobbyingDetail = lazyRetry(() => import("./pages/LobbyingDetail"));
+const Revenue = lazyRetry(() => import("./pages/Revenue"));
+const RevenueDetail = lazyRetry(() => import("./pages/RevenueDetail"));
 const SchoolFunding = lazyRetry(() => import("./pages/SchoolFunding"));
 const SchoolFundingDetail = lazyRetry(() => import("./pages/SchoolFundingDetail"));
 const Committees2 = lazyRetry(() => import("./pages/Committees2"));
@@ -193,6 +195,8 @@ const App = () => {
                   <Route path="/committees/:committeeSlug" element={<ProtectedRoute><Committees /></ProtectedRoute>} />
                   <Route path="/members" element={<ProtectedRoute><Members2 /></ProtectedRoute>} />
                   <Route path="/members/:memberSlug" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+                  <Route path="/revenue" element={<ProtectedRoute><Revenue /></ProtectedRoute>} />
+                  <Route path="/revenue/:revenueId" element={<ProtectedRoute><RevenueDetail /></ProtectedRoute>} />
                   <Route path="/school-funding" element={<ProtectedRoute><SchoolFunding /></ProtectedRoute>} />
                   <Route path="/school-funding/:fundingId" element={<ProtectedRoute><SchoolFundingDetail /></ProtectedRoute>} />
                   <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />

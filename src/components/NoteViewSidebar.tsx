@@ -24,6 +24,7 @@ import {
   LogIn,
   LogOut,
   HandCoins,
+  TrendingUp,
   MoreHorizontal,
   Pin,
   Trash2,
@@ -640,6 +641,25 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                   </TooltipTrigger>
                   <TooltipContent side="right">
                     <p>Explore lobbying data</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/revenue"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/revenue") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Revenue</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>NYS revenue data</p>
                   </TooltipContent>
                 </Tooltip>
 
