@@ -42,6 +42,7 @@ export function useDiscretionarySearch() {
   const [sponsorFilter, setSponsorFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('');
   const [amountRange, setAmountRange] = useState<[number, number]>([AMOUNT_SLIDER_MIN, AMOUNT_SLIDER_MAX]);
+  const [sortBy, setSortBy] = useState<string>('newest');
   const [allGrants, setAllGrants] = useState<Discretionary[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -68,19 +69,32 @@ export function useDiscretionarySearch() {
     return query;
   };
 
+  const applySort = (query: any) => {
+    switch (sortBy) {
+      case 'oldest':
+        return query.order('year', { ascending: true, nullsFirst: false }).order('id', { ascending: true });
+      case 'amount-desc':
+        return query.order('Grant Amount', { ascending: false, nullsFirst: false }).order('id', { ascending: false });
+      case 'amount-asc':
+        return query.order('Grant Amount', { ascending: true, nullsFirst: false }).order('id', { ascending: true });
+      case 'az':
+        return query.order('Grantee', { ascending: true, nullsFirst: false });
+      case 'newest':
+      default:
+        return query.order('year', { ascending: false, nullsFirst: false }).order('id', { ascending: false });
+    }
+  };
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['discretionary', searchTerm, agencyFilter, fundTypeFilter, sponsorFilter, yearFilter],
+    queryKey: ['discretionary', searchTerm, agencyFilter, fundTypeFilter, sponsorFilter, yearFilter, sortBy],
     queryFn: async () => {
       let query = supabase
         .from('Discretionary')
         .select('*', { count: 'exact' });
 
       query = applyFilters(query);
-
-      query = query
-        .order('year', { ascending: false, nullsFirst: false })
-        .order('id', { ascending: false })
-        .limit(PAGE_SIZE);
+      query = applySort(query);
+      query = query.limit(PAGE_SIZE);
 
       const { data, error, count } = await query;
       if (error) throw error;
@@ -104,10 +118,8 @@ export function useDiscretionarySearch() {
     try {
       let query = supabase.from('Discretionary').select('*');
       query = applyFilters(query);
-      query = query
-        .order('year', { ascending: false, nullsFirst: false })
-        .order('id', { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1);
+      query = applySort(query);
+      query = query.range(offset, offset + PAGE_SIZE - 1);
 
       const { data: moreData, error: err } = await query;
       if (err) throw err;
@@ -191,5 +203,7 @@ export function useDiscretionarySearch() {
     setYearFilter,
     amountRange,
     setAmountRange,
+    sortBy,
+    setSortBy,
   };
 }

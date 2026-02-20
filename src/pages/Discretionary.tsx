@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Banknote, ArrowUp } from 'lucide-react';
+import { Search, X, Banknote, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InsetPanel } from '@/components/ui/inset-panel';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
@@ -55,6 +55,8 @@ const Discretionary = () => {
     loadMore,
     hasMore,
     loadingMore,
+    sortBy,
+    setSortBy,
   } = useDiscretionarySearch();
 
   useEffect(() => {
@@ -216,6 +218,20 @@ const Discretionary = () => {
                       {years.map((y) => (
                         <SelectItem key={y} value={y} className="focus:bg-muted focus:text-foreground">{y}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted [&>svg]:hidden focus:ring-0 focus:ring-offset-0">
+                      <ArrowUpDown className="h-4 w-4 mr-1 inline" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest" className="focus:bg-muted focus:text-foreground">Newest</SelectItem>
+                      <SelectItem value="oldest" className="focus:bg-muted focus:text-foreground">Oldest</SelectItem>
+                      <SelectItem value="amount-desc" className="focus:bg-muted focus:text-foreground">Amount (High)</SelectItem>
+                      <SelectItem value="amount-asc" className="focus:bg-muted focus:text-foreground">Amount (Low)</SelectItem>
+                      <SelectItem value="az" className="focus:bg-muted focus:text-foreground">A-Z</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
