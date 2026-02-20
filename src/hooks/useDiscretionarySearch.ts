@@ -12,8 +12,28 @@ function parseGrantAmount(amount: string | null): number | null {
   return isNaN(num) ? null : num;
 }
 
-export const AMOUNT_MIN = 0;
-export const AMOUNT_MAX = 10_000_000;
+// Non-linear amount steps matching actual data distribution
+// Most grants cluster $5K–$100K, with a long tail to $10M
+export const AMOUNT_STEPS = [
+  0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 25000,
+  30000, 40000, 50000, 75000, 100000, 150000, 200000, 250000,
+  500000, 750000, 1000000, 2500000, 5000000, 10000000,
+] as const;
+
+export const AMOUNT_SLIDER_MIN = 0;
+export const AMOUNT_SLIDER_MAX = AMOUNT_STEPS.length - 1;
+
+// Slider index → dollar amount
+export function sliderToAmount(index: number): number {
+  return AMOUNT_STEPS[Math.round(Math.min(Math.max(index, 0), AMOUNT_SLIDER_MAX))];
+}
+
+// Format slider amount for display
+export function formatSliderAmount(amount: number): string {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount}`;
+}
 
 export function useDiscretionarySearch() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,7 +41,7 @@ export function useDiscretionarySearch() {
   const [fundTypeFilter, setFundTypeFilter] = useState('');
   const [sponsorFilter, setSponsorFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('');
-  const [amountRange, setAmountRange] = useState<[number, number]>([AMOUNT_MIN, AMOUNT_MAX]);
+  const [amountRange, setAmountRange] = useState<[number, number]>([AMOUNT_SLIDER_MIN, AMOUNT_SLIDER_MAX]);
   const [allGrants, setAllGrants] = useState<Discretionary[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -102,12 +122,14 @@ export function useDiscretionarySearch() {
     }
   };
 
-  const amountFilterActive = amountRange[0] !== AMOUNT_MIN || amountRange[1] !== AMOUNT_MAX;
+  const amountFilterActive = amountRange[0] !== AMOUNT_SLIDER_MIN || amountRange[1] !== AMOUNT_SLIDER_MAX;
   const grants = amountFilterActive
     ? allGrants.filter(g => {
         const amt = parseGrantAmount(g["Grant Amount"]);
         if (amt === null) return false;
-        return amt >= amountRange[0] && amt <= amountRange[1];
+        const lo = sliderToAmount(amountRange[0]);
+        const hi = sliderToAmount(amountRange[1]);
+        return amt >= lo && amt <= hi;
       })
     : allGrants;
   const totalCount = data?.totalCount || 0;
