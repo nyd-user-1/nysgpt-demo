@@ -97,17 +97,23 @@ export function useDiscretionarySearch() {
   const { data: filterOptions } = useQuery({
     queryKey: ['discretionary-filter-options'],
     queryFn: async () => {
-      const [agencyRes, fundRes, sponsorRes, yearRes] = await Promise.all([
-        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).limit(15000),
-        supabase.from('Discretionary').select('fund_type').not('fund_type', 'is', null).limit(15000),
-        supabase.from('Discretionary').select('Sponsor').not('Sponsor', 'is', null).limit(15000),
-        supabase.from('Discretionary').select('year').not('year', 'is', null).limit(15000),
+      // Fetch from both ends (oldest + newest) to ensure all distinct values are captured
+      // Supabase caps at 1000 rows regardless of .limit()
+      const [agencyRes, agencyRes2, fundRes, sponsorRes, yearAsc, yearDesc] = await Promise.all([
+        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).order('agency_name').limit(1000),
+        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).order('agency_name', { ascending: false }).limit(1000),
+        supabase.from('Discretionary').select('fund_type').not('fund_type', 'is', null).limit(1000),
+        supabase.from('Discretionary').select('Sponsor').not('Sponsor', 'is', null).limit(1000),
+        supabase.from('Discretionary').select('year').not('year', 'is', null).order('year').limit(1000),
+        supabase.from('Discretionary').select('year').not('year', 'is', null).order('year', { ascending: false }).limit(1000),
       ]);
 
-      const agencies = [...new Set(agencyRes.data?.map(d => d.agency_name))].filter(Boolean).sort() as string[];
+      const allAgencies = [...(agencyRes.data || []), ...(agencyRes2.data || [])];
+      const agencies = [...new Set(allAgencies.map(d => d.agency_name))].filter(Boolean).sort() as string[];
       const fundTypes = [...new Set(fundRes.data?.map(d => d.fund_type))].filter(Boolean).sort() as string[];
       const sponsors = [...new Set(sponsorRes.data?.map(d => d.Sponsor))].filter(Boolean).sort() as string[];
-      const years = [...new Set(yearRes.data?.map(d => String(d.year)))].filter(Boolean).sort().reverse() as string[];
+      const allYears = [...(yearAsc.data || []), ...(yearDesc.data || [])];
+      const years = [...new Set(allYears.map(d => String(d.year)))].filter(Boolean).sort().reverse() as string[];
 
       return { agencies, fundTypes, sponsors, years };
     },
