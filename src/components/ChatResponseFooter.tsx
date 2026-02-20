@@ -5,7 +5,7 @@
 
 import { useState, ReactNode, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThumbsUp, ThumbsDown, Copy, Check, Mail, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen, Newspaper } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Copy, Check, Mail, MoreHorizontal, Star, FileDown, ScrollText, TextQuote, Loader2, NotebookPen, Newspaper, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExcerptPersistence } from "@/hooks/useExcerptPersistence";
 import { useNotePersistence } from "@/hooks/useNotePersistence";
@@ -23,12 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -120,13 +115,17 @@ export function ChatResponseFooter({
   const [copied, setCopied] = useState(false);
   const [emailSheetOpen, setEmailSheetOpen] = useState(false);
   const [feedbackState, setFeedbackState] = useState<'good' | 'bad' | null>(feedback ?? null);
+  const [currentBillIndex, setCurrentBillIndex] = useState(0);
+  const [billTextOpen, setBillTextOpen] = useState(true);
   const billTextRef = useRef<HTMLDivElement>(null);
 
-  // Lazy-fetch bill text only when accordion is toggled open
-  const primaryBill = hasBills ? bills[0] : null;
+  // Current bill based on slider index
+  const currentBill = hasBills ? bills[currentBillIndex] : null;
+
+  // Lazy-fetch bill text only when section is visible
   const { data: billFullText, isLoading: billTextLoading } = useBillText(
-    primaryBill?.bill_number ?? null,
-    primaryBill?.session_id ?? null,
+    currentBill?.bill_number ?? null,
+    currentBill?.session_id ?? null,
     showBillText
   );
 
@@ -649,17 +648,48 @@ export function ChatResponseFooter({
         </div>
       )}
 
-      {/* Bill Text Accordion - toggled by ScrollText icon */}
+      {/* Bill Text Slider - toggled by ScrollText icon */}
       {!isStreaming && showBillText && hasBills && (
         <div ref={billTextRef} className="pt-4 animate-in fade-in duration-300">
-          <Accordion type="single" collapsible defaultValue="bill-text">
-            <AccordionItem value="bill-text" className="border-b">
-              <AccordionTrigger className="hover:no-underline py-4">
-                <span className="text-sm font-medium">
-                  View Bill — {primaryBill?.bill_number}
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="pb-4 pt-2">
+          <div className="border-b">
+            {/* Header row */}
+            <button
+              onClick={() => setBillTextOpen(!billTextOpen)}
+              className="flex items-center w-full py-3 px-3 rounded-t-lg hover:bg-muted/50 transition-colors"
+            >
+              {/* Left: label + bill number + expand/collapse chevron */}
+              <span className="text-sm font-medium flex items-center gap-1.5">
+                View Bill — {currentBill?.bill_number}
+                <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform duration-200", billTextOpen && "rotate-180")} />
+              </span>
+
+              {/* Right: bill navigation (only when multiple bills) */}
+              {bills.length > 1 && (
+                <div className="ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-xs text-muted-foreground tabular-nums mr-1">
+                    {currentBillIndex + 1} / {bills.length}
+                  </span>
+                  <button
+                    onClick={() => setCurrentBillIndex((i) => Math.max(0, i - 1))}
+                    disabled={currentBillIndex === 0}
+                    className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentBillIndex((i) => Math.min(bills.length - 1, i + 1))}
+                    disabled={currentBillIndex === bills.length - 1}
+                    className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </button>
+
+            {/* Bill text content */}
+            {billTextOpen && (
+              <div className="pb-4 pt-2 px-2 animate-in fade-in slide-in-from-top-1 duration-200">
                 {billTextLoading ? (
                   <div className="space-y-3 px-2">
                     <Skeleton className="h-4 w-full" />
@@ -684,9 +714,9 @@ export function ChatResponseFooter({
                     Bill text is not available for this legislation.
                   </p>
                 )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
