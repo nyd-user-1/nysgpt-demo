@@ -4,47 +4,52 @@ export interface Revenue {
   Fund_Group: string | null;
   FP_Category: string | null;
   Detail_Receipt: string | null;
-  "1991-92": string | null;
-  "1992-93": string | null;
-  "1993-94": string | null;
-  "1994-95": string | null;
-  "1995-96": string | null;
-  "1996-97": string | null;
-  "1997-98": string | null;
-  "1998-99": string | null;
-  "1999-00": string | null;
-  "2000-01": string | null;
-  "2001-02": string | null;
-  "2002-03": string | null;
-  "2003-04": string | null;
-  "2004-05": string | null;
-  "2005-06": string | null;
-  "2006-07": string | null;
-  "2007-08": string | null;
-  "2008-09": string | null;
-  "2009-10": string | null;
-  "2010-11": string | null;
-  "2011-12": string | null;
-  "2012-13": string | null;
-  "2013-14": string | null;
-  "2014-15": string | null;
-  "2015-16": string | null;
-  "2016-17": string | null;
-  "2017-18": string | null;
-  "2018-19": string | null;
-  "2019-20": string | null;
-  "2020-21": string | null;
-  "2021-22": string | null;
-  "2022-23": string | null;
+  "1991_92_Actuals": string | null;
+  "1992_93_Actuals": string | null;
+  "1993_94_Actuals": string | null;
+  "1994_95_Actuals": string | null;
+  "1995_96_Actuals": string | null;
+  "1996_97_Actuals": string | null;
+  "1997_98_Actuals": string | null;
+  "1998_99_Actuals": string | null;
+  "1999_00_Actuals": string | null;
+  "2000_01_Actuals": string | null;
+  "2001_02_Actuals": string | null;
+  "2002_03_Actuals": string | null;
+  "2003_04_Actuals": string | null;
+  "2004_05_Actuals": string | null;
+  "2005_06_Actuals": string | null;
+  "2006_07_Actuals": string | null;
+  "2007_08_Actuals": string | null;
+  "2008_09_Actuals": string | null;
+  "2009_10_Actuals": string | null;
+  "2010_11_Actuals": string | null;
+  "2011_12_Actuals": string | null;
+  "2012_13_Actuals": string | null;
+  "2013_14_Actuals": string | null;
+  "2014_15_Actuals": string | null;
+  "2015_16_Actuals": string | null;
+  "2016_17_Actuals": string | null;
+  "2017_18_Actuals": string | null;
+  "2018_19_Actuals": string | null;
+  "2019_20_Actuals": string | null;
+  "2020_21_Actuals": string | null;
+  "2021_22_Actuals": string | null;
+  "2022_23_Actuals": string | null;
 }
 
 // All fiscal year column names in chronological order
 export const FISCAL_YEARS = [
-  "1991-92", "1992-93", "1993-94", "1994-95", "1995-96",
-  "1996-97", "1997-98", "1998-99", "1999-00", "2000-01",
-  "2001-02", "2002-03", "2003-04", "2004-05", "2005-06",
-  "2006-07", "2007-08", "2008-09", "2009-10", "2010-11",
-  "2011-12", "2012-13", "2013-14", "2014-15", "2015-16",
-  "2016-17", "2017-18", "2018-19", "2019-20", "2020-21",
-  "2021-22", "2022-23",
+  "1991_92_Actuals", "1992_93_Actuals", "1993_94_Actuals", "1994_95_Actuals", "1995_96_Actuals",
+  "1996_97_Actuals", "1997_98_Actuals", "1998_99_Actuals", "1999_00_Actuals", "2000_01_Actuals",
+  "2001_02_Actuals", "2002_03_Actuals", "2003_04_Actuals", "2004_05_Actuals", "2005_06_Actuals",
+  "2006_07_Actuals", "2007_08_Actuals", "2008_09_Actuals", "2009_10_Actuals", "2010_11_Actuals",
+  "2011_12_Actuals", "2012_13_Actuals", "2013_14_Actuals", "2014_15_Actuals", "2015_16_Actuals",
+  "2016_17_Actuals", "2017_18_Actuals", "2018_19_Actuals", "2019_20_Actuals", "2020_21_Actuals",
+  "2021_22_Actuals", "2022_23_Actuals",
 ] as const;
+
+// Display label for a fiscal year column (e.g. "2022_23_Actuals" → "FY 2022-23")
+export function fiscalYearLabel(col: string): string {
+  return "FY " + col.replace("_Actuals", "").replace("_", "-");
+}

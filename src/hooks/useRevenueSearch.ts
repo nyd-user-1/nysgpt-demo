@@ -142,16 +142,24 @@ export function getLatestAmount(revenue: Revenue): string | null {
   return null;
 }
 
-// Helper to format revenue amount strings (they're stored as text)
+// Helper to format revenue amount strings (stored as text, values are in millions)
 export function formatRevenueAmount(amount: string | null): string {
   if (!amount || amount.trim() === '') return 'N/A';
-  // Try to parse as number and format as currency
-  const num = parseFloat(amount.replace(/[,$]/g, ''));
+  // Parse the text value — e.g. "78,150.40" means $78,150.4 million
+  const num = parseFloat(amount.replace(/,/g, ''));
   if (isNaN(num)) return amount;
+  // Convert millions to actual dollars and format
+  const actual = num * 1_000_000;
+  if (actual >= 1_000_000_000) {
+    return `$${(actual / 1_000_000_000).toFixed(1)}B`;
+  }
+  if (actual >= 1_000_000) {
+    return `$${(actual / 1_000_000).toFixed(1)}M`;
+  }
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(num);
+  }).format(actual);
 }

@@ -14,8 +14,7 @@ import { ArrowLeft, Plus, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { Revenue } from "@/types/revenue";
-import { FISCAL_YEARS } from "@/types/revenue";
+import { Revenue, FISCAL_YEARS, fiscalYearLabel } from "@/types/revenue";
 import { formatRevenueAmount } from "@/hooks/useRevenueSearch";
 import { useContractNotes } from "@/hooks/useContractNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
@@ -287,7 +286,7 @@ const RevenueDetail = () => {
                       className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/30 transition-colors"
                     >
                       <span className="text-sm font-medium text-muted-foreground">
-                        FY {year}
+                        {fiscalYearLabel(year)}
                       </span>
                       <span className={cn(
                         "text-sm font-medium",
