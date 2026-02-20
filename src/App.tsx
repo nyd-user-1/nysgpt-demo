@@ -69,6 +69,9 @@ const Lobbying = lazyRetry(() => import("./pages/Lobbying"));
 const LobbyingDashboard = lazyRetry(() => import("./pages/LobbyingDashboard"));
 const ContractsDashboard = lazyRetry(() => import("./pages/ContractsDashboard"));
 const VotesDashboard = lazyRetry(() => import("./pages/VotesDashboard"));
+const RevenueDashboard = lazyRetry(() => import("./pages/RevenueDashboard"));
+const CapitalDashboard = lazyRetry(() => import("./pages/CapitalDashboard"));
+const DiscretionaryDashboard = lazyRetry(() => import("./pages/DiscretionaryDashboard"));
 const LobbyingDetail = lazyRetry(() => import("./pages/LobbyingDetail"));
 const Revenue = lazyRetry(() => import("./pages/Revenue"));
 const RevenueDetail = lazyRetry(() => import("./pages/RevenueDetail"));
@@ -214,6 +217,9 @@ const App = () => {
                   <Route path="/charts/contracts/:subChart" element={<ProtectedRoute><ContractsDashboard /></ProtectedRoute>} />
                   <Route path="/charts/votes" element={<ProtectedRoute><VotesDashboard /></ProtectedRoute>} />
                   <Route path="/charts/votes/:subChart" element={<ProtectedRoute><VotesDashboard /></ProtectedRoute>} />
+                  <Route path="/charts/revenue" element={<ProtectedRoute><RevenueDashboard /></ProtectedRoute>} />
+                  <Route path="/charts/capital" element={<ProtectedRoute><CapitalDashboard /></ProtectedRoute>} />
+                  <Route path="/charts/discretionary" element={<ProtectedRoute><DiscretionaryDashboard /></ProtectedRoute>} />
                   {/* Redirects for old dashboard URLs */}
                   <Route path="/explore" element={<Navigate to="/charts" replace />} />
                   <Route path="/explore/*" element={<Navigate to="/charts" replace />} />

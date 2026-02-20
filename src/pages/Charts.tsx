@@ -136,6 +136,12 @@ export default function Charts() {
                   data: [{x:0,y:60},{x:1,y:20},{x:2,y:30},{x:3,y:25},{x:4,y:35},{x:5,y:40},{x:6,y:50}] },
                 { path: '/charts/contracts/by-spend', label: 'Spend Utilization', desc: 'Contracts by spend rate', color: 'hsl(180 60% 45%)', id: 'cSpend', type: 'bar' as const,
                   data: [{x:0,y:30},{x:1,y:45},{x:2,y:55},{x:3,y:40},{x:4,y:35},{x:5,y:15}] },
+                { path: '/charts/revenue', label: 'Revenue', desc: 'NYS revenue by fund group', color: 'hsl(160 60% 45%)', id: 'cRevenue', type: 'bar' as const,
+                  data: [{x:0,y:70},{x:1,y:55},{x:2,y:45},{x:3,y:35},{x:4,y:25},{x:5,y:20},{x:6,y:15},{x:7,y:10}] },
+                { path: '/charts/capital', label: 'Capital Appropriations', desc: 'Capital budget by agency', color: 'hsl(217 91% 60%)', id: 'cCapital', type: 'bar' as const,
+                  data: [{x:0,y:80},{x:1,y:60},{x:2,y:50},{x:3,y:40},{x:4,y:30},{x:5,y:25},{x:6,y:20}] },
+                { path: '/charts/discretionary', label: 'Discretionary', desc: 'Discretionary grants by agency', color: 'hsl(280 67% 55%)', id: 'cDiscretionary', type: 'bar' as const,
+                  data: [{x:0,y:65},{x:1,y:50},{x:2,y:40},{x:3,y:30},{x:4,y:22},{x:5,y:18},{x:6,y:12}] },
               ].map((d) => (
                 <button
                   key={d.path}
