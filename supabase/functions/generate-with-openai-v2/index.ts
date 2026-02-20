@@ -762,6 +762,73 @@ async function searchBudgetData(query: string): Promise<string> {
   }
 }
 
+// Search contracts table for agency/vendor data
+async function searchContractData(query: string, conversationContext?: string): Promise<string> {
+  if (!supabaseUrl || !supabaseServiceKey) return '';
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const stopWords = ['tell', 'about', 'contract', 'contracts', 'vendor', 'what', 'this', 'does', 'have', 'grant', 'procurement', 'with', 'related', 'their', 'them', 'show'];
+
+    // Combine current query with conversation context for keyword extraction
+    const searchText = conversationContext ? `${query} ${conversationContext}` : query;
+    const keywords = searchText
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 3 && !stopWords.includes(w))
+      .slice(0, 4);
+
+    if (keywords.length === 0) return '';
+
+    const deptConditions = keywords.map(k => `department_facility.ilike.%${k}%`).join(',');
+    const vendorConditions = keywords.map(k => `vendor_name.ilike.%${k}%`).join(',');
+
+    // Search by department AND vendor in parallel
+    const [deptResult, vendorResult] = await Promise.all([
+      supabase.from('Contracts').select('contract_number, vendor_name, department_facility, contract_type, current_contract_amount, spending_to_date, contract_start_date, contract_end_date, contract_description').or(deptConditions).order('current_contract_amount', { ascending: false, nullsFirst: false }).limit(15),
+      supabase.from('Contracts').select('contract_number, vendor_name, department_facility, contract_type, current_contract_amount, spending_to_date, contract_start_date, contract_end_date, contract_description').or(vendorConditions).order('current_contract_amount', { ascending: false, nullsFirst: false }).limit(10),
+    ]);
+
+    // Merge and deduplicate by contract_number
+    const seen = new Set<string>();
+    const allContracts: any[] = [];
+    for (const row of [...(deptResult.data || []), ...(vendorResult.data || [])]) {
+      if (row.contract_number && !seen.has(row.contract_number)) {
+        seen.add(row.contract_number);
+        allContracts.push(row);
+      }
+    }
+
+    // Sort by amount descending
+    allContracts.sort((a, b) => (b.current_contract_amount || 0) - (a.current_contract_amount || 0));
+    const contracts = allContracts.slice(0, 20);
+
+    if (contracts.length === 0) return '';
+
+    const parts: string[] = [];
+    parts.push(`\n\nSTATE CONTRACTS DATA (${contracts.length} contracts from NYSgpt database):`);
+
+    let totalAmount = 0;
+    let totalSpent = 0;
+    for (const c of contracts) {
+      const amt = c.current_contract_amount || 0;
+      const spent = parseBudgetNum(c.spending_to_date);
+      totalAmount += amt;
+      totalSpent += spent;
+      const pctSpent = amt > 0 ? ((spent / amt) * 100).toFixed(1) : '0.0';
+      parts.push(`- ${c.contract_number}: ${c.vendor_name} | Dept: ${c.department_facility} | Type: ${c.contract_type || ''} | Amount: $${amt.toLocaleString()} | Spent: $${spent.toLocaleString()} (${pctSpent}%) | ${c.contract_start_date || ''} to ${c.contract_end_date || ''} | ${c.contract_description || ''}`);
+    }
+    parts.push(`\nTOTAL: ${contracts.length} contracts worth $${totalAmount.toLocaleString()}, $${totalSpent.toLocaleString()} spent to date`);
+
+    console.log(`Contract search found ${contracts.length} contracts worth $${totalAmount.toLocaleString()}`);
+    return parts.join('\n');
+  } catch (error) {
+    console.error('Error searching contract data:', error);
+    return '';
+  }
+}
+
 // Format conversation history for OpenAI messages array
 // This helper can be reused across OpenAI, Claude, and Perplexity edge functions
 function formatConversationHistory(previousMessages: any[]): { role: string; content: string }[] {
@@ -820,6 +887,7 @@ serve(async (req) => {
     let semanticSearchPromise: Promise<any[] | null> | null = null;
     let billChunksPromise: Promise<any[] | null> | null = null;
     let budgetDataPromise: Promise<string> | null = null;
+    let contractDataPromise: Promise<string> | null = null;
 
     // Build comprehensive search query based on entity context
     let searchQuery = prompt;
@@ -888,6 +956,19 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
       budgetDataPromise = searchBudgetData(searchQuery);
     }
 
+    // Start contract data search for contract-related queries
+    const contractKeywords = /contract|vendor|procurement|grant|awarded|bidder/i;
+    const fullQueryContext = searchQuery + (context?.previousMessages?.length > 0
+      ? ' ' + (context.previousMessages as any[]).slice(-3).map((m: any) => m.content || '').join(' ')
+      : '');
+    if ((type === 'chat' || type === 'default') && contractKeywords.test(fullQueryContext)) {
+      // Build conversation context string for keyword extraction (helps follow-up queries)
+      const conversationContext = context?.previousMessages?.length > 0
+        ? (context.previousMessages as any[]).slice(-3).filter((m: any) => m.role === 'user').map((m: any) => m.content || '').join(' ')
+        : undefined;
+      contractDataPromise = searchContractData(searchQuery, conversationContext);
+    }
+
     // Start NYS API search if appropriate
     if (enhanceWithNYSData && nysApiKey && !shouldSkipNYSData && type !== 'media' && context !== 'landing_page') {
       nysDataPromise = searchNYSData(searchQuery, entityContext?.type, entityId);
@@ -945,6 +1026,13 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
       const budgetData = await budgetDataPromise;
       if (budgetData) {
         combinedContext += budgetData;
+      }
+    }
+    // Add contract data if searched
+    if (contractDataPromise) {
+      const contractData = await contractDataPromise;
+      if (contractData) {
+        combinedContext += contractData;
       }
     }
 
