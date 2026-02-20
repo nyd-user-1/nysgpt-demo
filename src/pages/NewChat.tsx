@@ -378,6 +378,18 @@ const fetchMemberContext = async (member: any): Promise<string> => {
   return parts.join('\n');
 };
 
+/** Parse comma-formatted budget text values (e.g. "472,101,800") to numbers */
+const parseBudgetNum = (val: unknown): number => {
+  if (val == null || val === '') return 0;
+  const n = Number(String(val).replace(/,/g, ''));
+  return isNaN(n) ? 0 : n;
+};
+
+const fmtBudget = (val: unknown): string => {
+  const n = parseBudgetNum(val);
+  return `$${n.toLocaleString()}`;
+};
+
 /** Fetch budget appropriations, capital, and spending data for an agency */
 const fetchBudgetContext = async (agencyName: string, programName?: string): Promise<string> => {
   const parts: string[] = [];
@@ -397,12 +409,11 @@ const fetchBudgetContext = async (agencyName: string, programName?: string): Pro
       for (const row of aprops) {
         const prog = row['Program Name'] ? ` — ${row['Program Name']}` : '';
         const cat = row['Appropriation Category'] || '';
-        const avail = Number(row['Appropriations Available 2025-26'] || 0);
-        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
-        const reapp = Number(row['Reappropriations Recommended 2026-27'] || 0);
         const fund = row['Fund Name'] || '';
         const fundType = row['Fund Type'] || '';
-        parts.push(`- ${row['Agency Name']}${prog} | Category: ${cat} | Fund: ${fund} (${fundType}) | Available 2025-26: $${avail.toLocaleString()} | Recommended 2026-27: $${rec.toLocaleString()} | Reappropriations: $${reapp.toLocaleString()}`);
+        const ftes26 = row['Estimated FTEs 03/31/2026'] || '';
+        const ftes27 = row['Estimated FTEs 03/31/2027'] || '';
+        parts.push(`- ${row['Agency Name']}${prog} | Category: ${cat} | Fund: ${fund} (${fundType}) | Available 2025-26: ${fmtBudget(row['Appropriations Available 2025-26'])} | Recommended 2026-27: ${fmtBudget(row['Appropriations Recommended 2026-27'])} | Reappropriations: ${fmtBudget(row['Reappropriations Recommended 2026-27'])}${ftes26 ? ` | FTEs 2026: ${ftes26}` : ''}${ftes27 ? ` | FTEs 2027: ${ftes27}` : ''}`);
       }
     }
 
@@ -417,32 +428,33 @@ const fetchBudgetContext = async (agencyName: string, programName?: string): Pro
       parts.push(`\nCAPITAL APPROPRIATIONS (${capAprops.length} items):`);
       for (const row of capAprops) {
         const desc = row['Description'] || 'No description';
-        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
-        const reapp = Number(row['Reappropriations Recommended 2026-27'] || 0);
         const source = row['Financing Source'] || '';
-        parts.push(`- ${desc} | Recommended: $${rec.toLocaleString()} | Reappropriations: $${reapp.toLocaleString()} | Source: ${source}`);
+        const encumbrance = row['Encumbrance as of 1/16/2026'];
+        parts.push(`- ${row['Program Name'] || ''}: ${desc} | Recommended: ${fmtBudget(row['Appropriations Recommended 2026-27'])} | Reappropriations: ${fmtBudget(row['Reappropriations Recommended 2026-27'])}${encumbrance ? ` | Encumbrance: ${fmtBudget(encumbrance)}` : ''} | Source: ${source} | Ref: ${row['Reference Number'] || ''}`);
       }
     }
 
-    // Fetch spending history (recent years only)
+    // Fetch spending history (10 years + estimates)
+    const spendCols = [
+      '"Agency"', '"Function"', '"FP Category"', '"Fund"', '"Fund Type"',
+      '"2016-17 Actuals"', '"2017-18 Actuals"', '"2018-19 Actuals"',
+      '"2019-20 Actuals"', '"2020-21 Actuals"', '"2021-22 Actuals"',
+      '"2022-23 Actuals"', '"2023-24 Actuals"', '"2024-25 Actuals"',
+      '"2025-26 Estimates"', '"2026-27 Estimates"'
+    ].join(', ');
     const { data: spending } = await supabase
       .from('budget_2027_spending')
-      .select('"Agency", "Function", "FP Category", "Fund", "Fund Type", "2022-23 Actuals", "2023-24 Actuals", "2024-25 Actuals", "2025-26 Estimates", "2026-27 Estimates"')
+      .select(spendCols)
       .ilike('Agency', `%${agencyName}%`)
-      .limit(30);
+      .limit(40);
 
     if (spending && spending.length > 0) {
-      parts.push(`\nSPENDING HISTORY (${spending.length} line items):`);
+      parts.push(`\nSPENDING HISTORY (${spending.length} line items, 10-year actuals + estimates):`);
       for (const row of spending) {
         const fn = row['Function'] || '';
         const fpCat = row['FP Category'] || '';
         const fund = row['Fund'] || '';
-        const y2223 = Number(row['2022-23 Actuals'] || 0);
-        const y2324 = Number(row['2023-24 Actuals'] || 0);
-        const y2425 = Number(row['2024-25 Actuals'] || 0);
-        const y2526 = Number(row['2025-26 Estimates'] || 0);
-        const y2627 = Number(row['2026-27 Estimates'] || 0);
-        parts.push(`- ${fn} | ${fpCat} | ${fund} | 2022-23: $${y2223.toLocaleString()} | 2023-24: $${y2324.toLocaleString()} | 2024-25: $${y2425.toLocaleString()} | 2025-26 Est: $${y2526.toLocaleString()} | 2026-27 Est: $${y2627.toLocaleString()}`);
+        parts.push(`- ${fn} | ${fpCat} | ${fund} | 2016-17: ${fmtBudget(row['2016-17 Actuals'])} | 2017-18: ${fmtBudget(row['2017-18 Actuals'])} | 2018-19: ${fmtBudget(row['2018-19 Actuals'])} | 2019-20: ${fmtBudget(row['2019-20 Actuals'])} | 2020-21: ${fmtBudget(row['2020-21 Actuals'])} | 2021-22: ${fmtBudget(row['2021-22 Actuals'])} | 2022-23: ${fmtBudget(row['2022-23 Actuals'])} | 2023-24: ${fmtBudget(row['2023-24 Actuals'])} | 2024-25: ${fmtBudget(row['2024-25 Actuals'])} | 2025-26 Est: ${fmtBudget(row['2025-26 Estimates'])} | 2026-27 Est: ${fmtBudget(row['2026-27 Estimates'])}`);
       }
     }
   } catch (err) {

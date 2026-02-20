@@ -686,6 +686,17 @@ function formatSemanticResultsForContext(chunks: any[]): string {
   return contextText;
 }
 
+// Parse comma-formatted budget text values (e.g. "472,101,800") to numbers
+function parseBudgetNum(val: any): number {
+  if (val == null || val === '') return 0;
+  const n = Number(String(val).replace(/,/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function fmtBudget(val: any): string {
+  return `$${parseBudgetNum(val).toLocaleString()}`;
+}
+
 // Search budget tables for agency/program data
 async function searchBudgetData(query: string): Promise<string> {
   if (!supabaseUrl || !supabaseServiceKey) return '';
@@ -703,41 +714,47 @@ async function searchBudgetData(query: string): Promise<string> {
     if (keywords.length === 0) return '';
 
     const parts: string[] = [];
-
-    // Search appropriations
     const agencyConditions = keywords.map(k => `"Agency Name".ilike.%${k}%`).join(',');
-    const { data: aprops } = await supabase
-      .from('budget_2027-aprops')
-      .select('*')
-      .or(agencyConditions)
-      .limit(20);
+    const spendConditions = keywords.map(k => `"Agency".ilike.%${k}%`).join(',');
+
+    // Run all 3 budget table queries in parallel
+    const [apropsResult, capResult, spendResult] = await Promise.all([
+      supabase.from('budget_2027-aprops').select('*').or(agencyConditions).limit(25),
+      supabase.from('budget_2027_capital_aprops').select('*').or(agencyConditions).limit(20),
+      supabase.from('budget_2027_spending')
+        .select('"Agency", "Function", "FP Category", "Fund", "Fund Type", "2016-17 Actuals", "2017-18 Actuals", "2018-19 Actuals", "2019-20 Actuals", "2020-21 Actuals", "2021-22 Actuals", "2022-23 Actuals", "2023-24 Actuals", "2024-25 Actuals", "2025-26 Estimates", "2026-27 Estimates"')
+        .or(spendConditions)
+        .limit(25),
+    ]);
+
+    const aprops = apropsResult.data;
+    const capAprops = capResult.data;
+    const spending = spendResult.data;
 
     if (aprops && aprops.length > 0) {
       parts.push(`\n\nBUDGET APPROPRIATIONS DATA (${aprops.length} records from NYSgpt database):`);
       for (const row of aprops) {
         const prog = row['Program Name'] ? ` — ${row['Program Name']}` : '';
-        const avail = Number(row['Appropriations Available 2025-26'] || 0);
-        const rec = Number(row['Appropriations Recommended 2026-27'] || 0);
-        parts.push(`- ${row['Agency Name']}${prog} | ${row['Appropriation Category'] || ''} | Fund: ${row['Fund Name'] || ''} (${row['Fund Type'] || ''}) | Available 2025-26: $${avail.toLocaleString()} | Recommended 2026-27: $${rec.toLocaleString()}`);
+        parts.push(`- ${row['Agency Name']}${prog} | ${row['Appropriation Category'] || ''} | Fund: ${row['Fund Name'] || ''} (${row['Fund Type'] || ''}) | Available 2025-26: ${fmtBudget(row['Appropriations Available 2025-26'])} | Recommended 2026-27: ${fmtBudget(row['Appropriations Recommended 2026-27'])} | Reappropriations: ${fmtBudget(row['Reappropriations Recommended 2026-27'])}`);
       }
     }
 
-    // Search spending
-    const spendConditions = keywords.map(k => `"Agency".ilike.%${k}%`).join(',');
-    const { data: spending } = await supabase
-      .from('budget_2027_spending')
-      .select('"Agency", "Function", "FP Category", "Fund", "2022-23 Actuals", "2023-24 Actuals", "2024-25 Actuals", "2025-26 Estimates", "2026-27 Estimates"')
-      .or(spendConditions)
-      .limit(15);
+    if (capAprops && capAprops.length > 0) {
+      parts.push(`\n\nCAPITAL BUDGET APPROPRIATIONS (${capAprops.length} records):`);
+      for (const row of capAprops) {
+        const desc = row['Description'] || 'No description';
+        parts.push(`- ${row['Program Name'] || ''}: ${desc} | Recommended: ${fmtBudget(row['Appropriations Recommended 2026-27'])} | Reappropriations: ${fmtBudget(row['Reappropriations Recommended 2026-27'])} | Encumbrance: ${fmtBudget(row['Encumbrance as of 1/16/2026'])} | Source: ${row['Financing Source'] || ''}`);
+      }
+    }
 
     if (spending && spending.length > 0) {
-      parts.push(`\n\nBUDGET SPENDING HISTORY (${spending.length} records):`);
+      parts.push(`\n\nBUDGET SPENDING HISTORY (${spending.length} records, 10-year actuals + estimates):`);
       for (const row of spending) {
-        parts.push(`- ${row['Agency']} | ${row['Function'] || ''} | ${row['FP Category'] || ''} | 2023-24: $${Number(row['2023-24 Actuals'] || 0).toLocaleString()} | 2024-25: $${Number(row['2024-25 Actuals'] || 0).toLocaleString()} | 2025-26 Est: $${Number(row['2025-26 Estimates'] || 0).toLocaleString()} | 2026-27 Est: $${Number(row['2026-27 Estimates'] || 0).toLocaleString()}`);
+        parts.push(`- ${row['Agency']} | ${row['Function'] || ''} | ${row['FP Category'] || ''} | ${row['Fund'] || ''} | 2016-17: ${fmtBudget(row['2016-17 Actuals'])} | 2017-18: ${fmtBudget(row['2017-18 Actuals'])} | 2018-19: ${fmtBudget(row['2018-19 Actuals'])} | 2019-20: ${fmtBudget(row['2019-20 Actuals'])} | 2020-21: ${fmtBudget(row['2020-21 Actuals'])} | 2021-22: ${fmtBudget(row['2021-22 Actuals'])} | 2022-23: ${fmtBudget(row['2022-23 Actuals'])} | 2023-24: ${fmtBudget(row['2023-24 Actuals'])} | 2024-25: ${fmtBudget(row['2024-25 Actuals'])} | 2025-26 Est: ${fmtBudget(row['2025-26 Estimates'])} | 2026-27 Est: ${fmtBudget(row['2026-27 Estimates'])}`);
       }
     }
 
-    console.log(`Budget search found ${aprops?.length || 0} appropriations, ${spending?.length || 0} spending records`);
+    console.log(`Budget search found ${aprops?.length || 0} appropriations, ${capAprops?.length || 0} capital, ${spending?.length || 0} spending records`);
     return parts.join('\n');
   } catch (error) {
     console.error('Error searching budget data:', error);
