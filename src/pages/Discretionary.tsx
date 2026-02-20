@@ -320,9 +320,16 @@ function GrantCard({ grant, onClick, onChatClick }: GrantCardProps) {
       onClick={onClick}
       className="group bg-muted/30 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg"
     >
-      <h3 className="font-semibold text-base mb-3">
-        {cleanGranteeName(grant.Grantee)}
-      </h3>
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <h3 className="font-semibold text-base">
+          {cleanGranteeName(grant.Grantee)}
+        </h3>
+        {grant.year && (
+          <span className="text-xs text-muted-foreground bg-muted/50 rounded-md px-2 py-0.5 shrink-0">
+            FY {grant.year}
+          </span>
+        )}
+      </div>
       {grant["Description of Grant"] && (
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3">
           {grant["Description of Grant"]}
