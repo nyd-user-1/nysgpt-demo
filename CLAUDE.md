@@ -63,7 +63,7 @@ All pages are lazy-loaded. The root `/` renders `NewChat`.
 | `/constitution` | Constitution | NY Constitution reference |
 | `/digital-bill-of-rights` | DigitalBillOfRights | Digital rights reference |
 | `/live-feed` | LiveFeed | Public legislative feed |
-| `/explore` | Charts | Explore landing page (public, login gate for unauthed) |
+| `/charts` | Charts | Charts landing page (public, login gate for unauthed) |
 | `/prompts` | PromptHub | Prompt discovery hub (Prompts/Lists tabs) |
 | `/submit-prompt` | SubmitPrompt | Community prompt submission form |
 | `/use-cases` | UseCases | Use case overview |
@@ -96,13 +96,13 @@ All pages are lazy-loaded. The root `/` renders `NewChat`.
 | `/lobbying/:id` | LobbyingDetail | Lobbying detail |
 | `/school-funding` | SchoolFunding | School funding listing |
 | `/school-funding/:fundingId` | SchoolFundingDetail | School funding detail |
-| `/budget` | Budget | Budget overview |
-| `/explore/budget` | BudgetDashboard | Budget visualizations |
-| `/explore/lobbying` | LobbyingDashboard | Lobbying visualizations |
-| `/explore/contracts` | ContractsDashboard | Contracts visualizations |
-| `/explore/contracts/:subChart` | ContractsDashboard | Contract sub-charts (by-month, by-top-vendors, by-duration) |
-| `/explore/votes` | VotesDashboard | Votes visualizations |
-| `/explore/votes/:subChart` | VotesDashboard | Vote sub-charts (by-roll-call, by-pass-fail, by-party, by-closest) |
+| `/budget` | Budget | Budget overview (tabs: Appropriations, Capital, Spending, Revenue) |
+| `/charts/budget` | BudgetDashboard | Budget visualizations |
+| `/charts/lobbying` | LobbyingDashboard | Lobbying visualizations |
+| `/charts/contracts` | ContractsDashboard | Contracts visualizations |
+| `/charts/contracts/:subChart` | ContractsDashboard | Contract sub-charts (by-month, by-top-vendors, by-duration) |
+| `/charts/votes` | VotesDashboard | Votes visualizations |
+| `/charts/votes/:subChart` | VotesDashboard | Vote sub-charts (by-roll-call, by-pass-fail, by-party, by-closest) |
 | `/departments` | Prompts | Departments listing |
 | `/departments/:slug` | DepartmentDetail | Department detail |
 | `/chats` | Chats2 | Chat history |
@@ -186,7 +186,7 @@ display_name, avatar_url, featured, created_at
 **Notes system**: `NoteView.tsx` uses TipTap editor. Notes persisted via `hooks/useNotePersistence.ts`. Excerpts via `hooks/useExcerptPersistence.ts`.
 
 **Navigation**:
-- Top nav (`ChatHeader.tsx`): Chat | Explore | Lists | Prompts
+- Top nav (`ChatHeader.tsx`): Chat | Charts | Lists | Prompts
 - Sidebar (`NoteViewSidebar.tsx`): Prompts, Chats, Notes, Bills, Committees, Departments, Members, Pro Plan, Features, Use Cases
 - Global search (`SearchModal.tsx`): Ctrl+K
 

@@ -454,11 +454,11 @@ const ContractsDashboard = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 px-4 pb-8">
                         {/* Dashboard navigation cards */}
                         {[
-                          { path: '/explore/budget', label: 'Budget', desc: 'NYS budget spending', color: 'hsl(160 60% 45%)', id: 'dBudget',
+                          { path: '/charts/budget', label: 'Budget', desc: 'NYS budget spending', color: 'hsl(160 60% 45%)', id: 'dBudget',
                             data: [{x:0,y:8},{x:1,y:10},{x:2,y:14},{x:3,y:18},{x:4,y:16},{x:5,y:20},{x:6,y:22},{x:7,y:19},{x:8,y:24},{x:9,y:28}] },
-                          { path: '/explore/lobbying', label: 'Lobbying', desc: 'Lobbyist compensation', color: 'hsl(217 91% 60%)', id: 'dLobby',
+                          { path: '/charts/lobbying', label: 'Lobbying', desc: 'Lobbyist compensation', color: 'hsl(217 91% 60%)', id: 'dLobby',
                             data: [{x:0,y:6},{x:1,y:8},{x:2,y:10},{x:3,y:12},{x:4,y:14},{x:5,y:16},{x:6,y:18},{x:7,y:22},{x:8,y:24},{x:9,y:28}] },
-                          { path: '/explore/votes', label: 'Votes', desc: 'Legislative votes', color: 'hsl(142 76% 36%)', id: 'dVotes',
+                          { path: '/charts/votes', label: 'Votes', desc: 'Legislative votes', color: 'hsl(142 76% 36%)', id: 'dVotes',
                             data: [{x:0,y:12},{x:1,y:10},{x:2,y:14},{x:3,y:16},{x:4,y:12},{x:5,y:18},{x:6,y:20},{x:7,y:16},{x:8,y:22},{x:9,y:22}] },
                         ].map((d) => (
                           <DrawerClose asChild key={d.path}>
@@ -487,15 +487,15 @@ const ContractsDashboard = () => {
 
                         {/* Contracts sub-chart cards */}
                         {[
-                          { path: '/explore/contracts/by-month', label: 'By Month', desc: 'New contracts per month', color: 'hsl(142 76% 36%)', id: 'dcMonth', type: 'area' as const,
+                          { path: '/charts/contracts/by-month', label: 'By Month', desc: 'New contracts per month', color: 'hsl(142 76% 36%)', id: 'dcMonth', type: 'area' as const,
                             data: [{x:0,y:30},{x:1,y:45},{x:2,y:38},{x:3,y:52},{x:4,y:48},{x:5,y:60},{x:6,y:55},{x:7,y:70},{x:8,y:65},{x:9,y:80}] },
-                          { path: '/explore/contracts/by-top-vendors', label: 'Top Vendors', desc: 'Vendors by contract value', color: 'hsl(32 95% 50%)', id: 'dcVendor', type: 'bar' as const,
+                          { path: '/charts/contracts/by-top-vendors', label: 'Top Vendors', desc: 'Vendors by contract value', color: 'hsl(32 95% 50%)', id: 'dcVendor', type: 'bar' as const,
                             data: [{x:0,y:80},{x:1,y:65},{x:2,y:55},{x:3,y:45},{x:4,y:38},{x:5,y:30},{x:6,y:25},{x:7,y:20},{x:8,y:15},{x:9,y:10}] },
-                          { path: '/explore/contracts/by-duration', label: 'Duration', desc: 'Contracts by duration', color: 'hsl(280 67% 55%)', id: 'dcDuration', type: 'bar' as const,
+                          { path: '/charts/contracts/by-duration', label: 'Duration', desc: 'Contracts by duration', color: 'hsl(280 67% 55%)', id: 'dcDuration', type: 'bar' as const,
                             data: [{x:0,y:40},{x:1,y:70},{x:2,y:55},{x:3,y:30},{x:4,y:90},{x:5,y:15}] },
-                          { path: '/explore/contracts/by-expiration', label: 'Expiring', desc: 'Contracts by expiration', color: 'hsl(0 84% 60%)', id: 'dcExpire', type: 'bar' as const,
+                          { path: '/charts/contracts/by-expiration', label: 'Expiring', desc: 'Contracts by expiration', color: 'hsl(0 84% 60%)', id: 'dcExpire', type: 'bar' as const,
                             data: [{x:0,y:60},{x:1,y:20},{x:2,y:30},{x:3,y:25},{x:4,y:35},{x:5,y:40},{x:6,y:50}] },
-                          { path: '/explore/contracts/by-spend', label: 'Spend Rate', desc: 'Spend utilization', color: 'hsl(180 60% 45%)', id: 'dcSpend', type: 'bar' as const,
+                          { path: '/charts/contracts/by-spend', label: 'Spend Rate', desc: 'Spend utilization', color: 'hsl(180 60% 45%)', id: 'dcSpend', type: 'bar' as const,
                             data: [{x:0,y:30},{x:1,y:45},{x:2,y:55},{x:3,y:40},{x:4,y:35},{x:5,y:15}] },
                         ].map((d) => (
                           <DrawerClose asChild key={d.path}>
@@ -531,19 +531,19 @@ const ContractsDashboard = () => {
 
                         {/* Votes chart cards */}
                         {[
-                          { path: '/explore/votes', label: 'Votes by Day', desc: 'Yes vs No votes per day',
+                          { path: '/charts/votes', label: 'Votes by Day', desc: 'Yes vs No votes per day',
                             areas: [{ key: 'y1', stroke: 'hsl(142 76% 36%)', id: 'cvYes' }, { key: 'y2', stroke: 'hsl(0 84% 60%)', id: 'cvNo' }],
                             data: [{x:0,y1:20,y2:5},{x:1,y1:18,y2:6},{x:2,y1:24,y2:4},{x:3,y1:22,y2:8},{x:4,y1:26,y2:3},{x:5,y1:20,y2:7},{x:6,y1:28,y2:5},{x:7,y1:24,y2:6},{x:8,y1:30,y2:4},{x:9,y1:26,y2:5}] },
-                          { path: '/explore/votes/by-roll-call', label: 'Roll Calls', desc: 'Roll call votes per day',
+                          { path: '/charts/votes/by-roll-call', label: 'Roll Calls', desc: 'Roll call votes per day',
                             areas: [{ key: 'y1', stroke: 'hsl(217 91% 60%)', id: 'cvRC' }],
                             data: [{x:0,y1:8},{x:1,y1:12},{x:2,y1:10},{x:3,y1:14},{x:4,y1:16},{x:5,y1:12},{x:6,y1:18},{x:7,y1:14},{x:8,y1:20},{x:9,y1:16}] },
-                          { path: '/explore/votes/by-pass-fail', label: 'Passed vs. Failed', desc: 'Bills passed or failed per day',
+                          { path: '/charts/votes/by-pass-fail', label: 'Passed vs. Failed', desc: 'Bills passed or failed per day',
                             areas: [{ key: 'y1', stroke: 'hsl(142 76% 36%)', id: 'cvPass' }, { key: 'y2', stroke: 'hsl(0 84% 60%)', id: 'cvFail' }],
                             data: [{x:0,y1:14,y2:4},{x:1,y1:16,y2:3},{x:2,y1:12,y2:5},{x:3,y1:18,y2:2},{x:4,y1:20,y2:4},{x:5,y1:16,y2:3},{x:6,y1:22,y2:2},{x:7,y1:18,y2:4},{x:8,y1:24,y2:3},{x:9,y1:20,y2:2}] },
-                          { path: '/explore/votes/by-party', label: 'By Party', desc: 'D vs R yes votes per day',
+                          { path: '/charts/votes/by-party', label: 'By Party', desc: 'D vs R yes votes per day',
                             areas: [{ key: 'y1', stroke: 'hsl(217 91% 60%)', id: 'cvDem' }, { key: 'y2', stroke: 'hsl(0 84% 60%)', id: 'cvRep' }],
                             data: [{x:0,y1:16,y2:10},{x:1,y1:18,y2:12},{x:2,y1:14,y2:14},{x:3,y1:20,y2:10},{x:4,y1:22,y2:12},{x:5,y1:18,y2:14},{x:6,y1:24,y2:10},{x:7,y1:20,y2:12},{x:8,y1:26,y2:14},{x:9,y1:22,y2:12}] },
-                          { path: '/explore/votes/by-closest', label: 'Closest Votes', desc: 'Average vote margin per day',
+                          { path: '/charts/votes/by-closest', label: 'Closest Votes', desc: 'Average vote margin per day',
                             areas: [{ key: 'y1', stroke: 'hsl(280 67% 55%)', id: 'cvMargin' }],
                             data: [{x:0,y1:18},{x:1,y1:14},{x:2,y1:20},{x:3,y1:12},{x:4,y1:16},{x:5,y1:22},{x:6,y1:14},{x:7,y1:18},{x:8,y1:10},{x:9,y1:16}] },
                         ].map((chart) => (

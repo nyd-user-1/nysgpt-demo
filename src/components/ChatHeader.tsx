@@ -30,33 +30,33 @@ const NAV_ITEMS: {
 }[] = [
   { to: "/", label: "Chat" },
   {
-    to: "/explore",
-    label: "Explore",
+    to: "/charts",
+    label: "Charts",
     dropdown: [
       {
         label: "Dashboards",
         items: [
-          { label: "Budget", to: "/explore/budget" },
-          { label: "Lobbying", to: "/explore/lobbying" },
-          { label: "Contracts", to: "/explore/contracts" },
+          { label: "Budget", to: "/charts/budget" },
+          { label: "Lobbying", to: "/charts/lobbying" },
+          { label: "Contracts", to: "/charts/contracts" },
         ],
       },
       {
         label: "Contract Charts",
         items: [
-          { label: "Contracts by Month", to: "/explore/contracts/by-month" },
-          { label: "Top Vendors", to: "/explore/contracts/by-top-vendors" },
-          { label: "Contract Duration", to: "/explore/contracts/by-duration" },
+          { label: "Contracts by Month", to: "/charts/contracts/by-month" },
+          { label: "Top Vendors", to: "/charts/contracts/by-top-vendors" },
+          { label: "Contract Duration", to: "/charts/contracts/by-duration" },
         ],
       },
       {
         label: "Vote Charts",
         items: [
-          { label: "Votes by Day", to: "/explore/votes" },
-          { label: "Roll Calls", to: "/explore/votes/by-roll-call" },
-          { label: "Passed vs. Failed", to: "/explore/votes/by-pass-fail" },
-          { label: "By Party", to: "/explore/votes/by-party" },
-          { label: "Closest Votes", to: "/explore/votes/by-closest" },
+          { label: "Votes by Day", to: "/charts/votes" },
+          { label: "Roll Calls", to: "/charts/votes/by-roll-call" },
+          { label: "Passed vs. Failed", to: "/charts/votes/by-pass-fail" },
+          { label: "By Party", to: "/charts/votes/by-party" },
+          { label: "Closest Votes", to: "/charts/votes/by-closest" },
         ],
       },
     ],

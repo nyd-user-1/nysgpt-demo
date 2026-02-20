@@ -282,11 +282,11 @@ const BudgetDashboard = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 px-4 pb-8">
                         {/* Dashboard navigation cards */}
                         {[
-                          { path: '/explore/lobbying', label: 'Lobbying', desc: 'Lobbyist compensation', color: 'hsl(217 91% 60%)', id: 'dLobby',
+                          { path: '/charts/lobbying', label: 'Lobbying', desc: 'Lobbyist compensation', color: 'hsl(217 91% 60%)', id: 'dLobby',
                             data: [{x:0,y:6},{x:1,y:8},{x:2,y:10},{x:3,y:12},{x:4,y:14},{x:5,y:16},{x:6,y:18},{x:7,y:22},{x:8,y:24},{x:9,y:28}] },
-                          { path: '/explore/contracts', label: 'Contracts', desc: 'State contracts', color: 'hsl(32 95% 50%)', id: 'dContract',
+                          { path: '/charts/contracts', label: 'Contracts', desc: 'State contracts', color: 'hsl(32 95% 50%)', id: 'dContract',
                             data: [{x:0,y:14},{x:1,y:12},{x:2,y:16},{x:3,y:14},{x:4,y:18},{x:5,y:16},{x:6,y:20},{x:7,y:18},{x:8,y:22},{x:9,y:24}] },
-                          { path: '/explore/votes', label: 'Votes', desc: 'Legislative votes', color: 'hsl(142 76% 36%)', id: 'dVotes',
+                          { path: '/charts/votes', label: 'Votes', desc: 'Legislative votes', color: 'hsl(142 76% 36%)', id: 'dVotes',
                             data: [{x:0,y:12},{x:1,y:10},{x:2,y:14},{x:3,y:16},{x:4,y:12},{x:5,y:18},{x:6,y:20},{x:7,y:16},{x:8,y:22},{x:9,y:22}] },
                         ].map((d) => (
                           <DrawerClose asChild key={d.path}>
@@ -315,19 +315,19 @@ const BudgetDashboard = () => {
 
                         {/* Votes chart cards */}
                         {[
-                          { path: '/explore/votes', label: 'Votes by Day', desc: 'Yes vs No votes per day',
+                          { path: '/charts/votes', label: 'Votes by Day', desc: 'Yes vs No votes per day',
                             areas: [{ key: 'y1', stroke: 'hsl(142 76% 36%)', id: 'bvYes' }, { key: 'y2', stroke: 'hsl(0 84% 60%)', id: 'bvNo' }],
                             data: [{x:0,y1:20,y2:5},{x:1,y1:18,y2:6},{x:2,y1:24,y2:4},{x:3,y1:22,y2:8},{x:4,y1:26,y2:3},{x:5,y1:20,y2:7},{x:6,y1:28,y2:5},{x:7,y1:24,y2:6},{x:8,y1:30,y2:4},{x:9,y1:26,y2:5}] },
-                          { path: '/explore/votes/by-roll-call', label: 'Roll Calls', desc: 'Roll call votes per day',
+                          { path: '/charts/votes/by-roll-call', label: 'Roll Calls', desc: 'Roll call votes per day',
                             areas: [{ key: 'y1', stroke: 'hsl(217 91% 60%)', id: 'bvRC' }],
                             data: [{x:0,y1:8},{x:1,y1:12},{x:2,y1:10},{x:3,y1:14},{x:4,y1:16},{x:5,y1:12},{x:6,y1:18},{x:7,y1:14},{x:8,y1:20},{x:9,y1:16}] },
-                          { path: '/explore/votes/by-pass-fail', label: 'Passed vs. Failed', desc: 'Bills passed or failed per day',
+                          { path: '/charts/votes/by-pass-fail', label: 'Passed vs. Failed', desc: 'Bills passed or failed per day',
                             areas: [{ key: 'y1', stroke: 'hsl(142 76% 36%)', id: 'bvPass' }, { key: 'y2', stroke: 'hsl(0 84% 60%)', id: 'bvFail' }],
                             data: [{x:0,y1:14,y2:4},{x:1,y1:16,y2:3},{x:2,y1:12,y2:5},{x:3,y1:18,y2:2},{x:4,y1:20,y2:4},{x:5,y1:16,y2:3},{x:6,y1:22,y2:2},{x:7,y1:18,y2:4},{x:8,y1:24,y2:3},{x:9,y1:20,y2:2}] },
-                          { path: '/explore/votes/by-party', label: 'By Party', desc: 'D vs R yes votes per day',
+                          { path: '/charts/votes/by-party', label: 'By Party', desc: 'D vs R yes votes per day',
                             areas: [{ key: 'y1', stroke: 'hsl(217 91% 60%)', id: 'bvDem' }, { key: 'y2', stroke: 'hsl(0 84% 60%)', id: 'bvRep' }],
                             data: [{x:0,y1:16,y2:10},{x:1,y1:18,y2:12},{x:2,y1:14,y2:14},{x:3,y1:20,y2:10},{x:4,y1:22,y2:12},{x:5,y1:18,y2:14},{x:6,y1:24,y2:10},{x:7,y1:20,y2:12},{x:8,y1:26,y2:14},{x:9,y1:22,y2:12}] },
-                          { path: '/explore/votes/by-closest', label: 'Closest Votes', desc: 'Average vote margin per day',
+                          { path: '/charts/votes/by-closest', label: 'Closest Votes', desc: 'Average vote margin per day',
                             areas: [{ key: 'y1', stroke: 'hsl(280 67% 55%)', id: 'bvMargin' }],
                             data: [{x:0,y1:18},{x:1,y1:14},{x:2,y1:20},{x:3,y1:12},{x:4,y1:16},{x:5,y1:22},{x:6,y1:14},{x:7,y1:18},{x:8,y1:10},{x:9,y1:16}] },
                         ].map((chart) => (
