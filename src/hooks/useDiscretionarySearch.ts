@@ -5,12 +5,23 @@ import { Discretionary } from '@/types/discretionary';
 
 const PAGE_SIZE = 100;
 
+// Parse "$15,000" / "-$40,000" → number
+function parseGrantAmount(amount: string | null): number | null {
+  if (!amount || amount.trim() === '') return null;
+  const num = parseFloat(amount.replace(/[,$]/g, ''));
+  return isNaN(num) ? null : num;
+}
+
+export const AMOUNT_MIN = 0;
+export const AMOUNT_MAX = 10_000_000;
+
 export function useDiscretionarySearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [agencyFilter, setAgencyFilter] = useState('');
   const [fundTypeFilter, setFundTypeFilter] = useState('');
   const [sponsorFilter, setSponsorFilter] = useState('');
   const [yearFilter, setYearFilter] = useState('');
+  const [amountRange, setAmountRange] = useState<[number, number]>([AMOUNT_MIN, AMOUNT_MAX]);
   const [allGrants, setAllGrants] = useState<Discretionary[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -91,7 +102,14 @@ export function useDiscretionarySearch() {
     }
   };
 
-  const grants = allGrants;
+  const amountFilterActive = amountRange[0] !== AMOUNT_MIN || amountRange[1] !== AMOUNT_MAX;
+  const grants = amountFilterActive
+    ? allGrants.filter(g => {
+        const amt = parseGrantAmount(g["Grant Amount"]);
+        if (amt === null) return false;
+        return amt >= amountRange[0] && amt <= amountRange[1];
+      })
+    : allGrants;
   const totalCount = data?.totalCount || 0;
 
   const { data: filterOptions } = useQuery({
@@ -149,5 +167,7 @@ export function useDiscretionarySearch() {
     setSponsorFilter,
     yearFilter,
     setYearFilter,
+    amountRange,
+    setAmountRange,
   };
 }

@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useDiscretionarySearch } from '@/hooks/useDiscretionarySearch';
+import { useDiscretionarySearch, AMOUNT_MIN, AMOUNT_MAX } from '@/hooks/useDiscretionarySearch';
+import { Slider } from '@/components/ui/slider';
 import { Discretionary as DiscretionaryType, formatGrantAmount, cleanGranteeName } from '@/types/discretionary';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -49,6 +50,8 @@ const Discretionary = () => {
     setSponsorFilter,
     yearFilter,
     setYearFilter,
+    amountRange,
+    setAmountRange,
     loadMore,
     hasMore,
     loadingMore,
@@ -84,9 +87,11 @@ const Discretionary = () => {
     setFundTypeFilter('');
     setSponsorFilter('');
     setYearFilter('');
+    setAmountRange([AMOUNT_MIN, AMOUNT_MAX]);
   };
 
-  const hasActiveFilters = searchTerm || agencyFilter || fundTypeFilter || sponsorFilter || yearFilter;
+  const amountFilterActive = amountRange[0] !== AMOUNT_MIN || amountRange[1] !== AMOUNT_MAX;
+  const hasActiveFilters = searchTerm || agencyFilter || fundTypeFilter || sponsorFilter || yearFilter || amountFilterActive;
 
   return (
     <div className="fixed inset-0 overflow-hidden">
@@ -213,6 +218,22 @@ const Discretionary = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Amount range slider */}
+                <div className="flex items-center gap-3 px-1">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Amount</span>
+                  <Slider
+                    value={amountRange}
+                    onValueChange={(val) => setAmountRange(val as [number, number])}
+                    min={AMOUNT_MIN}
+                    max={AMOUNT_MAX}
+                    step={10000}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[100px] text-right">
+                    ${(amountRange[0] / 1000).toFixed(0)}K – ${amountRange[1] >= 1_000_000 ? `${(amountRange[1] / 1_000_000).toFixed(0)}M` : `${(amountRange[1] / 1000).toFixed(0)}K`}
+                  </span>
                 </div>
               </div>
             </div>
