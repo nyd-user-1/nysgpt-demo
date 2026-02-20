@@ -25,6 +25,7 @@ import {
   LogOut,
   HandCoins,
   TrendingUp,
+  Banknote,
   MoreHorizontal,
   Pin,
   Trash2,
@@ -660,6 +661,25 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                   </TooltipTrigger>
                   <TooltipContent side="right">
                     <p>NYS revenue data</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/discretionary"
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/discretionary") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <Banknote className="h-4 w-4" />
+                      <span>Grants</span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>NYS discretionary grants</p>
                   </TooltipContent>
                 </Tooltip>
 
