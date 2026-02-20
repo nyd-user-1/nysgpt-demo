@@ -628,6 +628,9 @@ const NewChat = () => {
   const [committeesHasMore, setCommitteesHasMore] = useState(true);
   const [billsHasMore, setBillsHasMore] = useState(true);
   const [contractsHasMore, setContractsHasMore] = useState(true);
+  const [lobbyistsHasMore, setLobbyistsHasMore] = useState(true);
+  const [budgetHasMore, setBudgetHasMore] = useState(true);
+  const [schoolsHasMore, setSchoolsHasMore] = useState(true);
 
   // Sample prompts state (for lightbulb dropdown)
   const [promptsDropdownOpen, setPromptsDropdownOpen] = useState(false);
@@ -1144,57 +1147,148 @@ const NewChat = () => {
   // Lobbying data for mobile drawer
   const [mobileDrawerLobbyists, setMobileDrawerLobbyists] = useState<any[]>([]);
   const [mobileDrawerLoading, setMobileDrawerLoading] = useState(false);
+  const [lobbyistsLoading, setLobbyistsLoading] = useState(false);
   // Budget data for mobile drawer
   const [mobileDrawerBudget, setMobileDrawerBudget] = useState<any[]>([]);
+  const [budgetLoading, setBudgetLoading] = useState(false);
   // School funding data for mobile drawer
   const [mobileDrawerSchools, setMobileDrawerSchools] = useState<any[]>([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(false);
   // Search within drawer
   const [drawerSearch, setDrawerSearch] = useState("");
+  // Server-side search results (replace client-side filter when active)
+  const [drawerSearchResults, setDrawerSearchResults] = useState<any[] | null>(null);
+  const [drawerSearchLoading, setDrawerSearchLoading] = useState(false);
+  const drawerSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Fetch lobbying data with pagination */
+  const fetchLobbyingForSelection = async (offset = 0) => {
+    setLobbyistsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('lobbyists')
+        .select('id, name, type_of_lobbyist')
+        .order('name', { ascending: true })
+        .range(offset, offset + 29);
+      const rows = data || [];
+      if (offset === 0) setMobileDrawerLobbyists(rows);
+      else setMobileDrawerLobbyists(prev => [...prev, ...rows]);
+      setLobbyistsHasMore(rows.length === 30);
+    } catch (err) { console.error('Error fetching lobbyists:', err); }
+    finally { setLobbyistsLoading(false); }
+  };
+
+  /** Fetch budget data with pagination */
+  const fetchBudgetForSelection = async (offset = 0) => {
+    setBudgetLoading(true);
+    try {
+      const { data } = await supabase
+        .from('budget_2027-aprops')
+        .select('"Agency Name", "Program Name", "Appropriation Category", "Appropriations Recommended 2026-27"')
+        .order('Agency Name', { ascending: true })
+        .range(offset, offset + 29);
+      const rows = data || [];
+      if (offset === 0) setMobileDrawerBudget(rows);
+      else setMobileDrawerBudget(prev => [...prev, ...rows]);
+      setBudgetHasMore(rows.length === 30);
+    } catch (err) { console.error('Error fetching budget:', err); }
+    finally { setBudgetLoading(false); }
+  };
+
+  /** Fetch school funding data with pagination */
+  const fetchSchoolsForSelection = async (offset = 0) => {
+    setSchoolsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('school_funding_totals')
+        .select('id, district, county, enacted_budget, total_school_year, total_change, percent_change')
+        .order('district', { ascending: true })
+        .range(offset, offset + 29);
+      const rows = data || [];
+      if (offset === 0) setMobileDrawerSchools(rows);
+      else setMobileDrawerSchools(prev => [...prev, ...rows]);
+      setSchoolsHasMore(rows.length === 30);
+    } catch (err) { console.error('Error fetching schools:', err); }
+    finally { setSchoolsLoading(false); }
+  };
+
+  /** Server-side search for drawer - queries Supabase directly */
+  const performDrawerSearch = async (term: string, category: string) => {
+    if (!term || term.length < 2) { setDrawerSearchResults(null); return; }
+    setDrawerSearchLoading(true);
+    try {
+      const t = `%${term}%`;
+      let result: any[] = [];
+      if (category === 'bills') {
+        const { data } = await supabase.from('Bills')
+          .select('bill_id, bill_number, title, status_desc, description, committee, session_id')
+          .or(`bill_number.ilike.${t},title.ilike.${t}`)
+          .order('session_id', { ascending: false }).limit(30);
+        result = data || [];
+      } else if (category === 'members') {
+        const { data } = await supabase.from('People')
+          .select('people_id, name, party, chamber, district')
+          .ilike('name', t).order('name').limit(30);
+        result = data || [];
+      } else if (category === 'committees') {
+        const { data } = await supabase.from('Committees')
+          .select('committee_id, committee_name, chamber, chair_name, committee_members')
+          .ilike('committee_name', t).order('committee_name').limit(30);
+        result = data || [];
+      } else if (category === 'contracts') {
+        const { data } = await supabase.from('Contracts')
+          .select('*')
+          .or(`vendor_name.ilike.${t},department_facility.ilike.${t},contract_description.ilike.${t}`)
+          .order('current_contract_amount', { ascending: false, nullsFirst: false }).limit(30);
+        result = (data as Contract[]) || [];
+      } else if (category === 'lobbying') {
+        const { data } = await supabase.from('lobbyists')
+          .select('id, name, type_of_lobbyist')
+          .ilike('name', t).order('name').limit(30);
+        result = data || [];
+      } else if (category === 'budget') {
+        const { data } = await supabase.from('budget_2027-aprops')
+          .select('"Agency Name", "Program Name", "Appropriation Category", "Appropriations Recommended 2026-27"')
+          .or(`"Agency Name".ilike.${t},"Program Name".ilike.${t}`)
+          .order('Agency Name').limit(30);
+        result = data || [];
+      } else if (category === 'schools') {
+        const { data } = await supabase.from('school_funding_totals')
+          .select('id, district, county, enacted_budget, total_school_year, total_change, percent_change')
+          .or(`district.ilike.${t},county.ilike.${t}`)
+          .order('district').limit(30);
+        result = data || [];
+      }
+      setDrawerSearchResults(result);
+    } catch (err) { console.error('Drawer search error:', err); }
+    finally { setDrawerSearchLoading(false); }
+  };
+
+  // Debounced search effect
+  useEffect(() => {
+    if (drawerSearchTimeout.current) clearTimeout(drawerSearchTimeout.current);
+    if (!drawerSearch || drawerSearch.length < 2 || !mobileDrawerCategory) {
+      setDrawerSearchResults(null);
+      return;
+    }
+    drawerSearchTimeout.current = setTimeout(() => {
+      performDrawerSearch(drawerSearch, mobileDrawerCategory);
+    }, 300);
+    return () => { if (drawerSearchTimeout.current) clearTimeout(drawerSearchTimeout.current); };
+  }, [drawerSearch, mobileDrawerCategory]);
 
   // Fetch data when mobile drawer category opens
   useEffect(() => {
     setDrawerSearch("");
+    setDrawerSearchResults(null);
     if (!mobileDrawerCategory) return;
     if (mobileDrawerCategory === 'bills' && availableBills.length === 0) fetchBillsForSelection();
     if (mobileDrawerCategory === 'members' && availableMembers.length === 0) fetchMembersForSelection();
     if (mobileDrawerCategory === 'committees' && availableCommittees.length === 0) fetchCommitteesForSelection();
     if (mobileDrawerCategory === 'contracts' && availableContracts.length === 0) fetchContractsForSelection();
-    if (mobileDrawerCategory === 'lobbying' && mobileDrawerLobbyists.length === 0) {
-      setMobileDrawerLoading(true);
-      supabase
-        .from('lobbyists')
-        .select('id, name, type_of_lobbyist')
-        .order('name', { ascending: true })
-        .limit(50)
-        .then(({ data }) => {
-          setMobileDrawerLobbyists(data || []);
-          setMobileDrawerLoading(false);
-        });
-    }
-    if (mobileDrawerCategory === 'budget' && mobileDrawerBudget.length === 0) {
-      setMobileDrawerLoading(true);
-      supabase
-        .from('budget_2027-aprops')
-        .select('"Agency Name", "Program Name", "Appropriation Category", "Appropriations Recommended 2026-27"')
-        .order('Agency Name', { ascending: true })
-        .limit(50)
-        .then(({ data }) => {
-          setMobileDrawerBudget(data || []);
-          setMobileDrawerLoading(false);
-        });
-    }
-    if (mobileDrawerCategory === 'schools' && mobileDrawerSchools.length === 0) {
-      setMobileDrawerLoading(true);
-      supabase
-        .from('school_funding_totals')
-        .select('id, district, county, enacted_budget, total_school_year, total_change, percent_change')
-        .order('district', { ascending: true })
-        .limit(50)
-        .then(({ data }) => {
-          setMobileDrawerSchools(data || []);
-          setMobileDrawerLoading(false);
-        });
-    }
+    if (mobileDrawerCategory === 'lobbying' && mobileDrawerLobbyists.length === 0) fetchLobbyingForSelection();
+    if (mobileDrawerCategory === 'budget' && mobileDrawerBudget.length === 0) fetchBudgetForSelection();
+    if (mobileDrawerCategory === 'schools' && mobileDrawerSchools.length === 0) fetchSchoolsForSelection();
   }, [mobileDrawerCategory]);
 
   // Note: Real streaming is now handled by the edge functions
@@ -2527,10 +2621,14 @@ const NewChat = () => {
                           <div
                             className="flex-1 overflow-y-auto"
                             onScroll={(e) => {
+                              if (drawerSearchResults) return; // Don't paginate when showing search results
                               if (mobileDrawerCategory === 'bills') handlePopoverScroll(e, () => fetchBillsForSelection(availableBills.length), billsHasMore, billsLoading);
                               if (mobileDrawerCategory === 'members') handlePopoverScroll(e, () => fetchMembersForSelection(availableMembers.length), membersHasMore, membersLoading);
                               if (mobileDrawerCategory === 'committees') handlePopoverScroll(e, () => fetchCommitteesForSelection(availableCommittees.length), committeesHasMore, committeesLoading);
                               if (mobileDrawerCategory === 'contracts') handlePopoverScroll(e, () => fetchContractsForSelection(availableContracts.length), contractsHasMore, contractsLoading);
+                              if (mobileDrawerCategory === 'lobbying') handlePopoverScroll(e, () => fetchLobbyingForSelection(mobileDrawerLobbyists.length), lobbyistsHasMore, lobbyistsLoading);
+                              if (mobileDrawerCategory === 'budget') handlePopoverScroll(e, () => fetchBudgetForSelection(mobileDrawerBudget.length), budgetHasMore, budgetLoading);
+                              if (mobileDrawerCategory === 'schools') handlePopoverScroll(e, () => fetchSchoolsForSelection(mobileDrawerSchools.length), schoolsHasMore, schoolsLoading);
                             }}
                           >
                             {/* Sample Prompts */}
@@ -2563,13 +2661,23 @@ const NewChat = () => {
                               ))
                             )}
 
+                            {/* Search loading indicator */}
+                            {drawerSearchLoading && mobileDrawerCategory !== 'prompts' && (
+                              <div className="px-4 py-3 text-center text-xs text-muted-foreground">Searching...</div>
+                            )}
+
+                            {/* No results message */}
+                            {drawerSearchResults && drawerSearchResults.length === 0 && !drawerSearchLoading && (
+                              <div className="px-4 py-6 text-center text-sm text-muted-foreground">No results for &ldquo;{drawerSearch}&rdquo;</div>
+                            )}
+
                             {/* Bills */}
                             {mobileDrawerCategory === 'bills' && (
-                              billsLoading && availableBills.length === 0 ? (
+                              (billsLoading || drawerSearchLoading) && availableBills.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading bills...</div>
                               ) : (
                                 <>
-                                {availableBills.filter(bill => !drawerSearch || bill.bill_number?.toLowerCase().includes(drawerSearch.toLowerCase()) || bill.title?.toLowerCase().includes(drawerSearch.toLowerCase())).map((bill, idx) => (
+                                {((drawerSearchResults as BillCitation[] | null) || availableBills).map((bill, idx) => (
                                   <button
                                     key={`${bill.bill_number}-${bill.session_id}`}
                                     type="button"
@@ -2596,11 +2704,11 @@ const NewChat = () => {
 
                             {/* Members */}
                             {mobileDrawerCategory === 'members' && (
-                              membersLoading && availableMembers.length === 0 ? (
+                              (membersLoading || drawerSearchLoading) && availableMembers.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading members...</div>
                               ) : (
                                 <>
-                                {availableMembers.filter(member => !drawerSearch || member.name?.toLowerCase().includes(drawerSearch.toLowerCase())).map((member, idx) => (
+                                {(drawerSearchResults || availableMembers).map((member, idx) => (
                                   <button
                                     key={member.people_id}
                                     type="button"
@@ -2625,11 +2733,11 @@ const NewChat = () => {
 
                             {/* Contracts */}
                             {mobileDrawerCategory === 'contracts' && (
-                              contractsLoading && availableContracts.length === 0 ? (
+                              (contractsLoading || drawerSearchLoading) && availableContracts.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading contracts...</div>
                               ) : (
                                 <>
-                                {availableContracts.filter(c => !drawerSearch || c.vendor_name?.toLowerCase().includes(drawerSearch.toLowerCase()) || c.department_facility?.toLowerCase().includes(drawerSearch.toLowerCase())).map((contract, idx) => {
+                                {((drawerSearchResults as Contract[] | null) || availableContracts).map((contract, idx) => {
                                   const vendor = contract.vendor_name || 'Unknown vendor';
                                   const dept = contract.department_facility ? ` (${contract.department_facility})` : '';
                                   const amount = contract.current_contract_amount
@@ -2667,10 +2775,10 @@ const NewChat = () => {
 
                             {/* Lobbying */}
                             {mobileDrawerCategory === 'lobbying' && (
-                              mobileDrawerLoading ? (
+                              (lobbyistsLoading || drawerSearchLoading) && mobileDrawerLobbyists.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading lobbyists...</div>
                               ) : (
-                                mobileDrawerLobbyists.filter(l => !drawerSearch || l.name?.toLowerCase().includes(drawerSearch.toLowerCase())).map((lobbyist, idx) => (
+                                (drawerSearchResults || mobileDrawerLobbyists).map((lobbyist, idx) => (
                                   <button
                                     key={lobbyist.id}
                                     type="button"
@@ -2695,10 +2803,10 @@ const NewChat = () => {
 
                             {/* Budget */}
                             {mobileDrawerCategory === 'budget' && (
-                              mobileDrawerLoading ? (
+                              (budgetLoading || drawerSearchLoading) && mobileDrawerBudget.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading budget data...</div>
                               ) : (
-                                mobileDrawerBudget.filter(item => !drawerSearch || item['Agency Name']?.toLowerCase().includes(drawerSearch.toLowerCase()) || item['Program Name']?.toLowerCase().includes(drawerSearch.toLowerCase())).map((item, idx) => (
+                                (drawerSearchResults || mobileDrawerBudget).map((item, idx) => (
                                   <button
                                     key={idx}
                                     type="button"
@@ -2736,10 +2844,10 @@ const NewChat = () => {
 
                             {/* School Funding */}
                             {mobileDrawerCategory === 'schools' && (
-                              mobileDrawerLoading ? (
+                              (schoolsLoading || drawerSearchLoading) && mobileDrawerSchools.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading school funding...</div>
                               ) : (
-                                mobileDrawerSchools.filter(r => !drawerSearch || r.district?.toLowerCase().includes(drawerSearch.toLowerCase()) || r.county?.toLowerCase().includes(drawerSearch.toLowerCase())).map((record, idx) => (
+                                (drawerSearchResults || mobileDrawerSchools).map((record, idx) => (
                                   <button
                                     key={record.id}
                                     type="button"
@@ -2778,11 +2886,11 @@ const NewChat = () => {
 
                             {/* Committees */}
                             {mobileDrawerCategory === 'committees' && (
-                              committeesLoading && availableCommittees.length === 0 ? (
+                              (committeesLoading || drawerSearchLoading) && availableCommittees.length === 0 && !drawerSearchResults ? (
                                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading committees...</div>
                               ) : (
                                 <>
-                                {availableCommittees.filter(c => !drawerSearch || c.committee_name?.toLowerCase().includes(drawerSearch.toLowerCase())).map((committee, idx) => {
+                                {(drawerSearchResults || availableCommittees).map((committee, idx) => {
                                   const prefix = committee.chamber === 'Senate' ? 'Senate ' : committee.chamber === 'Assembly' ? 'Assembly ' : '';
                                   return (
                                   <button
