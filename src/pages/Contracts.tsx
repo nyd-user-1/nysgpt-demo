@@ -15,9 +15,12 @@ import {
 } from '@/components/ui/select';
 import { useContractsSearch, formatCurrency, formatContractDate } from '@/hooks/useContractsSearch';
 import { Contract } from '@/types/contracts';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Contracts = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
   const [sidebarMounted, setSidebarMounted] = useState(false);
@@ -204,6 +207,7 @@ const Contracts = () => {
 
           {/* Results - Masonry Grid (Scrollable) */}
           <div className="flex-1 overflow-y-auto px-4 py-6" onScroll={(e) => {
+            if (!isAuthenticated) return;
             const el = e.currentTarget;
             if (el.scrollHeight - el.scrollTop - el.clientHeight < 200 && hasMore && !loadingMore) {
               loadMore();
@@ -232,7 +236,7 @@ const Contracts = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {contracts.map((contract) => (
+                  {(isAuthenticated ? contracts : contracts.slice(0, 9)).map((contract) => (
                     <ContractCard
                       key={contract.id}
                       contract={contract}
@@ -241,9 +245,20 @@ const Contracts = () => {
                     />
                   ))}
                 </div>
-                {loadingMore && (
+                {isAuthenticated && loadingMore && (
                   <div className="flex justify-center py-4">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                  </div>
+                )}
+                {!isAuthenticated && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      Please log in to view thousands of contract records.
+                    </p>
+                    <Button variant="ghost" onClick={() => navigate('/auth-4')}
+                      className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">
+                      Sign Up
+                    </Button>
                   </div>
                 )}
               </>

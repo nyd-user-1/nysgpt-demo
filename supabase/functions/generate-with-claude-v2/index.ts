@@ -439,16 +439,17 @@ function fmtBudget(val: any): string {
 }
 
 // Search budget tables for agency/program data
-async function searchBudgetData(query: string): Promise<string> {
+async function searchBudgetData(query: string, conversationContext?: string): Promise<string> {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const stopWords = ['tell', 'about', 'budget', 'appropriation', 'spending', 'what', 'this', 'funding', 'used', 'from', 'prior', 'year', 'recent', 'years', 'changed', 'trends', 'capital', 'project'];
-    const keywords = query
+    const stopWords = ['tell', 'about', 'budget', 'appropriation', 'spending', 'what', 'this', 'funding', 'used', 'from', 'prior', 'year', 'recent', 'years', 'changed', 'trends', 'capital', 'project', 'allocation', 'expenditure', 'revenue', 'fiscal', 'department', 'agency'];
+    const searchText = conversationContext ? `${query} ${conversationContext}` : query;
+    const keywords = searchText
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
       .filter(w => w.length > 3 && !stopWords.includes(w))
-      .slice(0, 3);
+      .slice(0, 4);
 
     if (keywords.length === 0) return '';
 
@@ -769,18 +770,18 @@ serve(async (req) => {
     let nysDataPromise: Promise<any> | null = null;
     const nysgptDataPromise = searchNYSgptDatabase(prompt, getCurrentSessionYear());
     const semanticSearchPromise = searchSemanticBillChunks(prompt);
-    const budgetKeywords = /budget|appropriat|spending|fiscal|funding|agency|department/i;
-    const budgetDataPromise = budgetKeywords.test(prompt) ? searchBudgetData(prompt) : null;
+    // Build conversation context for keyword detection (current + recent messages)
+    const recentUserMessages = context?.previousMessages?.length > 0
+      ? (context.previousMessages as any[]).slice(-4).filter((m: any) => m.role === 'user').map((m: any) => m.content || '').join(' ')
+      : '';
+    const fullQueryContext = prompt + ' ' + recentUserMessages;
+
+    const budgetKeywords = /budget|appropriat|spending|fiscal|funding|agency|department|capital.*project|allocation|expenditure|revenue|state\s*operations|reappropriation/i;
+    const budgetDataPromise = budgetKeywords.test(fullQueryContext) ? searchBudgetData(prompt, recentUserMessages || undefined) : null;
 
     // Start contract data search for contract-related queries
-    const contractKeywords = /contract|vendor|procurement|grant|awarded|bidder/i;
-    const fullQueryContext = prompt + (context?.previousMessages?.length > 0
-      ? ' ' + (context.previousMessages as any[]).slice(-3).map((m: any) => m.content || '').join(' ')
-      : '');
-    const conversationCtx = context?.previousMessages?.length > 0
-      ? (context.previousMessages as any[]).slice(-3).filter((m: any) => m.role === 'user').map((m: any) => m.content || '').join(' ')
-      : undefined;
-    const contractDataPromise = contractKeywords.test(fullQueryContext) ? searchContractData(prompt, conversationCtx) : null;
+    const contractKeywords = /contract|vendor|procurement|grant|awarded|bidder|rfp|request\s*for\s*proposal|awarded|service\s*agreement|purchase\s*order|state\s*comptroller/i;
+    const contractDataPromise = contractKeywords.test(fullQueryContext) ? searchContractData(prompt, recentUserMessages || undefined) : null;
 
     // Fetch full bill text: from current query OR from recent conversation history
     let billLookupQuery = prompt;

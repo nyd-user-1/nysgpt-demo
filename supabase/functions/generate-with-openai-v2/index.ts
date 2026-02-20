@@ -698,18 +698,19 @@ function fmtBudget(val: any): string {
 }
 
 // Search budget tables for agency/program data
-async function searchBudgetData(query: string): Promise<string> {
+async function searchBudgetData(query: string, conversationContext?: string): Promise<string> {
   if (!supabaseUrl || !supabaseServiceKey) return '';
 
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const stopWords = ['tell', 'about', 'budget', 'appropriation', 'spending', 'what', 'this', 'funding', 'used', 'from', 'prior', 'year', 'recent', 'years', 'changed', 'trends', 'capital', 'project'];
-    const keywords = query
+    const stopWords = ['tell', 'about', 'budget', 'appropriation', 'spending', 'what', 'this', 'funding', 'used', 'from', 'prior', 'year', 'recent', 'years', 'changed', 'trends', 'capital', 'project', 'allocation', 'expenditure', 'revenue', 'fiscal', 'department', 'agency'];
+    const searchText = conversationContext ? `${query} ${conversationContext}` : query;
+    const keywords = searchText
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
       .filter(w => w.length > 3 && !stopWords.includes(w))
-      .slice(0, 3);
+      .slice(0, 4);
 
     if (keywords.length === 0) return '';
 
@@ -950,23 +951,22 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
       }
     }
 
+    // Build conversation context for keyword detection (current + recent messages)
+    const recentUserMessages = context?.previousMessages?.length > 0
+      ? (context.previousMessages as any[]).slice(-4).filter((m: any) => m.role === 'user').map((m: any) => m.content || '').join(' ')
+      : '';
+    const fullQueryContext = searchQuery + ' ' + recentUserMessages;
+
     // Start budget data search in parallel for budget-related queries
-    const budgetKeywords = /budget|appropriat|spending|fiscal|funding|agency/i;
-    if ((type === 'chat' || type === 'default') && budgetKeywords.test(searchQuery)) {
-      budgetDataPromise = searchBudgetData(searchQuery);
+    const budgetKeywords = /budget|appropriat|spending|fiscal|funding|agency|department|capital.*project|allocation|expenditure|revenue|state\s*operations|reappropriation/i;
+    if ((type === 'chat' || type === 'default') && budgetKeywords.test(fullQueryContext)) {
+      budgetDataPromise = searchBudgetData(searchQuery, recentUserMessages || undefined);
     }
 
     // Start contract data search for contract-related queries
-    const contractKeywords = /contract|vendor|procurement|grant|awarded|bidder/i;
-    const fullQueryContext = searchQuery + (context?.previousMessages?.length > 0
-      ? ' ' + (context.previousMessages as any[]).slice(-3).map((m: any) => m.content || '').join(' ')
-      : '');
+    const contractKeywords = /contract|vendor|procurement|grant|awarded|bidder|rfp|request\s*for\s*proposal|awarded|service\s*agreement|purchase\s*order|state\s*comptroller/i;
     if ((type === 'chat' || type === 'default') && contractKeywords.test(fullQueryContext)) {
-      // Build conversation context string for keyword extraction (helps follow-up queries)
-      const conversationContext = context?.previousMessages?.length > 0
-        ? (context.previousMessages as any[]).slice(-3).filter((m: any) => m.role === 'user').map((m: any) => m.content || '').join(' ')
-        : undefined;
-      contractDataPromise = searchContractData(searchQuery, conversationContext);
+      contractDataPromise = searchContractData(searchQuery, recentUserMessages || undefined);
     }
 
     // Start NYS API search if appropriate
