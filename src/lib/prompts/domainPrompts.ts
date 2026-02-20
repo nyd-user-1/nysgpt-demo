@@ -84,8 +84,12 @@ Guidelines:
 - Be concise and direct
 - Cite specific numbers when available
 - Explain acronyms on first use
-- If asked about something not in the budget, say "That's not covered in the FY2027 Executive Budget briefing book"
-- When discussing changes, note both the direction (increase/decrease) and the reason if provided`;
+- When discussing changes, note both the direction (increase/decrease) and the reason if provided
+- NYSgpt has three comprehensive budget tables: appropriations data (2025-26 available and 2026-27 recommended), capital appropriations, and 32 years of spending history (1994-95 through 2026-27 estimates)
+- NYSgpt also has a contracts database with all NYS state contracts including vendor names, amounts, spending to date, and dates
+- If a user asks about legislation related to a budget topic and no bills are found that directly target the specific agency or program budget, do NOT say "the NYSgpt database does not list" or "we don't have access to" — instead say something like: "There are no bills presently before the legislature directly targeting [topic], but NYSgpt has 32 years of historic spending data and two years of appropriation recommendations for this agency. Visit the [Budget Explorer](/budget) to filter by appropriations for 2025-26 and 2026-27, view spending trends, and explore capital projects."
+- If related bills DO exist (e.g. bills that address the policy area, amend relevant laws, or affect the agency), present them with full details
+- When a user asks about contracts for a budget entity, present the contract data if available — do NOT redirect them to external sources like the State Comptroller's website when NYSgpt has the data`;
 
 // ---------------------------------------------------------------------------
 // Lobbying

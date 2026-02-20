@@ -1051,7 +1051,12 @@ Member Count: ${entityContext.committee.member_count || 'Unknown'}`;
       systemPrompt = `${constitutionalContext}\n\n${context.systemContext}\n\n${PLATFORM_FEATURES_PROMPT}`;
       // Append backend-enriched data (keyword + semantic search results) so it's not lost
       if (combinedContext) {
-        systemPrompt += `\n\nCURRENT NYS LEGISLATIVE DATA:\n${combinedContext}\n\nIMPORTANT: Use the specific bill data above to ground your response. Cite actual bill numbers, sponsors, and details from this data rather than relying on general knowledge.`;
+        systemPrompt += `\n\nCURRENT NYS LEGISLATIVE DATA:\n${combinedContext}\n\nIMPORTANT DATA GROUNDING RULES:
+- Use the specific data above to ground your response. Cite actual bill numbers, sponsors, amounts, and details rather than relying on general knowledge.
+- If BUDGET data is present above (appropriations, capital, spending), present the actual dollar amounts and trends from this data. NYSgpt has 32 years of spending history and 2 years of appropriation recommendations.
+- If CONTRACT data is present above, present the actual contracts with vendor names, amounts, and spend percentages. Do NOT redirect users to external sources like the State Comptroller's website — NYSgpt has this data.
+- If a user asks about legislation related to a budget topic and no bills directly target that agency/program, do NOT say "the NYSgpt database does not list" or frame it as a limitation. Instead say: "There are no bills presently before the legislature directly targeting [topic]." Then highlight the budget and spending data that IS available and direct them to the [Budget Explorer](/budget) page.
+- When bills ARE found that relate to the topic, present them with full details (bill number, title, sponsor, status, committee).`;
       }
       console.log('Using frontend-composed systemContext with backend data appended');
     }
