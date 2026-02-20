@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronDown, ArrowUp, MessageSquare, X, LayoutGrid } from 'lucide-react';
+import { ChevronRight, ChevronDown, ArrowUp, MessageSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InsetPanel } from '@/components/ui/inset-panel';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardDrawer } from '@/components/DashboardDrawer';
 import {
   useRevenueDashboard,
   formatCompact,
@@ -14,8 +15,8 @@ import {
 } from '@/hooks/useRevenueDashboard';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   Tooltip as RechartsTooltip,
 } from 'recharts';
@@ -34,7 +35,7 @@ export default function RevenueDashboard() {
     return () => clearTimeout(timer);
   }, []);
 
-  const { isLoading, error, byFundGroup, grandTotal, totalItems, getDrillDown } = useRevenueDashboard();
+  const { isLoading, error, byFundGroup, grandTotal, totalItems, revenueByYear, getDrillDown } = useRevenueDashboard();
 
   const toggleRow = (name: string) => {
     setExpandedRows(prev => {
@@ -56,11 +57,7 @@ export default function RevenueDashboard() {
     navigate(`/new-chat?prompt=${encodeURIComponent(prompt)}`);
   };
 
-  const chartData = byFundGroup.slice(0, 12).map(r => ({
-    name: r.name.length > 15 ? r.name.slice(0, 13) + '...' : r.name,
-    amount: r.totalAmount,
-    fullName: r.name,
-  }));
+  const chartData = revenueByYear;
 
   return (
     <div className="fixed inset-0 overflow-hidden">
@@ -96,28 +93,32 @@ export default function RevenueDashboard() {
             <MobileNYSgpt />
           </div>
 
-          {/* Chart */}
+          {/* Chart — line chart showing revenue over 30+ fiscal years */}
           {!isLoading && chartData.length > 0 && (
             <div className="h-48 md:h-56 px-4 pb-2">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
-                  <Bar dataKey="amount" fill="hsl(160 60% 45%)" radius={[2, 2, 0, 0]} animationDuration={500} />
-                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
+                <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
+                  <defs>
+                    <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(160 60% 45%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(160 60% 45%)" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="amount" stroke="hsl(160 60% 45%)" strokeWidth={2} fill="url(#revFill)" dot={false} animationDuration={500} />
+                  <XAxis dataKey="year" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                   <RechartsTooltip
                     contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
                     formatter={(value: number) => [formatCompact(value), 'Revenue']}
-                    labelFormatter={(_, payload) => payload?.[0]?.payload?.fullName || ''}
+                    labelFormatter={(label) => `FY ${label}`}
                   />
-                </BarChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           )}
 
-          {/* Dashboards link + label */}
+          {/* Dashboards drawer */}
           <div className="flex items-center gap-3 px-4 py-2 border-b">
-            <button onClick={() => navigate('/charts')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <LayoutGrid className="h-4 w-4" /> Dashboards
-            </button>
+            <DashboardDrawer />
           </div>
         </div>
 

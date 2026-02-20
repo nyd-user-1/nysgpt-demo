@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronDown, ArrowUp, MessageSquare, X, LayoutGrid } from 'lucide-react';
+import { ChevronRight, ChevronDown, ArrowUp, MessageSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InsetPanel } from '@/components/ui/inset-panel';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardDrawer } from '@/components/DashboardDrawer';
 import {
   useCapitalDashboard,
   formatCompact,
@@ -113,11 +114,9 @@ export default function CapitalDashboard() {
             </div>
           )}
 
-          {/* Dashboards link + label */}
+          {/* Dashboards drawer */}
           <div className="flex items-center gap-3 px-4 py-2 border-b">
-            <button onClick={() => navigate('/charts')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <LayoutGrid className="h-4 w-4" /> Dashboards
-            </button>
+            <DashboardDrawer />
           </div>
         </div>
 

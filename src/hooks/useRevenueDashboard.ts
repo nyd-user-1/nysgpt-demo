@@ -95,6 +95,20 @@ export function useRevenueDashboard() {
   const grandTotal = useMemo(() => byFundGroup.reduce((s, r) => s + r.totalAmount, 0), [byFundGroup]);
   const totalItems = useMemo(() => byFundGroup.reduce((s, r) => s + r.count, 0), [byFundGroup]);
 
+  // Revenue by fiscal year (for line chart)
+  const revenueByYear = useMemo<{ year: string; amount: number }[]>(() => {
+    if (!allRows) return [];
+    return FISCAL_YEARS.map(col => {
+      let total = 0;
+      for (const row of allRows) {
+        const val = row[col as keyof Revenue] as string | null;
+        total += parseAmount(val);
+      }
+      const label = col.replace('_Actuals', '').replace('_', '-');
+      return { year: `'${label.split('-')[0].slice(-2)}`, amount: total };
+    }).filter(d => d.amount > 0);
+  }, [allRows]);
+
   // Drill-down: get individual revenue items for a fund group
   const getDrillDown = (fundGroup: string): RevenueDrillRow[] => {
     if (drillCache[fundGroup]) return drillCache[fundGroup];
@@ -131,6 +145,7 @@ export function useRevenueDashboard() {
     byFundGroup,
     grandTotal,
     totalItems,
+    revenueByYear,
     getDrillDown,
   };
 }
