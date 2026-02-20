@@ -330,10 +330,10 @@ function GrantCard({ grant, onClick, onChatClick }: GrantCardProps) {
               </p>
             </div>
           )}
-          {grant.year && (
+          {grant["Approval Date"] && (
             <div>
-              <span className="text-muted-foreground">Year</span>
-              <p className="font-medium">{grant.year}</p>
+              <span className="text-muted-foreground">Approved</span>
+              <p className="font-medium">{grant["Approval Date"]}</p>
             </div>
           )}
         </div>
