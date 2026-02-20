@@ -47,7 +47,8 @@ export function useDiscretionarySearch() {
       query = applyFilters(query);
 
       query = query
-        .order('Grantee', { ascending: true })
+        .order('year', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: false })
         .limit(PAGE_SIZE);
 
       const { data, error, count } = await query;
@@ -73,7 +74,8 @@ export function useDiscretionarySearch() {
       let query = supabase.from('Discretionary').select('*');
       query = applyFilters(query);
       query = query
-        .order('Grantee', { ascending: true })
+        .order('year', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1);
 
       const { data: moreData, error: err } = await query;
@@ -96,10 +98,10 @@ export function useDiscretionarySearch() {
     queryKey: ['discretionary-filter-options'],
     queryFn: async () => {
       const [agencyRes, fundRes, sponsorRes, yearRes] = await Promise.all([
-        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null),
-        supabase.from('Discretionary').select('fund_type').not('fund_type', 'is', null),
-        supabase.from('Discretionary').select('Sponsor').not('Sponsor', 'is', null),
-        supabase.from('Discretionary').select('year').not('year', 'is', null),
+        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).limit(15000),
+        supabase.from('Discretionary').select('fund_type').not('fund_type', 'is', null).limit(15000),
+        supabase.from('Discretionary').select('Sponsor').not('Sponsor', 'is', null).limit(15000),
+        supabase.from('Discretionary').select('year').not('year', 'is', null).limit(15000),
       ]);
 
       const agencies = [...new Set(agencyRes.data?.map(d => d.agency_name))].filter(Boolean).sort() as string[];
