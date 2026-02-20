@@ -97,23 +97,30 @@ export function useDiscretionarySearch() {
   const { data: filterOptions } = useQuery({
     queryKey: ['discretionary-filter-options'],
     queryFn: async () => {
-      // Fetch from both ends (oldest + newest) to ensure all distinct values are captured
-      // Supabase caps at 1000 rows regardless of .limit()
-      const [agencyRes, agencyRes2, fundRes, sponsorRes, yearAsc, yearDesc] = await Promise.all([
-        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).order('agency_name').limit(1000),
-        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).order('agency_name', { ascending: false }).limit(1000),
+      // Fetch filter options
+      // For years: Supabase caps at 1000 rows, so heavy years (2022=3986 rows)
+      // prevent dedup from seeing all values. Use HEAD requests per year instead.
+      const currentYear = new Date().getFullYear();
+      const possibleYears = Array.from({ length: currentYear - 1999 }, (_, i) => currentYear - i);
+      const yearChecks = await Promise.all(
+        possibleYears.map(y =>
+          supabase.from('Discretionary').select('id', { count: 'exact', head: true }).eq('year', y)
+        )
+      );
+      const years = possibleYears
+        .filter((_, i) => (yearChecks[i].count ?? 0) > 0)
+        .map(String);
+
+      // Agencies, fund types, sponsors have few distinct values — 1000 rows is enough
+      const [agencyRes, fundRes, sponsorRes] = await Promise.all([
+        supabase.from('Discretionary').select('agency_name').not('agency_name', 'is', null).limit(1000),
         supabase.from('Discretionary').select('fund_type').not('fund_type', 'is', null).limit(1000),
         supabase.from('Discretionary').select('Sponsor').not('Sponsor', 'is', null).limit(1000),
-        supabase.from('Discretionary').select('year').not('year', 'is', null).order('year').limit(1000),
-        supabase.from('Discretionary').select('year').not('year', 'is', null).order('year', { ascending: false }).limit(1000),
       ]);
 
-      const allAgencies = [...(agencyRes.data || []), ...(agencyRes2.data || [])];
-      const agencies = [...new Set(allAgencies.map(d => d.agency_name))].filter(Boolean).sort() as string[];
+      const agencies = [...new Set(agencyRes.data?.map(d => d.agency_name))].filter(Boolean).sort() as string[];
       const fundTypes = [...new Set(fundRes.data?.map(d => d.fund_type))].filter(Boolean).sort() as string[];
       const sponsors = [...new Set(sponsorRes.data?.map(d => d.Sponsor))].filter(Boolean).sort() as string[];
-      const allYears = [...(yearAsc.data || []), ...(yearDesc.data || [])];
-      const years = [...new Set(allYears.map(d => String(d.year)))].filter(Boolean).sort().reverse() as string[];
 
       return { agencies, fundTypes, sponsors, years };
     },
