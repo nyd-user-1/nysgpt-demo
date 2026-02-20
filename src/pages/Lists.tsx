@@ -573,7 +573,7 @@ export default function Lists() {
                         return (
                           <div key={idx} className="py-3 first:pt-0">
                             <Link
-                              to="/explore/lobbying"
+                              to="/charts/lobbying"
                               className="group flex items-center gap-3 py-2 bg-muted/50 hover:bg-muted/60 hover:shadow-md px-4 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
                             >
                               <div className="flex-1 min-w-0">
@@ -622,7 +622,7 @@ export default function Lists() {
                         .slice(0, lobbyistVisibleCount).map((l: any, idx: number) => (
                         <div key={idx} className="py-3 first:pt-0">
                           <Link
-                            to="/explore/lobbying"
+                            to="/charts/lobbying"
                             className="group flex items-center gap-3 py-2 bg-muted/50 hover:bg-muted/60 hover:shadow-md px-4 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
                           >
                             <div className="flex-1 min-w-0">
@@ -661,7 +661,7 @@ export default function Lists() {
                         .slice(0, lobbyistVisibleCount).map((l: any, idx: number) => (
                         <div key={idx} className="py-3 first:pt-0">
                           <Link
-                            to="/explore/lobbying"
+                            to="/charts/lobbying"
                             className="group flex items-center gap-3 py-2 bg-muted/50 hover:bg-muted/60 hover:shadow-md px-4 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
                           >
                             <div className="flex-1 min-w-0">

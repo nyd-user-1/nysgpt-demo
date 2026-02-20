@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, ChevronDown, ArrowUp, MessageSquare, LayoutGrid, ExternalLink } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, ArrowUp, MessageSquare, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InsetPanel } from '@/components/ui/inset-panel';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
@@ -8,15 +8,7 @@ import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { VotesChatDrawer } from '@/components/VotesChatDrawer';
-import {
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerClose,
-} from '@/components/ui/drawer';
+import { DashboardDrawer } from '@/components/DashboardDrawer';
 import {
   Select,
   SelectContent,
@@ -550,88 +542,7 @@ const VotesDashboard = () => {
 
               {/* Dashboards picker + time range + chart toggle */}
               <div className="flex items-center gap-3">
-                <Drawer>
-                    <DrawerTrigger asChild>
-                      <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                        <LayoutGrid className="h-4 w-4" />
-                        <span className="hidden sm:inline">Dashboards</span>
-                      </button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <DrawerHeader>
-                        <DrawerTitle>Dashboards</DrawerTitle>
-                        <DrawerDescription>Explore NYS data dashboards</DrawerDescription>
-                      </DrawerHeader>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 px-4 pb-8">
-                        {/* Dashboard navigation cards */}
-                        {[
-                          { path: '/explore/budget', label: 'Budget', desc: 'NYS budget spending', color: 'hsl(160 60% 45%)', id: 'dBudget',
-                            data: [{x:0,y:8},{x:1,y:10},{x:2,y:14},{x:3,y:18},{x:4,y:16},{x:5,y:20},{x:6,y:22},{x:7,y:19},{x:8,y:24},{x:9,y:28}] },
-                          { path: '/explore/lobbying', label: 'Lobbying', desc: 'Lobbyist compensation', color: 'hsl(217 91% 60%)', id: 'dLobby',
-                            data: [{x:0,y:6},{x:1,y:8},{x:2,y:10},{x:3,y:12},{x:4,y:14},{x:5,y:16},{x:6,y:18},{x:7,y:22},{x:8,y:24},{x:9,y:28}] },
-                          { path: '/explore/contracts', label: 'Contracts', desc: 'State contracts', color: 'hsl(32 95% 50%)', id: 'dContract',
-                            data: [{x:0,y:14},{x:1,y:12},{x:2,y:16},{x:3,y:14},{x:4,y:18},{x:5,y:16},{x:6,y:20},{x:7,y:18},{x:8,y:22},{x:9,y:24}] },
-                        ].map((d) => (
-                          <DrawerClose asChild key={d.path}>
-                            <button onClick={() => navigate(d.path)} className="text-left rounded-xl border border-border bg-muted/30 hover:bg-muted/50 hover:shadow-lg transition-all duration-200 overflow-hidden">
-                              <div className="h-24 px-2 pt-2">
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <AreaChart data={d.data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-                                    <defs>
-                                      <linearGradient id={d.id} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={d.color} stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor={d.color} stopOpacity={0.02} />
-                                      </linearGradient>
-                                    </defs>
-                                    <Area type="monotone" dataKey="y" stroke={d.color} strokeWidth={1.5} fill={`url(#${d.id})`} dot={false} animationDuration={500} />
-                                    <XAxis dataKey="x" hide />
-                                  </AreaChart>
-                                </ResponsiveContainer>
-                              </div>
-                              <div className="px-3 pb-3 pt-2">
-                                <p className="font-semibold text-sm">{d.label}</p>
-                                <p className="text-xs text-muted-foreground">{d.desc}</p>
-                              </div>
-                            </button>
-                          </DrawerClose>
-                        ))}
-
-                        {/* Vote chart cards */}
-                        {drawerCharts.map((chart, idx) => (
-                          <DrawerClose asChild key={idx}>
-                            <button onClick={() => setChartMode(idx)} className={cn("text-left rounded-xl border bg-muted/30 hover:bg-muted/50 hover:shadow-lg transition-all duration-200 overflow-hidden", chartMode === idx ? "border-foreground/30 ring-1 ring-foreground/10" : "border-border")}>
-                              <div className="h-24 px-2 pt-2">
-                                {chart.data.length > 1 ? (
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={chart.data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-                                      <defs>
-                                        {chart.areas.map((a) => (
-                                          <linearGradient key={a.id} id={a.id} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={a.stroke} stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor={a.stroke} stopOpacity={0.02} />
-                                          </linearGradient>
-                                        ))}
-                                      </defs>
-                                      {chart.areas.map((a) => (
-                                        <Area key={a.key} type="monotone" dataKey={a.key} stroke={a.stroke} strokeWidth={1.5} fill={`url(#${a.id})`} dot={false} animationDuration={500} />
-                                      ))}
-                                      <XAxis dataKey="date" hide />
-                                    </AreaChart>
-                                  </ResponsiveContainer>
-                                ) : (
-                                  <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>
-                                )}
-                              </div>
-                              <div className="px-3 pb-3 pt-2">
-                                <p className="font-semibold text-sm">{chart.label}</p>
-                                <p className="text-xs text-muted-foreground">{chart.desc}</p>
-                              </div>
-                            </button>
-                          </DrawerClose>
-                        ))}
-                      </div>
-                    </DrawerContent>
-                  </Drawer>
+                <DashboardDrawer />
 
                 {/* Time range filter */}
                 <Select value={timeRange} onValueChange={setTimeRange}>

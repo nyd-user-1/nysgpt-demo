@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, X, DollarSign, ArrowUp } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, X, DollarSign, TrendingUp, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Input } from '@/components/ui/input';
@@ -14,13 +14,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useBudgetSearch, formatBudgetAmount, reformatAgencyName, type BudgetTab } from '@/hooks/useBudgetSearch';
+import { useRevenueSearch, getLatestAmount, formatRevenueAmount } from '@/hooks/useRevenueSearch';
+import { Revenue as RevenueType } from '@/types/revenue';
 import { departmentPrompts, agencyPrompts, authorityPrompts } from '@/pages/Prompts';
 import { InsetPanel } from '@/components/ui/inset-panel';
 
-const tabs: { id: BudgetTab; label: string }[] = [
+type PageTab = BudgetTab | 'revenue';
+
+const tabs: { id: PageTab; label: string }[] = [
   { id: 'appropriations', label: 'Appropriations' },
   { id: 'capital', label: 'Capital' },
   { id: 'spending', label: 'Spending' },
+  { id: 'revenue', label: 'Revenue' },
 ];
 
 const SECONDARY_LABEL: Record<BudgetTab, string> = {
@@ -41,31 +46,38 @@ const EXTRA_LABEL: Record<BudgetTab, string> = {
   spending: 'FP Category',
 };
 
+const VALID_TABS: PageTab[] = ['appropriations', 'capital', 'spending', 'revenue'];
+
 const Budget = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session } = useAuth();
   const isAuthenticated = !!session;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
   const [sidebarMounted, setSidebarMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<BudgetTab>('appropriations');
+
+  // Read tab from URL query param, default to 'appropriations'
+  const tabParam = searchParams.get('tab') as PageTab | null;
+  const activeTab: PageTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'appropriations';
 
   useEffect(() => {
     const timer = setTimeout(() => setSidebarMounted(true), 50);
     return () => clearTimeout(timer);
   }, []);
 
+  const budgetTab: BudgetTab = activeTab === 'revenue' ? 'appropriations' : activeTab;
   const {
-    data: items,
-    isLoading,
-    error,
+    data: budgetItems,
+    isLoading: budgetLoading,
+    error: budgetError,
     agencies,
     secondaryOptions,
     fundTypeOptions,
     extraOptions,
     yearOptions,
-    searchTerm,
-    setSearchTerm,
+    searchTerm: budgetSearchTerm,
+    setSearchTerm: setBudgetSearchTerm,
     agencyFilter,
     setAgencyFilter,
     secondaryFilter,
@@ -77,10 +89,38 @@ const Budget = () => {
     yearFilter,
     setYearFilter,
     resetFilters,
-    loadMore,
-    hasMore,
-    loadingMore,
-  } = useBudgetSearch(activeTab);
+    loadMore: budgetLoadMore,
+    hasMore: budgetHasMore,
+    loadingMore: budgetLoadingMore,
+  } = useBudgetSearch(budgetTab);
+
+  const {
+    revenue: revenueItems,
+    isLoading: revenueLoading,
+    error: revenueError,
+    fundGroups,
+    fpCategories,
+    searchTerm: revenueSearchTerm,
+    setSearchTerm: setRevenueSearchTerm,
+    fundGroupFilter,
+    setFundGroupFilter,
+    fpCategoryFilter,
+    setFpCategoryFilter,
+    loadMore: revenueLoadMore,
+    hasMore: revenueHasMore,
+    loadingMore: revenueLoadingMore,
+  } = useRevenueSearch();
+
+  // Unified accessors based on active tab
+  const isRevenue = activeTab === 'revenue';
+  const items = isRevenue ? revenueItems : budgetItems;
+  const isLoading = isRevenue ? revenueLoading : budgetLoading;
+  const error = isRevenue ? revenueError : budgetError;
+  const searchTerm = isRevenue ? revenueSearchTerm : budgetSearchTerm;
+  const setSearchTerm = isRevenue ? setRevenueSearchTerm : setBudgetSearchTerm;
+  const loadMore = isRevenue ? revenueLoadMore : budgetLoadMore;
+  const hasMore = isRevenue ? revenueHasMore : budgetHasMore;
+  const loadingMore = isRevenue ? revenueLoadingMore : budgetLoadingMore;
 
   // Keyboard shortcut to focus search
   useEffect(() => {
@@ -95,23 +135,48 @@ const Budget = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleTabChange = (tab: BudgetTab) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab: PageTab) => {
+    if (tab === 'appropriations') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab });
+    }
     resetFilters();
+    setRevenueSearchTerm('');
+    setFundGroupFilter('');
+    setFpCategoryFilter('');
   };
 
   const clearFilters = () => {
     setSearchTerm('');
-    setAgencyFilter('');
-    setSecondaryFilter('');
-    setFundTypeFilter('');
-    setExtraFilter('');
-    setYearFilter('');
+    if (isRevenue) {
+      setFundGroupFilter('');
+      setFpCategoryFilter('');
+    } else {
+      setAgencyFilter('');
+      setSecondaryFilter('');
+      setFundTypeFilter('');
+      setExtraFilter('');
+      setYearFilter('');
+    }
   };
 
-  const hasActiveFilters = searchTerm || agencyFilter || secondaryFilter || fundTypeFilter || extraFilter || yearFilter;
+  const hasActiveFilters = isRevenue
+    ? (searchTerm || fundGroupFilter || fpCategoryFilter)
+    : (searchTerm || agencyFilter || secondaryFilter || fundTypeFilter || extraFilter || yearFilter);
 
   const handleChatClick = (item: any) => {
+    if (isRevenue) {
+      const receipt = item.Detail_Receipt || 'this revenue source';
+      const fund = item.Fund_Group ? ` in the ${item.Fund_Group} fund group` : '';
+      const category = item.FP_Category ? ` (${item.FP_Category})` : '';
+      const latestAmount = getLatestAmount(item);
+      const amountStr = latestAmount ? ` The most recent amount is ${formatRevenueAmount(latestAmount)}.` : '';
+      const prompt = `[Revenue:${item.id}] Tell me about the NYS revenue source "${receipt}"${fund}${category}.${amountStr} What should I know about this revenue category?`;
+      navigate(`/new-chat?prompt=${encodeURIComponent(prompt)}`);
+      return;
+    }
+
     let prompt = '';
     let budgetAgency = '';
     let budgetProgram = '';
@@ -150,6 +215,10 @@ const Budget = () => {
   };
 
   const handleCardClick = (item: any) => {
+    if (isRevenue) {
+      navigate(`/revenue/${item.id}`);
+      return;
+    }
     const agencyCol = activeTab === 'spending' ? 'Agency' : 'Agency Name';
     const rawName = item[agencyCol];
     if (!rawName) return;
@@ -259,7 +328,7 @@ const Budget = () => {
                     </button>
                   ))}
                   <button
-                    onClick={() => navigate('/explore/budget')}
+                    onClick={() => navigate('/charts/budget')}
                     className="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-muted hover:bg-muted/80 text-foreground whitespace-nowrap"
                   >
                     Dashboard
@@ -267,79 +336,107 @@ const Budget = () => {
                 </div>
 
                 {/* Filters row */}
-                <div className="flex gap-2 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
-                  <Select value={agencyFilter || 'all'} onValueChange={(v) => setAgencyFilter(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
-                      <SelectValue placeholder="Agency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="focus:bg-muted focus:text-foreground">Agency</SelectItem>
-                      {agencies.map((a: string) => (
-                        <SelectItem key={a} value={a} className="focus:bg-muted focus:text-foreground">
-                          {a}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={secondaryFilter || 'all'} onValueChange={(v) => setSecondaryFilter(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
-                      <SelectValue placeholder={SECONDARY_LABEL[activeTab]} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="focus:bg-muted focus:text-foreground">{SECONDARY_LABEL[activeTab]}</SelectItem>
-                      {secondaryOptions.map((opt: string) => (
-                        <SelectItem key={opt} value={opt} className="focus:bg-muted focus:text-foreground">
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={fundTypeFilter || 'all'} onValueChange={(v) => setFundTypeFilter(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
-                      <SelectValue placeholder={FUND_TYPE_LABEL[activeTab]} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="focus:bg-muted focus:text-foreground">{FUND_TYPE_LABEL[activeTab]}</SelectItem>
-                      {fundTypeOptions.map((opt: string) => (
-                        <SelectItem key={opt} value={opt} className="focus:bg-muted focus:text-foreground">
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={extraFilter || 'all'} onValueChange={(v) => setExtraFilter(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
-                      <SelectValue placeholder={EXTRA_LABEL[activeTab]} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="focus:bg-muted focus:text-foreground">{EXTRA_LABEL[activeTab]}</SelectItem>
-                      {extraOptions.map((opt: string) => (
-                        <SelectItem key={opt} value={opt} className="focus:bg-muted focus:text-foreground">
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {activeTab === 'spending' && (
-                    <Select value={yearFilter || 'all'} onValueChange={(v) => setYearFilter(v === 'all' ? '' : v)}>
+                {isRevenue ? (
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+                    <Select value={fundGroupFilter || 'all'} onValueChange={(v) => setFundGroupFilter(v === 'all' ? '' : v)}>
                       <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
-                        <SelectValue placeholder="Year" />
+                        <SelectValue placeholder="Fund Group" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">Year</SelectItem>
-                        {yearOptions.map((yr: string) => (
-                          <SelectItem key={yr} value={yr} className="focus:bg-muted focus:text-foreground">
-                            {yr}
+                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">Fund Group</SelectItem>
+                        {fundGroups.map((g: string) => (
+                          <SelectItem key={g} value={g} className="focus:bg-muted focus:text-foreground">{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={fpCategoryFilter || 'all'} onValueChange={(v) => setFpCategoryFilter(v === 'all' ? '' : v)}>
+                      <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">Category</SelectItem>
+                        {fpCategories.map((c: string) => (
+                          <SelectItem key={c} value={c} className="focus:bg-muted focus:text-foreground">{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+                    <Select value={agencyFilter || 'all'} onValueChange={(v) => setAgencyFilter(v === 'all' ? '' : v)}>
+                      <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
+                        <SelectValue placeholder="Agency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">Agency</SelectItem>
+                        {agencies.map((a: string) => (
+                          <SelectItem key={a} value={a} className="focus:bg-muted focus:text-foreground">
+                            {a}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  )}
-                </div>
+
+                    <Select value={secondaryFilter || 'all'} onValueChange={(v) => setSecondaryFilter(v === 'all' ? '' : v)}>
+                      <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
+                        <SelectValue placeholder={SECONDARY_LABEL[budgetTab]} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">{SECONDARY_LABEL[budgetTab]}</SelectItem>
+                        {secondaryOptions.map((opt: string) => (
+                          <SelectItem key={opt} value={opt} className="focus:bg-muted focus:text-foreground">
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={fundTypeFilter || 'all'} onValueChange={(v) => setFundTypeFilter(v === 'all' ? '' : v)}>
+                      <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
+                        <SelectValue placeholder={FUND_TYPE_LABEL[budgetTab]} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">{FUND_TYPE_LABEL[budgetTab]}</SelectItem>
+                        {fundTypeOptions.map((opt: string) => (
+                          <SelectItem key={opt} value={opt} className="focus:bg-muted focus:text-foreground">
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={extraFilter || 'all'} onValueChange={(v) => setExtraFilter(v === 'all' ? '' : v)}>
+                      <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
+                        <SelectValue placeholder={EXTRA_LABEL[budgetTab]} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="focus:bg-muted focus:text-foreground">{EXTRA_LABEL[budgetTab]}</SelectItem>
+                        {extraOptions.map((opt: string) => (
+                          <SelectItem key={opt} value={opt} className="focus:bg-muted focus:text-foreground">
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {activeTab === 'spending' && (
+                      <Select value={yearFilter || 'all'} onValueChange={(v) => setYearFilter(v === 'all' ? '' : v)}>
+                        <SelectTrigger className="w-auto border-0 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted focus:ring-0 focus:ring-offset-0 [&>svg]:hidden">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="focus:bg-muted focus:text-foreground">Year</SelectItem>
+                          {yearOptions.map((yr: string) => (
+                            <SelectItem key={yr} value={yr} className="focus:bg-muted focus:text-foreground">
+                              {yr}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -363,8 +460,11 @@ const Budget = () => {
               </div>
             ) : items.length === 0 ? (
               <div className="text-center py-12">
-                <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No budget records found matching your criteria.</p>
+                {isRevenue
+                  ? <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  : <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                }
+                <p className="text-muted-foreground">No {isRevenue ? 'revenue' : 'budget'} records found matching your criteria.</p>
                 {hasActiveFilters && (
                   <Button variant="link" onClick={clearFilters} className="mt-2">
                     Clear filters
@@ -375,14 +475,23 @@ const Budget = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(isAuthenticated ? items : items.slice(0, 9)).map((item: any, idx: number) => (
-                    <BudgetCard
-                      key={idx}
-                      item={item}
-                      tab={activeTab}
-                      yearCol={yearFilter || '2026-27 Estimates'}
-                      onChatClick={() => handleChatClick(item)}
-                      onCardClick={() => handleCardClick(item)}
-                    />
+                    isRevenue ? (
+                      <RevenueCard
+                        key={item.id ?? idx}
+                        revenue={item}
+                        onChatClick={() => handleChatClick(item)}
+                        onCardClick={() => handleCardClick(item)}
+                      />
+                    ) : (
+                      <BudgetCard
+                        key={idx}
+                        item={item}
+                        tab={budgetTab}
+                        yearCol={yearFilter || '2026-27 Estimates'}
+                        onChatClick={() => handleChatClick(item)}
+                        onCardClick={() => handleCardClick(item)}
+                      />
+                    )
                   ))}
                 </div>
                 {isAuthenticated && loadingMore && (
@@ -687,6 +796,65 @@ function SpendingCard({ item, yearCol, onChatClick, onCardClick }: { item: any; 
         <div className="flex justify-end mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={onChatClick}
+            className="w-10 h-10 bg-foreground text-background rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Revenue Card ──────────────────────────────────────────────────
+
+function RevenueCard({ revenue, onChatClick, onCardClick }: { revenue: RevenueType; onChatClick: () => void; onCardClick: () => void }) {
+  const latestAmount = getLatestAmount(revenue);
+
+  const handleChat = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChatClick();
+  };
+
+  return (
+    <div
+      onClick={onCardClick}
+      className="group bg-muted/30 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg"
+    >
+      <h3 className="font-semibold text-base mb-3">
+        {revenue.Detail_Receipt || 'Unknown Revenue Source'}
+      </h3>
+      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+        NYS revenue source{revenue.Fund_Group ? ` in ${revenue.Fund_Group}` : ''}.
+      </p>
+
+      <div className="mt-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+          {revenue.Fund_Group && (
+            <div>
+              <span className="text-muted-foreground">Fund Group</span>
+              <p className="font-medium truncate">{revenue.Fund_Group}</p>
+            </div>
+          )}
+          {revenue.FP_Category && (
+            <div>
+              <span className="text-muted-foreground">Category</span>
+              <p className="font-medium truncate">{revenue.FP_Category}</p>
+            </div>
+          )}
+          {latestAmount && (
+            <div className="col-span-2">
+              <span className="text-muted-foreground">Latest Amount</span>
+              <p className="font-medium text-green-600 dark:text-green-400">
+                {formatRevenueAmount(latestAmount)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={handleChat}
             className="w-10 h-10 bg-foreground text-background rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
           >
             <ArrowUp className="h-5 w-5" />

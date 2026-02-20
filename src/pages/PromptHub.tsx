@@ -692,7 +692,7 @@ export default function PromptHub() {
             <div className="flex-1 min-w-0">
               {/* Hero — Budget Dashboard Preview */}
               <Link
-                to="/explore/budget"
+                to="/charts/budget"
                 className="block rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white p-8 mb-8 relative overflow-hidden group hover:shadow-xl transition-shadow"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10" />
