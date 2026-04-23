@@ -389,28 +389,6 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
           </TooltipContent>
         </Tooltip>
 
-        {/* #3 User Prompts */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/prompts"
-              onClick={onClose}
-              className={cn(
-                "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
-                isActive("/prompts") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
-              )}
-            >
-              <Sparkles className="h-4 w-4" />
-              <span className="flex-1">User Prompts</span>
-              <span className="hidden sm:block text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                New
-              </span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>Browse prompts & lists</p>
-          </TooltipContent>
-        </Tooltip>
         </div>
       </aside>
 
@@ -716,6 +694,29 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                   </TooltipTrigger>
                   <TooltipContent side="right">
                     <p>School funding information</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* User Prompts */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/prompts"
+                      onClick={onClose}
+                      className={cn(
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/prompts") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span className="flex-1">User Prompts</span>
+                      <span className="hidden sm:block text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        New
+                      </span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Browse prompts & lists</p>
                   </TooltipContent>
                 </Tooltip>
               </CollapsibleContent>
