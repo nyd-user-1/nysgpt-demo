@@ -389,28 +389,6 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
           </TooltipContent>
         </Tooltip>
 
-        {/* #3 User Prompts */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/prompts"
-              onClick={onClose}
-              className={cn(
-                "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
-                isActive("/prompts") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
-              )}
-            >
-              <Sparkles className="h-4 w-4" />
-              <span className="flex-1">User Prompts</span>
-              <span className="hidden sm:block text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                New
-              </span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>Browse prompts & lists</p>
-          </TooltipContent>
-        </Tooltip>
         </div>
       </aside>
 
@@ -548,6 +526,29 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]/pro:rotate-90" />
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-4 space-y-1 mt-1">
+                {/* User Prompts */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink
+                      to="/prompts"
+                      onClick={onClose}
+                      className={cn(
+                        "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                        isActive("/prompts") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
+                      )}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span className="flex-1">User Prompts</span>
+                      <span className="hidden sm:block text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        New
+                      </span>
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Browse prompts & lists</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 {/* Notes */}
                 <Tooltip>
                   <TooltipTrigger asChild>
