@@ -206,7 +206,7 @@ const Contracts = () => {
           </div>
 
           {/* Results - Masonry Grid (Scrollable) */}
-          <div className="flex-1 overflow-y-auto px-4 py-6" onScroll={(e) => {
+          <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-6" onScroll={(e) => {
             if (!isAuthenticated) return;
             const el = e.currentTarget;
             if (el.scrollHeight - el.scrollTop - el.clientHeight < 200 && hasMore && !loadingMore) {

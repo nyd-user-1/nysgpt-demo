@@ -240,7 +240,7 @@ const ExcerptView = () => {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto py-8 px-4">
+          <div className="flex-1 overflow-y-auto scrollbar-hide py-8 px-4">
             <div className="max-w-[720px] mx-auto space-y-6">
           {/* User Message */}
           <div className="flex justify-end">

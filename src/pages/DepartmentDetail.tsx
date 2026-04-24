@@ -214,7 +214,7 @@ export default function DepartmentDetail() {
           </div>
 
           {/* Scrollable Content */}
-          <div className="absolute top-[57px] bottom-0 left-0 right-0 overflow-y-auto">
+          <div className="absolute top-[57px] bottom-0 left-0 right-0 overflow-y-auto scrollbar-hide">
             <div className="container mx-auto px-4 py-8 max-w-4xl">
               {/* Breadcrumb */}
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-10">

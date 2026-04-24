@@ -281,7 +281,7 @@ export default function Prompts() {
           </div>
 
           {/* Scrollable Content Area */}
-          <div className="absolute top-[57px] bottom-0 left-0 right-0 overflow-y-auto">
+          <div className="absolute top-[57px] bottom-0 left-0 right-0 overflow-y-auto scrollbar-hide">
             <div className="container mx-auto px-4 py-8 max-w-5xl">
               {/* Header */}
               <div className="flex items-center justify-between mb-8">

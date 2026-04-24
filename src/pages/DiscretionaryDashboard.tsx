@@ -121,7 +121,7 @@ export default function DiscretionaryDashboard() {
         </div>
 
         {/* Table */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>
           ) : error ? (

@@ -279,7 +279,7 @@ const BudgetDashboard = () => {
           </div>
 
           {/* Table Body */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
             {error ? (
               <div className="text-center py-12 px-4">
                 <p className="text-destructive">Error loading budget data: {String(error)}</p>

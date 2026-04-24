@@ -244,7 +244,7 @@ const Chats2 = () => {
           </div>
 
           {/* Results - Grid (Scrollable) */}
-          <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-6">
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 12 }).map((_, i) => (
