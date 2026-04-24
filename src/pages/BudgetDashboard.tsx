@@ -126,215 +126,217 @@ const BudgetDashboard = () => {
   };
 
   return (
-    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
-          {/* Header */}
-          <div className="flex-shrink-0 bg-background border-b">
-            <div className="px-4 py-4 md:px-6">
-              {/* Top row: sidebar + title left, amount right */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
-                  <button
-                    onClick={() => setLeftSidebarOpen(true)}
-                    className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
-                    aria-label="Open menu"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                      <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                      <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-                    </svg>
-                  </button>
+    <>
+      <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
+            {/* Header */}
+            <div className="flex-shrink-0 bg-background border-b">
+              <div className="px-4 py-4 md:px-6">
+                {/* Top row: sidebar + title left, amount right */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
+                    <button
+                      onClick={() => setLeftSidebarOpen(true)}
+                      className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
+                      aria-label="Open menu"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                        <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                        <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Amount + YoY — top right */}
+                  {!isLoading && !error && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => openChat()}
+                          className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </button>
+                        <span className="text-3xl md:text-4xl font-bold tracking-tight transition-all duration-300">
+                          {formatCompactCurrency(headerAmount)}
+                        </span>
+                        {selectedRow && (
+                          <button
+                            onClick={() => setSelectedRow(null)}
+                            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-sm",
+                        headerYoy > 0 ? "text-green-600 dark:text-green-400" :
+                        headerYoy < 0 ? "text-red-600 dark:text-red-400" :
+                        "text-muted-foreground"
+                      )}>
+                        {headerYoy >= 0 ? '+' : ''}{headerYoy.toFixed(1)}% from prior year
+                      </span>
+                    </div>
+                  )}
+
+                  <MobileNYSgpt />
                 </div>
 
-                {/* Amount + YoY — top right */}
-                {!isLoading && !error && (
-                  <div className="text-right flex-shrink-0">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        onClick={() => openChat()}
-                        className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </button>
-                      <span className="text-3xl md:text-4xl font-bold tracking-tight transition-all duration-300">
-                        {formatCompactCurrency(headerAmount)}
-                      </span>
-                      {selectedRow && (
-                        <button
-                          onClick={() => setSelectedRow(null)}
-                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                    <span className={cn(
-                      "text-sm",
-                      headerYoy > 0 ? "text-green-600 dark:text-green-400" :
-                      headerYoy < 0 ? "text-red-600 dark:text-red-400" :
-                      "text-muted-foreground"
-                    )}>
-                      {headerYoy >= 0 ? '+' : ''}{headerYoy.toFixed(1)}% from prior year
-                    </span>
+                {/* Mini Historical Chart */}
+                {!isLoading && chartData.length > 1 && (
+                  <div className="h-24 md:h-28 mb-4 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                        <defs>
+                          <linearGradient id="budgetGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="total"
+                          stroke="hsl(217 91% 60%)"
+                          strokeWidth={1.5}
+                          fill="url(#budgetGradient)"
+                          dot={false}
+                          animationDuration={500}
+                        />
+                        <XAxis
+                          dataKey="year"
+                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={false}
+                          interval="preserveStartEnd"
+                          tickFormatter={(value) => {
+                            // Show just the ending year: "2026-27" → "2027"
+                            const parts = value.split('-');
+                            return parts.length === 2 ? `'${parts[1]}` : value;
+                          }}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value: number) => [formatFullCurrency(value), selectedRow || 'Total']}
+                          labelFormatter={(label) => `FY ${label} Enacted Budget`}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 )}
 
-                <MobileNYSgpt />
-              </div>
-
-              {/* Mini Historical Chart */}
-              {!isLoading && chartData.length > 1 && (
-                <div className="h-24 md:h-28 mb-4 -mx-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-                      <defs>
-                        <linearGradient id="budgetGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
-                          <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
-                        </linearGradient>
-                      </defs>
-                      <Area
-                        type="monotone"
-                        dataKey="total"
-                        stroke="hsl(217 91% 60%)"
-                        strokeWidth={1.5}
-                        fill="url(#budgetGradient)"
-                        dot={false}
-                        animationDuration={500}
-                      />
-                      <XAxis
-                        dataKey="year"
-                        tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                        tickLine={false}
-                        axisLine={false}
-                        interval="preserveStartEnd"
-                        tickFormatter={(value) => {
-                          // Show just the ending year: "2026-27" → "2027"
-                          const parts = value.split('-');
-                          return parts.length === 2 ? `'${parts[1]}` : value;
-                        }}
-                      />
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        formatter={(value: number) => [formatFullCurrency(value), selectedRow || 'Total']}
-                        labelFormatter={(label) => `FY ${label} Enacted Budget`}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                {/* Dashboards picker + Tabs */}
+                <div className="flex items-center gap-3">
+                  <DashboardDrawer />
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={cn(
+                        'px-3 py-2 rounded-lg text-sm transition-colors',
+                        activeTab === tab
+                          ? 'bg-muted text-foreground font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      {TAB_LABELS[tab]}
+                    </button>
+                  ))}
                 </div>
-              )}
-
-              {/* Dashboards picker + Tabs */}
-              <div className="flex items-center gap-3">
-                <DashboardDrawer />
-                {TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      'px-3 py-2 rounded-lg text-sm transition-colors',
-                      activeTab === tab
-                        ? 'bg-muted text-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                  >
-                    {TAB_LABELS[tab]}
-                  </button>
-                ))}
               </div>
             </div>
-          </div>
 
-          {/* Table Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            {error ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-destructive">Error loading budget data: {String(error)}</p>
-              </div>
-            ) : isLoading ? (
-              <div className="px-4 md:px-6 py-4 space-y-2">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-muted-foreground">No budget records found matching your criteria.</p>
-              </div>
-            ) : (
-              <>
-                <div className="divide-y">
-                  {/* Column headers */}
-                  <div className="hidden md:grid grid-cols-[1fr_44px_120px_100px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                    <span>Name</span>
-                    <span className="flex items-center justify-center">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="text-right">{primaryYearLabel.split('-')[1] ? `'${primaryYearLabel.split('-')[1]}` : primaryYearLabel}</span>
-                    <span className="text-right">Change</span>
-                    <span className="text-right">Share</span>
-                  </div>
-
-                  {(isAuthenticated ? rows : rows.slice(0, 6)).map((row) => (
-                    <DashboardRowItem
-                      key={row.name}
-                      row={row}
-                      isExpanded={expandedRows.has(row.name)}
-                      isSelected={selectedRow === row.name}
-                      hasSelection={selectedRow !== null}
-                      onToggle={() => toggleRow(row.name)}
-                      onChatClick={() => handleChatClick(row)}
-                      tab={activeTab}
-                      getDrillDown={getDrillDown}
-                      onAgencyChatClick={(agency) => handleAgencyChatClick(agency, row.name)}
-                      primaryYearLabel={primaryYearLabel}
-                    />
-                  ))}
-
-                  {/* Grand total row */}
-                  <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_44px_120px_100px_80px] gap-4 px-4 md:px-6 py-4 bg-muted/30 font-semibold">
-                    <span>Total</span>
-                    <span className="hidden md:block" />
-                    <span className="text-right">{formatCompactCurrency(grandTotal)}</span>
-                    <span className={cn(
-                      "hidden md:block text-right",
-                      grandTotalYoy > 0 ? "text-green-600 dark:text-green-400" :
-                      grandTotalYoy < 0 ? "text-red-600 dark:text-red-400" :
-                      "text-muted-foreground"
-                    )}>
-                      {grandTotalYoy >= 0 ? '+' : ''}{grandTotalYoy.toFixed(1)}%
-                    </span>
-                    <span className="hidden md:block text-right">100%</span>
-                  </div>
+            {/* Table Body */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {error ? (
+                <div className="text-center py-12 px-4">
+                  <p className="text-destructive">Error loading budget data: {String(error)}</p>
                 </div>
-                {!isAuthenticated && (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">
-                      Please log in to view thousands of budget records.
-                    </p>
-                    <Button variant="ghost" onClick={() => navigate('/auth-4')}
-                      className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">
-                      Sign Up
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-      </AppLayout>
+              ) : isLoading ? (
+                <div className="px-4 md:px-6 py-4 space-y-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : rows.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <p className="text-muted-foreground">No budget records found matching your criteria.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y">
+                    {/* Column headers */}
+                    <div className="hidden md:grid grid-cols-[1fr_44px_120px_100px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                      <span>Name</span>
+                      <span className="flex items-center justify-center">
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="text-right">{primaryYearLabel.split('-')[1] ? `'${primaryYearLabel.split('-')[1]}` : primaryYearLabel}</span>
+                      <span className="text-right">Change</span>
+                      <span className="text-right">Share</span>
+                    </div>
 
-      {/* Budget Chat Drawer */}
-      <BudgetChatDrawer
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-        functionName={chatFunctionName}
-      />
+                    {(isAuthenticated ? rows : rows.slice(0, 6)).map((row) => (
+                      <DashboardRowItem
+                        key={row.name}
+                        row={row}
+                        isExpanded={expandedRows.has(row.name)}
+                        isSelected={selectedRow === row.name}
+                        hasSelection={selectedRow !== null}
+                        onToggle={() => toggleRow(row.name)}
+                        onChatClick={() => handleChatClick(row)}
+                        tab={activeTab}
+                        getDrillDown={getDrillDown}
+                        onAgencyChatClick={(agency) => handleAgencyChatClick(agency, row.name)}
+                        primaryYearLabel={primaryYearLabel}
+                      />
+                    ))}
+
+                    {/* Grand total row */}
+                    <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_44px_120px_100px_80px] gap-4 px-4 md:px-6 py-4 bg-muted/30 font-semibold">
+                      <span>Total</span>
+                      <span className="hidden md:block" />
+                      <span className="text-right">{formatCompactCurrency(grandTotal)}</span>
+                      <span className={cn(
+                        "hidden md:block text-right",
+                        grandTotalYoy > 0 ? "text-green-600 dark:text-green-400" :
+                        grandTotalYoy < 0 ? "text-red-600 dark:text-red-400" :
+                        "text-muted-foreground"
+                      )}>
+                        {grandTotalYoy >= 0 ? '+' : ''}{grandTotalYoy.toFixed(1)}%
+                      </span>
+                      <span className="hidden md:block text-right">100%</span>
+                    </div>
+                  </div>
+                  {!isAuthenticated && (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">
+                        Please log in to view thousands of budget records.
+                      </p>
+                      <Button variant="ghost" onClick={() => navigate('/auth-4')}
+                        className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">
+                        Sign Up
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+        </AppLayout>
+
+        {/* Budget Chat Drawer */}
+        <BudgetChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          functionName={chatFunctionName}
+        />
+    </>
   );
 };
 

@@ -151,291 +151,293 @@ const DiscretionaryDetail = () => {
   }
 
   return (
-    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
-          {/* Header */}
-          <div className="flex-shrink-0 bg-background">
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setLeftSidebarOpen(true)}
-                    className="inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
-                    aria-label="Open menu"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                      <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                      <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => navigate('/?prompt=What%20is%20NYSgpt%3F')}
-                    className="inline-flex items-center justify-center h-10 rounded-md px-3 text-foreground hover:bg-muted transition-colors font-semibold text-xl"
-                  >
-                    NYSgpt
-                  </button>
+    <>
+      <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
+            {/* Header */}
+            <div className="flex-shrink-0 bg-background">
+              <div className="px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setLeftSidebarOpen(true)}
+                      className="inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
+                      aria-label="Open menu"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                        <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                        <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => navigate('/?prompt=What%20is%20NYSgpt%3F')}
+                      className="inline-flex items-center justify-center h-10 rounded-md px-3 text-foreground hover:bg-muted transition-colors font-semibold text-xl"
+                    >
+                      NYSgpt
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <div className="p-4 sm:p-6 lg:p-8">
-              <div className="max-w-7xl mx-auto space-y-6">
-            {/* Back button */}
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Discretionary</span>
-              <span className="sm:hidden">Back</span>
-            </Button>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              <div className="p-4 sm:p-6 lg:p-8">
+                <div className="max-w-7xl mx-auto space-y-6">
+              {/* Back button */}
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back to Discretionary</span>
+                <span className="sm:hidden">Back</span>
+              </Button>
 
-            {/* Grant Header Card */}
-            <Card className="overflow-hidden">
-              <CardContent className="p-6">
-                <div className="space-y-6 relative">
-                  <div className="pb-4 border-b">
-                    <h1 className="text-2xl font-semibold text-foreground">
-                      {cleanGranteeName(grant.Grantee)}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                      {grant.fund_type && (
-                        <Badge variant="secondary">{grant.fund_type}</Badge>
+              {/* Grant Header Card */}
+              <Card className="overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="space-y-6 relative">
+                    <div className="pb-4 border-b">
+                      <h1 className="text-2xl font-semibold text-foreground">
+                        {cleanGranteeName(grant.Grantee)}
+                      </h1>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {grant.fund_type && (
+                          <Badge variant="secondary">{grant.fund_type}</Badge>
+                        )}
+                        {grant.year && (
+                          <Badge variant="outline">FY {grant.year}</Badge>
+                        )}
+                        {grant.agency_name && (
+                          <span className="text-sm text-muted-foreground">
+                            {grant.agency_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {grant["Description of Grant"] && (
+                      <div className="text-sm text-muted-foreground leading-relaxed">
+                        {grant["Description of Grant"]}
+                      </div>
+                    )}
+
+                    {/* Detail Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <div className="text-xs text-muted-foreground mb-1">Grant Amount</div>
+                        <div className="font-semibold text-sm text-green-600 dark:text-green-400">
+                          {formatGrantAmount(grant["Grant Amount"])}
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <div className="text-xs text-muted-foreground mb-1">Appropriation</div>
+                        <div className="font-semibold text-sm">
+                          {formatGrantAmount(grant.appropriation_amount)}
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <div className="text-xs text-muted-foreground mb-1">Sponsor</div>
+                        <div className="font-semibold text-sm">{grant.Sponsor || 'N/A'}</div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <div className="text-xs text-muted-foreground mb-1">Agency</div>
+                        <div className="font-semibold text-sm">{grant.agency_name || 'N/A'}</div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <div className="text-xs text-muted-foreground mb-1">Fund Type</div>
+                        <div className="font-semibold text-sm">{grant.fund_type || 'N/A'}</div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <div className="text-xs text-muted-foreground mb-1">Approval Date</div>
+                        <div className="font-semibold text-sm">{grant["Approval Date"] || 'N/A'}</div>
+                      </div>
+                      {grant.chapter && (
+                        <div className="bg-muted/30 rounded-lg p-4">
+                          <div className="text-xs text-muted-foreground mb-1">Chapter</div>
+                          <div className="font-semibold text-sm">{grant.chapter}</div>
+                        </div>
                       )}
-                      {grant.year && (
-                        <Badge variant="outline">FY {grant.year}</Badge>
+                      {(grant["From Line"] || grant["To Line"]) && (
+                        <div className="bg-muted/30 rounded-lg p-4">
+                          <div className="text-xs text-muted-foreground mb-1">Lines</div>
+                          <div className="font-semibold text-sm">
+                            {grant["From Line"] || '—'} – {grant["To Line"] || '—'}
+                          </div>
+                        </div>
                       )}
-                      {grant.agency_name && (
-                        <span className="text-sm text-muted-foreground">
-                          {grant.agency_name}
-                        </span>
+                      {(grant.from_page || grant.to_page) && (
+                        <div className="bg-muted/30 rounded-lg p-4">
+                          <div className="text-xs text-muted-foreground mb-1">Pages</div>
+                          <div className="font-semibold text-sm">
+                            {grant.from_page || '—'} – {grant.to_page || '—'}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {grant["Description of Grant"] && (
-                    <div className="text-sm text-muted-foreground leading-relaxed">
-                      {grant["Description of Grant"]}
+              {/* Your Notes Section */}
+              <Card className="bg-card rounded-xl shadow-sm border">
+                <CardHeader className="px-6 py-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CardTitle className="text-lg font-semibold">
+                        Your Notes
+                      </CardTitle>
+                      {notes.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+                        </Badge>
+                      )}
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddNote}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Note
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {notes.length === 0 ? (
+                    <div className="bg-muted/30 rounded-lg p-4 text-sm">
+                      <span className="text-muted-foreground italic">No notes yet. Add a note to keep track of important information.</span>
+                    </div>
+                  ) : (
+                    <Accordion type="single" collapsible className="w-full">
+                      {notes.map((note) => (
+                        <AccordionItem key={note.id} value={note.id} className="border-b last:border-b-0">
+                          <AccordionTrigger className="hover:no-underline py-3">
+                            <div className="flex items-center gap-3 text-left">
+                              <span className="text-xs text-muted-foreground">
+                                {formatNoteDate(note.created_at)}
+                              </span>
+                              <span className="text-sm truncate max-w-[300px]">
+                                {note.content.substring(0, 50)}{note.content.length > 50 ? '...' : ''}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-4">
+                            <div className="text-sm text-muted-foreground whitespace-pre-wrap mb-4">
+                              {note.content}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditNote(note)}
+                                className="gap-1"
+                              >
+                                <Pencil className="h-3 w-3" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteNote(note.id)}
+                                className="gap-1 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Delete
+                              </Button>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                   )}
+                </CardContent>
+              </Card>
 
-                  {/* Detail Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-xs text-muted-foreground mb-1">Grant Amount</div>
-                      <div className="font-semibold text-sm text-green-600 dark:text-green-400">
-                        {formatGrantAmount(grant["Grant Amount"])}
-                      </div>
+              {/* Related Chats Section */}
+              <Card className="bg-card rounded-xl shadow-sm border">
+                <CardHeader className="px-6 py-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CardTitle className="text-lg font-semibold">
+                        Related Chats
+                      </CardTitle>
+                      {grantChats.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {grantChats.length} {grantChats.length === 1 ? 'chat' : 'chats'}
+                        </Badge>
+                      )}
                     </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-xs text-muted-foreground mb-1">Appropriation</div>
-                      <div className="font-semibold text-sm">
-                        {formatGrantAmount(grant.appropriation_amount)}
-                      </div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-xs text-muted-foreground mb-1">Sponsor</div>
-                      <div className="font-semibold text-sm">{grant.Sponsor || 'N/A'}</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-xs text-muted-foreground mb-1">Agency</div>
-                      <div className="font-semibold text-sm">{grant.agency_name || 'N/A'}</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-xs text-muted-foreground mb-1">Fund Type</div>
-                      <div className="font-semibold text-sm">{grant.fund_type || 'N/A'}</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <div className="text-xs text-muted-foreground mb-1">Approval Date</div>
-                      <div className="font-semibold text-sm">{grant["Approval Date"] || 'N/A'}</div>
-                    </div>
-                    {grant.chapter && (
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <div className="text-xs text-muted-foreground mb-1">Chapter</div>
-                        <div className="font-semibold text-sm">{grant.chapter}</div>
-                      </div>
-                    )}
-                    {(grant["From Line"] || grant["To Line"]) && (
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <div className="text-xs text-muted-foreground mb-1">Lines</div>
-                        <div className="font-semibold text-sm">
-                          {grant["From Line"] || '—'} – {grant["To Line"] || '—'}
-                        </div>
-                      </div>
-                    )}
-                    {(grant.from_page || grant.to_page) && (
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <div className="text-xs text-muted-foreground mb-1">Pages</div>
-                        <div className="font-semibold text-sm">
-                          {grant.from_page || '—'} – {grant.to_page || '—'}
-                        </div>
-                      </div>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNewChat}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      New Chat
+                    </Button>
                   </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {grantChats.length === 0 ? (
+                    <div className="bg-muted/30 rounded-lg p-4 text-sm">
+                      <span className="text-muted-foreground italic">No chats yet. Start a conversation about this grant.</span>
+                    </div>
+                  ) : (
+                    <Accordion type="single" collapsible className="w-full">
+                      {grantChats.map((chat) => (
+                        <AccordionItem key={chat.id} value={chat.id} className="border-b last:border-b-0">
+                          <AccordionTrigger className="hover:no-underline py-3">
+                            <div className="flex items-center gap-3 text-left">
+                              <span className="text-xs text-muted-foreground">
+                                {formatNoteDate(chat.created_at)}
+                              </span>
+                              <span className="text-sm truncate max-w-[300px]">
+                                {chat.title}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-4">
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/c/${chat.id}`)}
+                                className="gap-1"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Open Chat
+                              </Button>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </CardContent>
+              </Card>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Your Notes Section */}
-            <Card className="bg-card rounded-xl shadow-sm border">
-              <CardHeader className="px-6 py-4 border-b">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <CardTitle className="text-lg font-semibold">
-                      Your Notes
-                    </CardTitle>
-                    {notes.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddNote}
-                    className="gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Note
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                {notes.length === 0 ? (
-                  <div className="bg-muted/30 rounded-lg p-4 text-sm">
-                    <span className="text-muted-foreground italic">No notes yet. Add a note to keep track of important information.</span>
-                  </div>
-                ) : (
-                  <Accordion type="single" collapsible className="w-full">
-                    {notes.map((note) => (
-                      <AccordionItem key={note.id} value={note.id} className="border-b last:border-b-0">
-                        <AccordionTrigger className="hover:no-underline py-3">
-                          <div className="flex items-center gap-3 text-left">
-                            <span className="text-xs text-muted-foreground">
-                              {formatNoteDate(note.created_at)}
-                            </span>
-                            <span className="text-sm truncate max-w-[300px]">
-                              {note.content.substring(0, 50)}{note.content.length > 50 ? '...' : ''}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pb-4">
-                          <div className="text-sm text-muted-foreground whitespace-pre-wrap mb-4">
-                            {note.content}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditNote(note)}
-                              className="gap-1"
-                            >
-                              <Pencil className="h-3 w-3" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteNote(note.id)}
-                              className="gap-1 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              Delete
-                            </Button>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Related Chats Section */}
-            <Card className="bg-card rounded-xl shadow-sm border">
-              <CardHeader className="px-6 py-4 border-b">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <CardTitle className="text-lg font-semibold">
-                      Related Chats
-                    </CardTitle>
-                    {grantChats.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {grantChats.length} {grantChats.length === 1 ? 'chat' : 'chats'}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNewChat}
-                    className="gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    New Chat
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                {grantChats.length === 0 ? (
-                  <div className="bg-muted/30 rounded-lg p-4 text-sm">
-                    <span className="text-muted-foreground italic">No chats yet. Start a conversation about this grant.</span>
-                  </div>
-                ) : (
-                  <Accordion type="single" collapsible className="w-full">
-                    {grantChats.map((chat) => (
-                      <AccordionItem key={chat.id} value={chat.id} className="border-b last:border-b-0">
-                        <AccordionTrigger className="hover:no-underline py-3">
-                          <div className="flex items-center gap-3 text-left">
-                            <span className="text-xs text-muted-foreground">
-                              {formatNoteDate(chat.created_at)}
-                            </span>
-                            <span className="text-sm truncate max-w-[300px]">
-                              {chat.title}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pb-4">
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/c/${chat.id}`)}
-                              className="gap-1"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              Open Chat
-                            </Button>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                )}
-              </CardContent>
-            </Card>
               </div>
             </div>
-          </div>
-      </AppLayout>
+        </AppLayout>
 
-      <NoteDialog
-        isOpen={noteDialogOpen}
-        onClose={() => {
-          setNoteDialogOpen(false);
-          setEditingNote(null);
-        }}
-        onSave={handleSaveNote}
-        initialNote={editingNote?.content || ''}
-        placeholder="Add your notes about this grant..."
-      />
+        <NoteDialog
+          isOpen={noteDialogOpen}
+          onClose={() => {
+            setNoteDialogOpen(false);
+            setEditingNote(null);
+          }}
+          onSave={handleSaveNote}
+          initialNote={editingNote?.content || ''}
+          placeholder="Add your notes about this grant..."
+        />
+    </>
   );
 };
 

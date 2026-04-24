@@ -338,470 +338,472 @@ const VotesDashboard = () => {
   const hdr = "hover:bg-muted/60 rounded px-1.5 py-1 -mx-1.5 transition-colors cursor-pointer select-none";
 
   return (
-    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
-          {/* Header */}
-          <div className="flex-shrink-0 bg-background border-b">
-            <div className="px-4 py-4 md:px-6">
-              {/* Top row: sidebar toggle left, total votes right */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
-                  <button
-                    onClick={() => setLeftSidebarOpen(true)}
-                    className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
-                    aria-label="Open menu"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                      <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                      <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-                    </svg>
-                  </button>
+    <>
+      <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
+            {/* Header */}
+            <div className="flex-shrink-0 bg-background border-b">
+              <div className="px-4 py-4 md:px-6">
+                {/* Top row: sidebar toggle left, total votes right */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
+                    <button
+                      onClick={() => setLeftSidebarOpen(true)}
+                      className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
+                      aria-label="Open menu"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                        <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                        <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Total votes — top right */}
+                  {!isLoading && !error && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => openChat()}
+                          className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </button>
+                        <span className="text-3xl md:text-4xl font-bold tracking-tight">
+                          {summaryNumber.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {summaryLabel}
+                      </div>
+                    </div>
+                  )}
+
+                  <MobileNYSgpt />
                 </div>
 
-                {/* Total votes — top right */}
-                {!isLoading && !error && (
-                  <div className="text-right flex-shrink-0">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        onClick={() => openChat()}
-                        className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </button>
-                      <span className="text-3xl md:text-4xl font-bold tracking-tight">
-                        {summaryNumber.toLocaleString()}
-                      </span>
+                {/* Chart */}
+                {!isLoading && activeChartHasData && (
+                  <div className="mb-4">
+                    <div className="h-24 md:h-28 -mx-2">
+                      {/* Mode 0: Yes/No votes per day */}
+                      {chartMode === 0 && (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={filteredChartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                            <defs>
+                              <linearGradient id="votesYesGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0.05} />
+                              </linearGradient>
+                              <linearGradient id="votesNoGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="yes" stroke="hsl(142 76% 36%)" strokeWidth={1.5} fill="url(#votesYesGradient)" dot={false} animationDuration={500} />
+                            <Area type="monotone" dataKey="no" stroke="hsl(0 84% 60%)" strokeWidth={1.5} fill="url(#votesNoGradient)" dot={false} animationDuration={500} />
+                            <XAxis {...xAxisProps} />
+                            <RechartsTooltip {...tooltipProps} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {/* Mode 1: Roll calls per day */}
+                      {chartMode === 1 && (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={filteredRollCallData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                            <defs>
+                              <linearGradient id="rollCallGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="rollCalls" stroke="hsl(217 91% 60%)" strokeWidth={1.5} fill="url(#rollCallGradient)" dot={false} animationDuration={500} />
+                            <XAxis {...xAxisProps} />
+                            <RechartsTooltip {...tooltipProps} formatter={(value: number) => [value, 'Roll Calls']} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {/* Mode 2: Passed vs Failed per day */}
+                      {chartMode === 2 && (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={filteredPassFailData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                            <defs>
+                              <linearGradient id="passedGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0.05} />
+                              </linearGradient>
+                              <linearGradient id="failedGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="passed" stroke="hsl(142 76% 36%)" strokeWidth={1.5} fill="url(#passedGradient)" dot={false} animationDuration={500} />
+                            <Area type="monotone" dataKey="failed" stroke="hsl(0 84% 60%)" strokeWidth={1.5} fill="url(#failedGradient)" dot={false} animationDuration={500} />
+                            <XAxis {...xAxisProps} />
+                            <RechartsTooltip {...tooltipProps} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {/* Mode 3: Party breakdown — D vs R yes votes */}
+                      {chartMode === 3 && (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={filteredPartyData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                            <defs>
+                              <linearGradient id="demGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
+                              </linearGradient>
+                              <linearGradient id="repGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="demYes" stroke="hsl(217 91% 60%)" strokeWidth={1.5} fill="url(#demGradient)" dot={false} animationDuration={500} />
+                            <Area type="monotone" dataKey="repYes" stroke="hsl(0 84% 60%)" strokeWidth={1.5} fill="url(#repGradient)" dot={false} animationDuration={500} />
+                            <XAxis {...xAxisProps} />
+                            <RechartsTooltip {...tooltipProps} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {/* Mode 4: Average margin per day */}
+                      {chartMode === 4 && (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={filteredMarginData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                            <defs>
+                              <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(280 67% 55%)" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(280 67% 55%)" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="avgMargin" stroke="hsl(280 67% 55%)" strokeWidth={1.5} fill="url(#marginGradient)" dot={false} animationDuration={500} />
+                            <XAxis {...xAxisProps} />
+                            <RechartsTooltip {...tooltipProps} formatter={(value: number) => [value, 'Avg Margin']} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {summaryLabel}
+
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 mt-2 px-2">
+                      {chartMode === 0 && (
+                        <>
+                          <LegendDot color="hsl(142 76% 36%)" label="Yes" />
+                          <LegendDot color="hsl(0 84% 60%)" label="No" />
+                        </>
+                      )}
+                      {chartMode === 1 && <LegendDot color="hsl(217 91% 60%)" label="Roll Calls" />}
+                      {chartMode === 2 && (
+                        <>
+                          <LegendDot color="hsl(142 76% 36%)" label="Passed" />
+                          <LegendDot color="hsl(0 84% 60%)" label="Failed" />
+                        </>
+                      )}
+                      {chartMode === 3 && (
+                        <>
+                          <LegendDot color="hsl(217 91% 60%)" label="Democrat" />
+                          <LegendDot color="hsl(0 84% 60%)" label="Republican" />
+                        </>
+                      )}
+                      {chartMode === 4 && <LegendDot color="hsl(280 67% 55%)" label="Avg Margin" />}
                     </div>
                   </div>
                 )}
 
-                <MobileNYSgpt />
-              </div>
+                {/* Dashboards picker + time range + chart toggle */}
+                <div className="flex items-center gap-3">
+                  <DashboardDrawer />
 
-              {/* Chart */}
-              {!isLoading && activeChartHasData && (
-                <div className="mb-4">
-                  <div className="h-24 md:h-28 -mx-2">
-                    {/* Mode 0: Yes/No votes per day */}
-                    {chartMode === 0 && (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={filteredChartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
-                          <defs>
-                            <linearGradient id="votesYesGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="votesNoGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="yes" stroke="hsl(142 76% 36%)" strokeWidth={1.5} fill="url(#votesYesGradient)" dot={false} animationDuration={500} />
-                          <Area type="monotone" dataKey="no" stroke="hsl(0 84% 60%)" strokeWidth={1.5} fill="url(#votesNoGradient)" dot={false} animationDuration={500} />
-                          <XAxis {...xAxisProps} />
-                          <RechartsTooltip {...tooltipProps} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    )}
+                  {/* Time range filter */}
+                  <Select value={timeRange} onValueChange={setTimeRange}>
+                    <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted [&>svg]:hidden focus:ring-0 focus:ring-offset-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="focus:bg-muted focus:text-foreground">All time</SelectItem>
+                      <SelectItem value="2026" className="focus:bg-muted focus:text-foreground">2026</SelectItem>
+                      <SelectItem value="2025" className="focus:bg-muted focus:text-foreground">2025</SelectItem>
+                      <SelectItem value="90" className="focus:bg-muted focus:text-foreground">90 days</SelectItem>
+                      <SelectItem value="30" className="focus:bg-muted focus:text-foreground">30 days</SelectItem>
+                      <SelectItem value="7" className="focus:bg-muted focus:text-foreground">7 days</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                    {/* Mode 1: Roll calls per day */}
-                    {chartMode === 1 && (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={filteredRollCallData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
-                          <defs>
-                            <linearGradient id="rollCallGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="rollCalls" stroke="hsl(217 91% 60%)" strokeWidth={1.5} fill="url(#rollCallGradient)" dot={false} animationDuration={500} />
-                          <XAxis {...xAxisProps} />
-                          <RechartsTooltip {...tooltipProps} formatter={(value: number) => [value, 'Roll Calls']} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    )}
-
-                    {/* Mode 2: Passed vs Failed per day */}
-                    {chartMode === 2 && (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={filteredPassFailData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
-                          <defs>
-                            <linearGradient id="passedGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="failedGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="passed" stroke="hsl(142 76% 36%)" strokeWidth={1.5} fill="url(#passedGradient)" dot={false} animationDuration={500} />
-                          <Area type="monotone" dataKey="failed" stroke="hsl(0 84% 60%)" strokeWidth={1.5} fill="url(#failedGradient)" dot={false} animationDuration={500} />
-                          <XAxis {...xAxisProps} />
-                          <RechartsTooltip {...tooltipProps} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    )}
-
-                    {/* Mode 3: Party breakdown — D vs R yes votes */}
-                    {chartMode === 3 && (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={filteredPartyData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
-                          <defs>
-                            <linearGradient id="demGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="repGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="demYes" stroke="hsl(217 91% 60%)" strokeWidth={1.5} fill="url(#demGradient)" dot={false} animationDuration={500} />
-                          <Area type="monotone" dataKey="repYes" stroke="hsl(0 84% 60%)" strokeWidth={1.5} fill="url(#repGradient)" dot={false} animationDuration={500} />
-                          <XAxis {...xAxisProps} />
-                          <RechartsTooltip {...tooltipProps} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    )}
-
-                    {/* Mode 4: Average margin per day */}
-                    {chartMode === 4 && (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={filteredMarginData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
-                          <defs>
-                            <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(280 67% 55%)" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="hsl(280 67% 55%)" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="avgMargin" stroke="hsl(280 67% 55%)" strokeWidth={1.5} fill="url(#marginGradient)" dot={false} animationDuration={500} />
-                          <XAxis {...xAxisProps} />
-                          <RechartsTooltip {...tooltipProps} formatter={(value: number) => [value, 'Avg Margin']} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    )}
-                  </div>
-
-                  {/* Legend */}
-                  <div className="flex items-center gap-4 mt-2 px-2">
-                    {chartMode === 0 && (
-                      <>
-                        <LegendDot color="hsl(142 76% 36%)" label="Yes" />
-                        <LegendDot color="hsl(0 84% 60%)" label="No" />
-                      </>
-                    )}
-                    {chartMode === 1 && <LegendDot color="hsl(217 91% 60%)" label="Roll Calls" />}
-                    {chartMode === 2 && (
-                      <>
-                        <LegendDot color="hsl(142 76% 36%)" label="Passed" />
-                        <LegendDot color="hsl(0 84% 60%)" label="Failed" />
-                      </>
-                    )}
-                    {chartMode === 3 && (
-                      <>
-                        <LegendDot color="hsl(217 91% 60%)" label="Democrat" />
-                        <LegendDot color="hsl(0 84% 60%)" label="Republican" />
-                      </>
-                    )}
-                    {chartMode === 4 && <LegendDot color="hsl(280 67% 55%)" label="Avg Margin" />}
-                  </div>
-                </div>
-              )}
-
-              {/* Dashboards picker + time range + chart toggle */}
-              <div className="flex items-center gap-3">
-                <DashboardDrawer />
-
-                {/* Time range filter */}
-                <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-muted rounded-lg px-3 py-2 h-auto text-muted-foreground data-[state=open]:bg-muted [&>svg]:hidden focus:ring-0 focus:ring-offset-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="focus:bg-muted focus:text-foreground">All time</SelectItem>
-                    <SelectItem value="2026" className="focus:bg-muted focus:text-foreground">2026</SelectItem>
-                    <SelectItem value="2025" className="focus:bg-muted focus:text-foreground">2025</SelectItem>
-                    <SelectItem value="90" className="focus:bg-muted focus:text-foreground">90 days</SelectItem>
-                    <SelectItem value="30" className="focus:bg-muted focus:text-foreground">30 days</SelectItem>
-                    <SelectItem value="7" className="focus:bg-muted focus:text-foreground">7 days</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Chart mode toggle */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setChartMode((prev) => (prev - 1 + NUM_MODES) % NUM_MODES)}
-                    className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[120px] text-center">
-                    {CHART_LABELS[chartMode]}
-                  </span>
-                  <button
-                    onClick={() => setChartMode((prev) => (prev + 1) % NUM_MODES)}
-                    className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* Explainer hover card */}
-                <HoverCard openDelay={10} closeDelay={100}>
-                  <HoverCardTrigger asChild>
-                    <button className="text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 rounded transition-colors">
-                      Explainer
+                  {/* Chart mode toggle */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setChartMode((prev) => (prev - 1 + NUM_MODES) % NUM_MODES)}
+                      className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
                     </button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="flex w-72 flex-col gap-1">
-                    <div className="font-semibold text-sm">{CHART_LABELS[chartMode]}</div>
-                    <div className="text-sm text-muted-foreground">{CHART_EXPLAINERS[chartMode]}</div>
-                  </HoverCardContent>
-                </HoverCard>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[120px] text-center">
+                      {CHART_LABELS[chartMode]}
+                    </span>
+                    <button
+                      onClick={() => setChartMode((prev) => (prev + 1) % NUM_MODES)}
+                      className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Explainer hover card */}
+                  <HoverCard openDelay={10} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                      <button className="text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 rounded transition-colors">
+                        Explainer
+                      </button>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="flex w-72 flex-col gap-1">
+                      <div className="font-semibold text-sm">{CHART_LABELS[chartMode]}</div>
+                      <div className="text-sm text-muted-foreground">{CHART_EXPLAINERS[chartMode]}</div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Table Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            {error ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-destructive">Error loading votes data: {String(error)}</p>
-              </div>
-            ) : isLoading ? (
-              <div className="px-4 md:px-6 py-4 space-y-2">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
-                ))}
-              </div>
-
-            /* ── Bills Tables (modes 1, 2, 4) ────────────── */
-            ) : isBillsTable ? (
-              displayBills.length === 0 && !selectedDate ? (
+            {/* Table Body */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {error ? (
                 <div className="text-center py-12 px-4">
-                  <p className="text-muted-foreground">No bill vote records found.</p>
+                  <p className="text-destructive">Error loading votes data: {String(error)}</p>
                 </div>
-              ) : (
-                <>
-                  {/* Active date filter pill */}
-                  {selectedDate && (
-                    <div className="px-4 md:px-6 py-2 border-b flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Filtered to</span>
-                      <button
-                        onClick={() => setSelectedDate(null)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/10 text-xs font-medium hover:bg-foreground/20 transition-colors"
-                      >
-                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        <span className="text-muted-foreground">&times;</span>
-                      </button>
-                      <span className="text-xs text-muted-foreground">
-                        {displayBills.length} {displayBills.length === 1 ? 'bill' : 'bills'}
-                      </span>
-                    </div>
-                  )}
-                  <div className="divide-y">
-                    {/* Column headers vary by mode */}
-                    {chartMode === 1 && (
-                      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_90px_60px_60px_60px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                        <span className={hdr} onClick={() => toggleBillSort('billTitle')}>Bill</span>
-                        <span className="flex items-center justify-center">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                        </span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('date')}>Date</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('total')}>Total</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('yesCount')}>Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('noCount')}>No</span>
-                      </div>
-                    )}
-                    {chartMode === 2 && (
-                      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_90px_60px_60px_70px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                        <span className={hdr} onClick={() => toggleBillSort('billTitle')}>Bill</span>
-                        <span className="flex items-center justify-center">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                        </span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('date')}>Date</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('yesCount')}>Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('noCount')}>No</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('result')}>Result</span>
-                      </div>
-                    )}
-                    {chartMode === 4 && (
-                      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_90px_60px_60px_70px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                        <span className={hdr} onClick={() => toggleBillSort('billTitle')}>Bill</span>
-                        <span className="flex items-center justify-center">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                        </span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('date')}>Date</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('yesCount')}>Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('noCount')}>No</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('margin')}>Margin</span>
-                      </div>
-                    )}
-
-                    {(isAuthenticated ? displayBills.slice(0, billDisplayCount) : displayBills.slice(0, 6)).map((row) => (
-                      <BillRowItem
-                        key={`${chartMode}-${row.rollCallId}`}
-                        row={row}
-                        mode={chartMode as 1 | 2 | 4}
-                        isExpanded={expandedBillRows.has(row.rollCallId)}
-                        onToggle={() => toggleBillRow(row.rollCallId)}
-                        onChatClick={() => handleBillChatClick(row)}
-                        onDrillChatClick={(mv) => {
-                          const allVotes = getBillMemberVotes(row.rollCallId);
-                          const details = [
-                            `Bill: ${row.billTitle || 'Untitled'} (${row.billNumber || 'no number'})`,
-                            `Result: ${row.result} — ${row.yesCount} Yes, ${row.noCount} No`,
-                            row.date ? `Vote Date: ${row.date}` : '',
-                            '',
-                            `Focus member: ${mv.name} voted ${mv.vote}`,
-                            '',
-                            'All member votes:',
-                            ...allVotes.map(v => `- ${v.name}: ${v.vote}`),
-                          ].filter(Boolean).join('\n');
-                          setChatMemberName(mv.name);
-                          setChatMemberParty(null);
-                          setChatMemberVoteDetails(null);
-                          setChatBillTitle(row.billTitle || null);
-                          setChatBillNumber(row.billNumber || null);
-                          setChatBillResult(row.result || null);
-                          setChatBillVoteDetails(details);
-                          setChatDataContext(null);
-                          setChatOpen(true);
-                        }}
-                        getBillMemberVotes={getBillMemberVotes}
-                      />
-                    ))}
-                  </div>
-                  {!isAuthenticated && (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">Please log in to view all bill records.</p>
-                      <Button variant="ghost" onClick={() => navigate('/auth-4')}
-                        className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">Sign Up</Button>
-                    </div>
-                  )}
-                  {isAuthenticated && billDisplayCount < displayBills.length && (
-                    <div className="flex justify-center py-6">
-                      <button
-                        onClick={() => setBillDisplayCount((prev) => prev + 20)}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                      >
-                        Load More ({Math.min(billDisplayCount, displayBills.length)} of {displayBills.length})
-                      </button>
-                    </div>
-                  )}
-                </>
-              )
-
-            /* ── Members Tables (modes 0, 3) ─────────────── */
-            ) : isMembersTable ? (
-              sortedMembers.length === 0 ? (
-                <div className="text-center py-12 px-4">
-                  <p className="text-muted-foreground">No vote records found.</p>
+              ) : isLoading ? (
+                <div className="px-4 md:px-6 py-4 space-y-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
+                  ))}
                 </div>
-              ) : (
-                <>
-                  <div className="divide-y">
-                    {chartMode === 0 && (
-                      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_80px_80px_80px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                        <span className={hdr} onClick={() => toggleMemberSort('name')}>Name</span>
-                        <span className="flex items-center justify-center">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                        </span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('totalVotes')}>Votes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('yesCount')}>Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('pctYes')}>% Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>No</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>% No</span>
-                      </div>
-                    )}
-                    {chartMode === 3 && (
-                      <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_60px_80px_80px_80px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                        <span className={hdr} onClick={() => toggleMemberSort('name')}>Name</span>
-                        <span className="flex items-center justify-center">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                        </span>
-                        <span className={hdr} onClick={() => toggleMemberSort('party')}>Party</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('totalVotes')}>Votes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('yesCount')}>Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('pctYes')}>% Yes</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>No</span>
-                        <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>% No</span>
-                      </div>
-                    )}
 
-                    {(isAuthenticated ? sortedMembers.slice(0, displayCount) : sortedMembers.slice(0, 6)).map((row) => (
-                      <VoteRowItem
-                        key={row.people_id}
-                        row={row}
-                        showParty={chartMode === 3}
-                        isExpanded={expandedRows.has(row.people_id)}
-                        onToggle={() => toggleRow(row.people_id)}
-                        onChatClick={() => handleMemberChatClick(row)}
-                        onDrillChatClick={(vote) => {
-                          const details = [
-                            `Member: ${row.name} (${row.party})`,
-                            `Vote on this bill: ${vote.vote}`,
-                            `Member stats: ${row.totalVotes} total votes, ${row.yesCount} Yes, ${row.noCount} No, ${row.pctYes.toFixed(0)}% Yes`,
-                            '',
-                            `Bill: ${vote.billTitle || 'Untitled'}`,
-                            vote.billNumber ? `Bill Number: ${vote.billNumber}` : '',
-                            vote.date ? `Vote Date: ${vote.date}` : '',
-                          ].filter(Boolean).join('\n');
-                          setChatMemberName(row.name);
-                          setChatMemberParty(row.party);
-                          setChatMemberVoteDetails(details);
-                          setChatBillTitle(null);
-                          setChatBillNumber(null);
-                          setChatBillResult(null);
-                          setChatBillVoteDetails(null);
-                          setChatDataContext(null);
-                          setChatOpen(true);
-                        }}
-                        getDrillDown={getDrillDown}
-                      />
-                    ))}
+              /* ── Bills Tables (modes 1, 2, 4) ────────────── */
+              ) : isBillsTable ? (
+                displayBills.length === 0 && !selectedDate ? (
+                  <div className="text-center py-12 px-4">
+                    <p className="text-muted-foreground">No bill vote records found.</p>
                   </div>
-                  {!isAuthenticated && (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">Please log in to view all vote records.</p>
-                      <Button variant="ghost" onClick={() => navigate('/auth-4')}
-                        className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">Sign Up</Button>
-                    </div>
-                  )}
-                  {isAuthenticated && displayCount < sortedMembers.length && (
-                    <div className="flex justify-center py-6">
-                      <button
-                        onClick={() => setDisplayCount((prev) => prev + 20)}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                      >
-                        Load More ({Math.min(displayCount, sortedMembers.length)} of {sortedMembers.length})
-                      </button>
-                    </div>
-                  )}
-                </>
-              )
-            ) : null}
-          </div>
-      </AppLayout>
+                ) : (
+                  <>
+                    {/* Active date filter pill */}
+                    {selectedDate && (
+                      <div className="px-4 md:px-6 py-2 border-b flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Filtered to</span>
+                        <button
+                          onClick={() => setSelectedDate(null)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/10 text-xs font-medium hover:bg-foreground/20 transition-colors"
+                        >
+                          {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          <span className="text-muted-foreground">&times;</span>
+                        </button>
+                        <span className="text-xs text-muted-foreground">
+                          {displayBills.length} {displayBills.length === 1 ? 'bill' : 'bills'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="divide-y">
+                      {/* Column headers vary by mode */}
+                      {chartMode === 1 && (
+                        <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_90px_60px_60px_60px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                          <span className={hdr} onClick={() => toggleBillSort('billTitle')}>Bill</span>
+                          <span className="flex items-center justify-center">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('date')}>Date</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('total')}>Total</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('yesCount')}>Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('noCount')}>No</span>
+                        </div>
+                      )}
+                      {chartMode === 2 && (
+                        <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_90px_60px_60px_70px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                          <span className={hdr} onClick={() => toggleBillSort('billTitle')}>Bill</span>
+                          <span className="flex items-center justify-center">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('date')}>Date</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('yesCount')}>Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('noCount')}>No</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('result')}>Result</span>
+                        </div>
+                      )}
+                      {chartMode === 4 && (
+                        <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_90px_60px_60px_70px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                          <span className={hdr} onClick={() => toggleBillSort('billTitle')}>Bill</span>
+                          <span className="flex items-center justify-center">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('date')}>Date</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('yesCount')}>Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('noCount')}>No</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleBillSort('margin')}>Margin</span>
+                        </div>
+                      )}
 
-      {/* Votes Chat Drawer */}
-      <VotesChatDrawer
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-        memberName={chatMemberName}
-        memberParty={chatMemberParty}
-        memberVoteDetails={chatMemberVoteDetails}
-        billTitle={chatBillTitle}
-        billNumber={chatBillNumber}
-        billResult={chatBillResult}
-        billVoteDetails={chatBillVoteDetails}
-        dataContext={chatDataContext}
-      />
+                      {(isAuthenticated ? displayBills.slice(0, billDisplayCount) : displayBills.slice(0, 6)).map((row) => (
+                        <BillRowItem
+                          key={`${chartMode}-${row.rollCallId}`}
+                          row={row}
+                          mode={chartMode as 1 | 2 | 4}
+                          isExpanded={expandedBillRows.has(row.rollCallId)}
+                          onToggle={() => toggleBillRow(row.rollCallId)}
+                          onChatClick={() => handleBillChatClick(row)}
+                          onDrillChatClick={(mv) => {
+                            const allVotes = getBillMemberVotes(row.rollCallId);
+                            const details = [
+                              `Bill: ${row.billTitle || 'Untitled'} (${row.billNumber || 'no number'})`,
+                              `Result: ${row.result} — ${row.yesCount} Yes, ${row.noCount} No`,
+                              row.date ? `Vote Date: ${row.date}` : '',
+                              '',
+                              `Focus member: ${mv.name} voted ${mv.vote}`,
+                              '',
+                              'All member votes:',
+                              ...allVotes.map(v => `- ${v.name}: ${v.vote}`),
+                            ].filter(Boolean).join('\n');
+                            setChatMemberName(mv.name);
+                            setChatMemberParty(null);
+                            setChatMemberVoteDetails(null);
+                            setChatBillTitle(row.billTitle || null);
+                            setChatBillNumber(row.billNumber || null);
+                            setChatBillResult(row.result || null);
+                            setChatBillVoteDetails(details);
+                            setChatDataContext(null);
+                            setChatOpen(true);
+                          }}
+                          getBillMemberVotes={getBillMemberVotes}
+                        />
+                      ))}
+                    </div>
+                    {!isAuthenticated && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Please log in to view all bill records.</p>
+                        <Button variant="ghost" onClick={() => navigate('/auth-4')}
+                          className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">Sign Up</Button>
+                      </div>
+                    )}
+                    {isAuthenticated && billDisplayCount < displayBills.length && (
+                      <div className="flex justify-center py-6">
+                        <button
+                          onClick={() => setBillDisplayCount((prev) => prev + 20)}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                        >
+                          Load More ({Math.min(billDisplayCount, displayBills.length)} of {displayBills.length})
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )
+
+              /* ── Members Tables (modes 0, 3) ─────────────── */
+              ) : isMembersTable ? (
+                sortedMembers.length === 0 ? (
+                  <div className="text-center py-12 px-4">
+                    <p className="text-muted-foreground">No vote records found.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y">
+                      {chartMode === 0 && (
+                        <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_80px_80px_80px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                          <span className={hdr} onClick={() => toggleMemberSort('name')}>Name</span>
+                          <span className="flex items-center justify-center">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('totalVotes')}>Votes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('yesCount')}>Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('pctYes')}>% Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>No</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>% No</span>
+                        </div>
+                      )}
+                      {chartMode === 3 && (
+                        <div className="hidden md:grid grid-cols-[minmax(0,1fr)_44px_60px_80px_80px_80px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                          <span className={hdr} onClick={() => toggleMemberSort('name')}>Name</span>
+                          <span className="flex items-center justify-center">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </span>
+                          <span className={hdr} onClick={() => toggleMemberSort('party')}>Party</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('totalVotes')}>Votes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('yesCount')}>Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('pctYes')}>% Yes</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>No</span>
+                          <span className={cn(hdr, "text-right")} onClick={() => toggleMemberSort('noCount')}>% No</span>
+                        </div>
+                      )}
+
+                      {(isAuthenticated ? sortedMembers.slice(0, displayCount) : sortedMembers.slice(0, 6)).map((row) => (
+                        <VoteRowItem
+                          key={row.people_id}
+                          row={row}
+                          showParty={chartMode === 3}
+                          isExpanded={expandedRows.has(row.people_id)}
+                          onToggle={() => toggleRow(row.people_id)}
+                          onChatClick={() => handleMemberChatClick(row)}
+                          onDrillChatClick={(vote) => {
+                            const details = [
+                              `Member: ${row.name} (${row.party})`,
+                              `Vote on this bill: ${vote.vote}`,
+                              `Member stats: ${row.totalVotes} total votes, ${row.yesCount} Yes, ${row.noCount} No, ${row.pctYes.toFixed(0)}% Yes`,
+                              '',
+                              `Bill: ${vote.billTitle || 'Untitled'}`,
+                              vote.billNumber ? `Bill Number: ${vote.billNumber}` : '',
+                              vote.date ? `Vote Date: ${vote.date}` : '',
+                            ].filter(Boolean).join('\n');
+                            setChatMemberName(row.name);
+                            setChatMemberParty(row.party);
+                            setChatMemberVoteDetails(details);
+                            setChatBillTitle(null);
+                            setChatBillNumber(null);
+                            setChatBillResult(null);
+                            setChatBillVoteDetails(null);
+                            setChatDataContext(null);
+                            setChatOpen(true);
+                          }}
+                          getDrillDown={getDrillDown}
+                        />
+                      ))}
+                    </div>
+                    {!isAuthenticated && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Please log in to view all vote records.</p>
+                        <Button variant="ghost" onClick={() => navigate('/auth-4')}
+                          className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">Sign Up</Button>
+                      </div>
+                    )}
+                    {isAuthenticated && displayCount < sortedMembers.length && (
+                      <div className="flex justify-center py-6">
+                        <button
+                          onClick={() => setDisplayCount((prev) => prev + 20)}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                        >
+                          Load More ({Math.min(displayCount, sortedMembers.length)} of {sortedMembers.length})
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )
+              ) : null}
+            </div>
+        </AppLayout>
+
+        {/* Votes Chat Drawer */}
+        <VotesChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          memberName={chatMemberName}
+          memberParty={chatMemberParty}
+          memberVoteDetails={chatMemberVoteDetails}
+          billTitle={chatBillTitle}
+          billNumber={chatBillNumber}
+          billResult={chatBillResult}
+          billVoteDetails={chatBillVoteDetails}
+          dataContext={chatDataContext}
+        />
+    </>
   );
 };
 

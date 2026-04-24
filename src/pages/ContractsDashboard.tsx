@@ -241,530 +241,532 @@ const ContractsDashboard = () => {
   };
 
   return (
-    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
-          {/* Header */}
-          <div className="flex-shrink-0 bg-background border-b">
-            <div className="px-4 py-4 md:px-6">
-              {/* Top row: sidebar + title left, amount right */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
-                  <button
-                    onClick={() => setLeftSidebarOpen(true)}
-                    className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
-                    aria-label="Open menu"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                      <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                      <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-                    </svg>
-                  </button>
+    <>
+      <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
+            {/* Header */}
+            <div className="flex-shrink-0 bg-background border-b">
+              <div className="px-4 py-4 md:px-6">
+                {/* Top row: sidebar + title left, amount right */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
+                    <button
+                      onClick={() => setLeftSidebarOpen(true)}
+                      className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
+                      aria-label="Open menu"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                        <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                        <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Amount — top right */}
+                  {!isLoading && !error && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => openChat()}
+                          className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </button>
+                        <span className="text-3xl md:text-4xl font-bold tracking-tight transition-all duration-300">
+                          {formatCompactCurrency(headerAmount)}
+                        </span>
+                        {selectedRow && (
+                          <button
+                            onClick={() => setSelectedRow(null)}
+                            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {selectedRow
+                          ? `${selectedRowData?.pctOfTotal.toFixed(1)}% of total`
+                          : 'Total Contract Value'}
+                      </span>
+                    </div>
+                  )}
+
+                  <MobileNYSgpt />
                 </div>
 
-                {/* Amount — top right */}
-                {!isLoading && !error && (
-                  <div className="text-right flex-shrink-0">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        onClick={() => openChat()}
-                        className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </button>
-                      <span className="text-3xl md:text-4xl font-bold tracking-tight transition-all duration-300">
-                        {formatCompactCurrency(headerAmount)}
-                      </span>
-                      {selectedRow && (
-                        <button
-                          onClick={() => setSelectedRow(null)}
-                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {selectedRow
-                        ? `${selectedRowData?.pctOfTotal.toFixed(1)}% of total`
-                        : 'Total Contract Value'}
-                    </span>
+                {/* Chart area */}
+                {!isLoading && (
+                  <div className="h-24 md:h-28 mb-4 -mx-2">
+                    {/* Mode 0: Cumulative contract value (existing) */}
+                    {chartMode === 0 && chartData.length > 1 && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                          <defs>
+                            <linearGradient id="contractsGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <Area type="monotone" dataKey="total" stroke="hsl(217 91% 60%)" strokeWidth={1.5} fill="url(#contractsGradient)" dot={false} animationDuration={500} />
+                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" tickFormatter={(value) => `'${value.slice(-2)}`} />
+                          <RechartsTooltip
+                            contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value: number) => [formatFullCurrency(value), selectedRow || 'Cumulative']}
+                            labelFormatter={(label) => `Contracts starting ${label}`}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* Mode 1: Monthly contracts line chart */}
+                    {chartMode === 1 && monthlyData.length > 1 && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                          <defs>
+                            <linearGradient id="monthlyGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <Area type="monotone" dataKey="count" stroke="hsl(142 76% 36%)" strokeWidth={1.5} fill="url(#monthlyGradient)" dot={false} animationDuration={500} />
+                          <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" tickFormatter={(v) => v.slice(2, 7)} />
+                          <RechartsTooltip
+                            contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'New Contracts' : 'Amount']}
+                            labelFormatter={(label) => label}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* Mode 2: Top vendors bar chart */}
+                    {chartMode === 2 && topVendors.length > 0 && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={topVendors.slice(0, 20)} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                          <Bar dataKey="amount" fill="hsl(32 95% 50%)" radius={[2, 2, 0, 0]} animationDuration={500} />
+                          <XAxis dataKey="name" hide />
+                          <RechartsTooltip
+                            contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value: number) => [formatFullCurrency(value), 'Total Value']}
+                            labelFormatter={(label) => label}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* Mode 3: Duration buckets bar chart */}
+                    {chartMode === 3 && durationBuckets.length > 0 && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={durationBuckets} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
+                          <Bar dataKey="count" fill="hsl(280 67% 55%)" radius={[2, 2, 0, 0]} animationDuration={500} />
+                          <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
+                          <RechartsTooltip
+                            contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'Contracts' : 'Total Value']}
+                            labelFormatter={(label) => label}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* Mode 4: Expiration buckets bar chart */}
+                    {chartMode === 4 && expirationBuckets.length > 0 && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={expirationBuckets} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
+                          <Bar dataKey="count" fill="hsl(0 84% 60%)" radius={[2, 2, 0, 0]} animationDuration={500} />
+                          <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
+                          <RechartsTooltip
+                            contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'Contracts' : 'Total Value']}
+                            labelFormatter={(label) => label}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* Mode 5: Spend utilization bar chart */}
+                    {chartMode === 5 && spendBuckets.length > 0 && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={spendBuckets} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
+                          <Bar dataKey="count" fill="hsl(180 60% 45%)" radius={[2, 2, 0, 0]} animationDuration={500} />
+                          <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
+                          <RechartsTooltip
+                            contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                            formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'Contracts' : 'Total Value']}
+                            labelFormatter={(label) => label}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 )}
 
-                <MobileNYSgpt />
-              </div>
-
-              {/* Chart area */}
-              {!isLoading && (
-                <div className="h-24 md:h-28 mb-4 -mx-2">
-                  {/* Mode 0: Cumulative contract value (existing) */}
-                  {chartMode === 0 && chartData.length > 1 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-                        <defs>
-                          <linearGradient id="contractsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
-                          </linearGradient>
-                        </defs>
-                        <Area type="monotone" dataKey="total" stroke="hsl(217 91% 60%)" strokeWidth={1.5} fill="url(#contractsGradient)" dot={false} animationDuration={500} />
-                        <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" tickFormatter={(value) => `'${value.slice(-2)}`} />
-                        <RechartsTooltip
-                          contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                          formatter={(value: number) => [formatFullCurrency(value), selectedRow || 'Cumulative']}
-                          labelFormatter={(label) => `Contracts starting ${label}`}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-
-                  {/* Mode 1: Monthly contracts line chart */}
-                  {chartMode === 1 && monthlyData.length > 1 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-                        <defs>
-                          <linearGradient id="monthlyGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0.05} />
-                          </linearGradient>
-                        </defs>
-                        <Area type="monotone" dataKey="count" stroke="hsl(142 76% 36%)" strokeWidth={1.5} fill="url(#monthlyGradient)" dot={false} animationDuration={500} />
-                        <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" tickFormatter={(v) => v.slice(2, 7)} />
-                        <RechartsTooltip
-                          contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                          formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'New Contracts' : 'Amount']}
-                          labelFormatter={(label) => label}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-
-                  {/* Mode 2: Top vendors bar chart */}
-                  {chartMode === 2 && topVendors.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topVendors.slice(0, 20)} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-                        <Bar dataKey="amount" fill="hsl(32 95% 50%)" radius={[2, 2, 0, 0]} animationDuration={500} />
-                        <XAxis dataKey="name" hide />
-                        <RechartsTooltip
-                          contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                          formatter={(value: number) => [formatFullCurrency(value), 'Total Value']}
-                          labelFormatter={(label) => label}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-
-                  {/* Mode 3: Duration buckets bar chart */}
-                  {chartMode === 3 && durationBuckets.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={durationBuckets} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
-                        <Bar dataKey="count" fill="hsl(280 67% 55%)" radius={[2, 2, 0, 0]} animationDuration={500} />
-                        <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
-                        <RechartsTooltip
-                          contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                          formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'Contracts' : 'Total Value']}
-                          labelFormatter={(label) => label}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-
-                  {/* Mode 4: Expiration buckets bar chart */}
-                  {chartMode === 4 && expirationBuckets.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={expirationBuckets} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
-                        <Bar dataKey="count" fill="hsl(0 84% 60%)" radius={[2, 2, 0, 0]} animationDuration={500} />
-                        <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
-                        <RechartsTooltip
-                          contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                          formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'Contracts' : 'Total Value']}
-                          labelFormatter={(label) => label}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-
-                  {/* Mode 5: Spend utilization bar chart */}
-                  {chartMode === 5 && spendBuckets.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={spendBuckets} margin={{ top: 4, right: 8, bottom: 16, left: 8 }}>
-                        <Bar dataKey="count" fill="hsl(180 60% 45%)" radius={[2, 2, 0, 0]} animationDuration={500} />
-                        <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
-                        <RechartsTooltip
-                          contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                          formatter={(value: number, name: string) => [name === 'count' ? `${value} contracts` : formatFullCurrency(value), name === 'count' ? 'Contracts' : 'Total Value']}
-                          labelFormatter={(label) => label}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              )}
-
-              {/* Dashboards picker + Tabs + Chart mode toggle */}
-              <div className="flex items-center gap-3">
-                <DashboardDrawer />
-                {TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      'px-3 py-2 rounded-lg text-sm transition-colors',
-                      activeTab === tab
-                        ? 'bg-muted text-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                  >
-                    {TAB_LABELS[tab]}
-                  </button>
-                ))}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setChartMode((prev) => (prev - 1 + NUM_CHART_MODES) % NUM_CHART_MODES)}
-                    className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[100px] text-center">
-                    {CHART_LABELS[chartMode]}
-                  </span>
-                  <button
-                    onClick={() => setChartMode((prev) => (prev + 1) % NUM_CHART_MODES)}
-                    className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+                {/* Dashboards picker + Tabs + Chart mode toggle */}
+                <div className="flex items-center gap-3">
+                  <DashboardDrawer />
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={cn(
+                        'px-3 py-2 rounded-lg text-sm transition-colors',
+                        activeTab === tab
+                          ? 'bg-muted text-foreground font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      {TAB_LABELS[tab]}
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setChartMode((prev) => (prev - 1 + NUM_CHART_MODES) % NUM_CHART_MODES)}
+                      className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[100px] text-center">
+                      {CHART_LABELS[chartMode]}
+                    </span>
+                    <button
+                      onClick={() => setChartMode((prev) => (prev + 1) % NUM_CHART_MODES)}
+                      className="p-1 rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Table Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            {error ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-destructive">Error loading contracts data: {String(error)}</p>
-              </div>
-            ) : isLoading ? (
-              <div className="px-4 md:px-6 py-4 space-y-2">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : chartMode === 0 ? (
-              /* ── Mode 0: Department/Type table (existing) ── */
-              rows.length === 0 ? (
+            {/* Table Body */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {error ? (
                 <div className="text-center py-12 px-4">
-                  <p className="text-muted-foreground">No contract records found.</p>
+                  <p className="text-destructive">Error loading contracts data: {String(error)}</p>
                 </div>
-              ) : (
-                <>
-                  <div className="divide-y">
-                    <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                      <span>Name</span>
-                      <span className="flex items-center justify-center">
-                        <MessageSquare className="h-3.5 w-3.5" />
-                      </span>
-                      <span className="text-right">Amount</span>
-                      <span className="text-right">Contracts</span>
-                      <span className="text-right">Share</span>
-                    </div>
-                    {(isAuthenticated ? rows.slice(0, displayCount) : rows.slice(0, 6)).map((row) => (
-                      <ContractRowItem
-                        key={row.name}
-                        row={row}
-                        isExpanded={expandedRows.has(row.name)}
-                        isSelected={selectedRow === row.name}
-                        hasSelection={selectedRow !== null}
-                        onToggle={() => toggleRow(row.name)}
-                        onChatClick={() => handleChatClick(row)}
-                        onDrillChatClick={(contract) => {
-                          const amt = contract.amount >= 1e9 ? `$${(contract.amount / 1e9).toFixed(1)}B` : contract.amount >= 1e6 ? `$${(contract.amount / 1e6).toFixed(1)}M` : `$${contract.amount.toLocaleString()}`;
-                          const ctx = [
-                            `Contract: ${contract.name}`,
-                            contract.contractNumber ? `Contract Number: ${contract.contractNumber}` : '',
-                            `Amount: ${amt}`,
-                            `Share of ${row.name}: ${contract.pctOfParent.toFixed(1)}%`,
-                            '',
-                            `Parent Category: ${row.name}`,
-                            `Parent Total: ${formatCompactCurrency(row.amount)} (${row.contractCount} contracts, ${row.pctOfTotal.toFixed(1)}% of grand total)`,
-                          ].filter(Boolean).join('\n');
-                          const dept = activeTab === 'department' ? row.name : null;
-                          const type = activeTab === 'type' ? row.name : null;
-                          openChat(dept, type, null, ctx, contract.name);
-                        }}
-                        tab={activeTab}
-                        getDrillDown={getDrillDown}
-                      />
-                    ))}
-                    <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_44px_120px_80px_80px] gap-4 px-4 md:px-6 py-4 bg-muted/30 font-semibold">
-                      <span>Total</span>
-                      <span className="hidden md:block" />
-                      <span className="text-right">{formatCompactCurrency(grandTotal)}</span>
-                      <span className="hidden md:block text-right">{displayedTotalContracts.toLocaleString()}</span>
-                      <span className="hidden md:block text-right">100%</span>
-                    </div>
+              ) : isLoading ? (
+                <div className="px-4 md:px-6 py-4 space-y-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : chartMode === 0 ? (
+                /* ── Mode 0: Department/Type table (existing) ── */
+                rows.length === 0 ? (
+                  <div className="text-center py-12 px-4">
+                    <p className="text-muted-foreground">No contract records found.</p>
                   </div>
-                  {!isAuthenticated && (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground">Please log in to view all contract records.</p>
-                      <Button variant="ghost" onClick={() => navigate('/auth-4')} className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">Sign Up</Button>
+                ) : (
+                  <>
+                    <div className="divide-y">
+                      <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                        <span>Name</span>
+                        <span className="flex items-center justify-center">
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="text-right">Amount</span>
+                        <span className="text-right">Contracts</span>
+                        <span className="text-right">Share</span>
+                      </div>
+                      {(isAuthenticated ? rows.slice(0, displayCount) : rows.slice(0, 6)).map((row) => (
+                        <ContractRowItem
+                          key={row.name}
+                          row={row}
+                          isExpanded={expandedRows.has(row.name)}
+                          isSelected={selectedRow === row.name}
+                          hasSelection={selectedRow !== null}
+                          onToggle={() => toggleRow(row.name)}
+                          onChatClick={() => handleChatClick(row)}
+                          onDrillChatClick={(contract) => {
+                            const amt = contract.amount >= 1e9 ? `$${(contract.amount / 1e9).toFixed(1)}B` : contract.amount >= 1e6 ? `$${(contract.amount / 1e6).toFixed(1)}M` : `$${contract.amount.toLocaleString()}`;
+                            const ctx = [
+                              `Contract: ${contract.name}`,
+                              contract.contractNumber ? `Contract Number: ${contract.contractNumber}` : '',
+                              `Amount: ${amt}`,
+                              `Share of ${row.name}: ${contract.pctOfParent.toFixed(1)}%`,
+                              '',
+                              `Parent Category: ${row.name}`,
+                              `Parent Total: ${formatCompactCurrency(row.amount)} (${row.contractCount} contracts, ${row.pctOfTotal.toFixed(1)}% of grand total)`,
+                            ].filter(Boolean).join('\n');
+                            const dept = activeTab === 'department' ? row.name : null;
+                            const type = activeTab === 'type' ? row.name : null;
+                            openChat(dept, type, null, ctx, contract.name);
+                          }}
+                          tab={activeTab}
+                          getDrillDown={getDrillDown}
+                        />
+                      ))}
+                      <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_44px_120px_80px_80px] gap-4 px-4 md:px-6 py-4 bg-muted/30 font-semibold">
+                        <span>Total</span>
+                        <span className="hidden md:block" />
+                        <span className="text-right">{formatCompactCurrency(grandTotal)}</span>
+                        <span className="hidden md:block text-right">{displayedTotalContracts.toLocaleString()}</span>
+                        <span className="hidden md:block text-right">100%</span>
+                      </div>
                     </div>
-                  )}
-                  {isAuthenticated && displayCount < rows.length && (
-                    <div className="flex justify-center py-6">
-                      <button onClick={() => setDisplayCount((prev) => prev + 50)} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
-                        Load More ({Math.min(displayCount, rows.length)} of {rows.length})
-                      </button>
-                    </div>
-                  )}
-                </>
-              )
-            ) : chartMode === 1 ? (
-              /* ── Mode 1: Years table with month drill-down ── */
-              <div className="divide-y">
-                <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                  <span>Year</span>
-                  <span className="flex items-center justify-center">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Contracts</span>
+                    {!isAuthenticated && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">Please log in to view all contract records.</p>
+                        <Button variant="ghost" onClick={() => navigate('/auth-4')} className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">Sign Up</Button>
+                      </div>
+                    )}
+                    {isAuthenticated && displayCount < rows.length && (
+                      <div className="flex justify-center py-6">
+                        <button onClick={() => setDisplayCount((prev) => prev + 50)} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
+                          Load More ({Math.min(displayCount, rows.length)} of {rows.length})
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )
+              ) : chartMode === 1 ? (
+                /* ── Mode 1: Years table with month drill-down ── */
+                <div className="divide-y">
+                  <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                    <span>Year</span>
+                    <span className="flex items-center justify-center">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Contracts</span>
+                  </div>
+                  {byYear.map((yr) => (
+                    <YearRowItem
+                      key={yr.year}
+                      row={yr}
+                      isExpanded={expandedRows.has(yr.year)}
+                      onToggle={() => toggleRow(yr.year)}
+                      onChatClick={() => {
+                        const months = getMonthsForYear(yr.year);
+                        const ctx = [
+                          `Year: ${yr.year}`,
+                          `Total Contract Value: ${formatCompactCurrency(yr.amount)}`,
+                          `Number of Contracts: ${yr.count}`,
+                          '',
+                          'Monthly Breakdown:',
+                          ...months.map(m => `- ${m.monthName} ${yr.year}: ${formatCompactCurrency(m.amount)} (${m.count} contracts)`),
+                        ].join('\n');
+                        openChat(null, null, null, ctx);
+                      }}
+                      onMonthChatClick={(m) => {
+                        const ctx = [
+                          `Month: ${m.monthName} ${yr.year}`,
+                          `Contract Value: ${formatCompactCurrency(m.amount)}`,
+                          `Number of Contracts: ${m.count}`,
+                          '',
+                          `Parent Year: ${yr.year}`,
+                          `Year Total: ${formatCompactCurrency(yr.amount)} (${yr.count} contracts)`,
+                        ].join('\n');
+                        openChat(null, null, null, ctx, `${m.monthName} ${yr.year}`);
+                      }}
+                      getMonthsForYear={getMonthsForYear}
+                    />
+                  ))}
                 </div>
-                {byYear.map((yr) => (
-                  <YearRowItem
-                    key={yr.year}
-                    row={yr}
-                    isExpanded={expandedRows.has(yr.year)}
-                    onToggle={() => toggleRow(yr.year)}
-                    onChatClick={() => {
-                      const months = getMonthsForYear(yr.year);
-                      const ctx = [
-                        `Year: ${yr.year}`,
-                        `Total Contract Value: ${formatCompactCurrency(yr.amount)}`,
-                        `Number of Contracts: ${yr.count}`,
-                        '',
-                        'Monthly Breakdown:',
-                        ...months.map(m => `- ${m.monthName} ${yr.year}: ${formatCompactCurrency(m.amount)} (${m.count} contracts)`),
-                      ].join('\n');
-                      openChat(null, null, null, ctx);
-                    }}
-                    onMonthChatClick={(m) => {
-                      const ctx = [
-                        `Month: ${m.monthName} ${yr.year}`,
-                        `Contract Value: ${formatCompactCurrency(m.amount)}`,
-                        `Number of Contracts: ${m.count}`,
-                        '',
-                        `Parent Year: ${yr.year}`,
-                        `Year Total: ${formatCompactCurrency(yr.amount)} (${yr.count} contracts)`,
-                      ].join('\n');
-                      openChat(null, null, null, ctx, `${m.monthName} ${yr.year}`);
-                    }}
-                    getMonthsForYear={getMonthsForYear}
-                  />
-                ))}
-              </div>
-            ) : chartMode === 2 ? (
-              /* ── Mode 2: Vendors table with contract drill-down ── */
-              <div className="divide-y">
-                <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                  <span>Vendor</span>
-                  <span className="flex items-center justify-center">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Contracts</span>
+              ) : chartMode === 2 ? (
+                /* ── Mode 2: Vendors table with contract drill-down ── */
+                <div className="divide-y">
+                  <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                    <span>Vendor</span>
+                    <span className="flex items-center justify-center">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Contracts</span>
+                  </div>
+                  {topVendors.map((vendor) => (
+                    <VendorRowItem
+                      key={vendor.name}
+                      row={vendor}
+                      isExpanded={expandedRows.has(vendor.name)}
+                      onToggle={() => toggleRow(vendor.name)}
+                      onChatClick={() => openChat(null, null, vendor.name)}
+                      onDrillChatClick={(c) => {
+                        const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                        const ctx = [
+                          `Contract: ${c.name}`,
+                          c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
+                          `Amount: ${amt}`,
+                          c.startDate ? `Start Date: ${c.startDate.slice(0, 10)}` : '',
+                          c.endDate ? `End Date: ${c.endDate.slice(0, 10)}` : '',
+                          '',
+                          `Vendor: ${vendor.name}`,
+                          `Vendor Total: ${formatCompactCurrency(vendor.amount)} (${vendor.contractCount} contracts)`,
+                        ].filter(Boolean).join('\n');
+                        openChat(null, null, vendor.name, ctx, c.name);
+                      }}
+                      getContractsForVendor={getContractsForVendor}
+                    />
+                  ))}
                 </div>
-                {topVendors.map((vendor) => (
-                  <VendorRowItem
-                    key={vendor.name}
-                    row={vendor}
-                    isExpanded={expandedRows.has(vendor.name)}
-                    onToggle={() => toggleRow(vendor.name)}
-                    onChatClick={() => openChat(null, null, vendor.name)}
-                    onDrillChatClick={(c) => {
-                      const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                      const ctx = [
-                        `Contract: ${c.name}`,
-                        c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
-                        `Amount: ${amt}`,
-                        c.startDate ? `Start Date: ${c.startDate.slice(0, 10)}` : '',
-                        c.endDate ? `End Date: ${c.endDate.slice(0, 10)}` : '',
-                        '',
-                        `Vendor: ${vendor.name}`,
-                        `Vendor Total: ${formatCompactCurrency(vendor.amount)} (${vendor.contractCount} contracts)`,
-                      ].filter(Boolean).join('\n');
-                      openChat(null, null, vendor.name, ctx, c.name);
-                    }}
-                    getContractsForVendor={getContractsForVendor}
-                  />
-                ))}
-              </div>
-            ) : chartMode === 3 ? (
-              /* ── Mode 3: Duration buckets table ── */
-              <div className="divide-y">
-                <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                  <span>Duration</span>
-                  <span className="flex items-center justify-center">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Contracts</span>
+              ) : chartMode === 3 ? (
+                /* ── Mode 3: Duration buckets table ── */
+                <div className="divide-y">
+                  <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                    <span>Duration</span>
+                    <span className="flex items-center justify-center">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Contracts</span>
+                  </div>
+                  {durationBuckets.map((bucket) => (
+                    <DurationRowItem
+                      key={bucket.bucket}
+                      row={bucket}
+                      isExpanded={expandedRows.has(bucket.bucket)}
+                      onToggle={() => toggleRow(bucket.bucket)}
+                      onChatClick={() => {
+                        const contracts = getContractsForDurationBucket(bucket.bucket);
+                        const ctx = [
+                          `Duration Bucket: ${bucket.bucket}`,
+                          `Total Contract Value: ${formatCompactCurrency(bucket.amount)}`,
+                          `Number of Contracts: ${bucket.count}`,
+                          '',
+                          'Sample Contracts:',
+                          ...contracts.slice(0, 15).map(c => {
+                            const amt = c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                            return `- ${c.vendorName}${c.contractNumber ? ` (${c.contractNumber})` : ''}: ${amt}, ${Math.round(c.durationDays / 365 * 10) / 10} years`;
+                          }),
+                        ].join('\n');
+                        openChat(null, null, null, ctx);
+                      }}
+                      onDrillChatClick={(c) => {
+                        const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                        const ctx = [
+                          `Vendor: ${c.vendorName}`,
+                          c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
+                          `Amount: ${amt}`,
+                          `Duration: ${Math.round(c.durationDays / 365 * 10) / 10} years (${c.durationDays} days)`,
+                          '',
+                          `Duration Bucket: ${bucket.bucket}`,
+                          `Bucket Total: ${formatCompactCurrency(bucket.amount)} (${bucket.count} contracts)`,
+                        ].filter(Boolean).join('\n');
+                        openChat(null, null, null, ctx, c.vendorName);
+                      }}
+                      getContractsForDurationBucket={getContractsForDurationBucket}
+                    />
+                  ))}
                 </div>
-                {durationBuckets.map((bucket) => (
-                  <DurationRowItem
-                    key={bucket.bucket}
-                    row={bucket}
-                    isExpanded={expandedRows.has(bucket.bucket)}
-                    onToggle={() => toggleRow(bucket.bucket)}
-                    onChatClick={() => {
-                      const contracts = getContractsForDurationBucket(bucket.bucket);
-                      const ctx = [
-                        `Duration Bucket: ${bucket.bucket}`,
-                        `Total Contract Value: ${formatCompactCurrency(bucket.amount)}`,
-                        `Number of Contracts: ${bucket.count}`,
-                        '',
-                        'Sample Contracts:',
-                        ...contracts.slice(0, 15).map(c => {
-                          const amt = c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                          return `- ${c.vendorName}${c.contractNumber ? ` (${c.contractNumber})` : ''}: ${amt}, ${Math.round(c.durationDays / 365 * 10) / 10} years`;
-                        }),
-                      ].join('\n');
-                      openChat(null, null, null, ctx);
-                    }}
-                    onDrillChatClick={(c) => {
-                      const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                      const ctx = [
-                        `Vendor: ${c.vendorName}`,
-                        c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
-                        `Amount: ${amt}`,
-                        `Duration: ${Math.round(c.durationDays / 365 * 10) / 10} years (${c.durationDays} days)`,
-                        '',
-                        `Duration Bucket: ${bucket.bucket}`,
-                        `Bucket Total: ${formatCompactCurrency(bucket.amount)} (${bucket.count} contracts)`,
-                      ].filter(Boolean).join('\n');
-                      openChat(null, null, null, ctx, c.vendorName);
-                    }}
-                    getContractsForDurationBucket={getContractsForDurationBucket}
-                  />
-                ))}
-              </div>
-            ) : chartMode === 4 ? (
-              /* ── Mode 4: Expiration buckets table ── */
-              <div className="divide-y">
-                <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                  <span>Expiration</span>
-                  <span className="flex items-center justify-center">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Contracts</span>
+              ) : chartMode === 4 ? (
+                /* ── Mode 4: Expiration buckets table ── */
+                <div className="divide-y">
+                  <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                    <span>Expiration</span>
+                    <span className="flex items-center justify-center">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Contracts</span>
+                  </div>
+                  {expirationBuckets.map((bucket) => (
+                    <ExpirationRowItem
+                      key={bucket.bucket}
+                      row={bucket}
+                      isExpanded={expandedRows.has(bucket.bucket)}
+                      onToggle={() => toggleRow(bucket.bucket)}
+                      onChatClick={() => {
+                        const contracts = getContractsForExpirationBucket(bucket.bucket);
+                        const ctx = [
+                          `Expiration Bucket: ${bucket.bucket}`,
+                          `Total Contract Value: ${formatCompactCurrency(bucket.amount)}`,
+                          `Number of Contracts: ${bucket.count}`,
+                          '',
+                          'Sample Contracts:',
+                          ...contracts.slice(0, 15).map(c => {
+                            const amt = c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                            return `- ${c.vendorName}${c.contractNumber ? ` (${c.contractNumber})` : ''}: ${amt}, ${c.department}, ends ${c.endDate?.slice(0, 10) || 'N/A'} (${c.daysUntilExpiry} days)`;
+                          }),
+                        ].join('\n');
+                        openChat(null, null, null, ctx);
+                      }}
+                      onDrillChatClick={(c) => {
+                        const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                        const ctx = [
+                          `Vendor: ${c.vendorName}`,
+                          c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
+                          `Amount: ${amt}`,
+                          `Department: ${c.department}`,
+                          `End Date: ${c.endDate?.slice(0, 10) || 'N/A'}`,
+                          `Days Until Expiry: ${c.daysUntilExpiry}`,
+                          '',
+                          `Expiration Bucket: ${bucket.bucket}`,
+                          `Bucket Total: ${formatCompactCurrency(bucket.amount)} (${bucket.count} contracts)`,
+                        ].filter(Boolean).join('\n');
+                        openChat(null, null, null, ctx, c.vendorName);
+                      }}
+                      getContractsForExpirationBucket={getContractsForExpirationBucket}
+                    />
+                  ))}
                 </div>
-                {expirationBuckets.map((bucket) => (
-                  <ExpirationRowItem
-                    key={bucket.bucket}
-                    row={bucket}
-                    isExpanded={expandedRows.has(bucket.bucket)}
-                    onToggle={() => toggleRow(bucket.bucket)}
-                    onChatClick={() => {
-                      const contracts = getContractsForExpirationBucket(bucket.bucket);
-                      const ctx = [
-                        `Expiration Bucket: ${bucket.bucket}`,
-                        `Total Contract Value: ${formatCompactCurrency(bucket.amount)}`,
-                        `Number of Contracts: ${bucket.count}`,
-                        '',
-                        'Sample Contracts:',
-                        ...contracts.slice(0, 15).map(c => {
-                          const amt = c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                          return `- ${c.vendorName}${c.contractNumber ? ` (${c.contractNumber})` : ''}: ${amt}, ${c.department}, ends ${c.endDate?.slice(0, 10) || 'N/A'} (${c.daysUntilExpiry} days)`;
-                        }),
-                      ].join('\n');
-                      openChat(null, null, null, ctx);
-                    }}
-                    onDrillChatClick={(c) => {
-                      const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                      const ctx = [
-                        `Vendor: ${c.vendorName}`,
-                        c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
-                        `Amount: ${amt}`,
-                        `Department: ${c.department}`,
-                        `End Date: ${c.endDate?.slice(0, 10) || 'N/A'}`,
-                        `Days Until Expiry: ${c.daysUntilExpiry}`,
-                        '',
-                        `Expiration Bucket: ${bucket.bucket}`,
-                        `Bucket Total: ${formatCompactCurrency(bucket.amount)} (${bucket.count} contracts)`,
-                      ].filter(Boolean).join('\n');
-                      openChat(null, null, null, ctx, c.vendorName);
-                    }}
-                    getContractsForExpirationBucket={getContractsForExpirationBucket}
-                  />
-                ))}
-              </div>
-            ) : chartMode === 5 ? (
-              /* ── Mode 5: Spend utilization table ── */
-              <div className="divide-y">
-                <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                  <span>Spend Rate</span>
-                  <span className="flex items-center justify-center">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Contracts</span>
+              ) : chartMode === 5 ? (
+                /* ── Mode 5: Spend utilization table ── */
+                <div className="divide-y">
+                  <div className="hidden md:grid grid-cols-[1fr_44px_120px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                    <span>Spend Rate</span>
+                    <span className="flex items-center justify-center">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-right">Amount</span>
+                    <span className="text-right">Contracts</span>
+                  </div>
+                  {spendBuckets.map((bucket) => (
+                    <SpendRowItem
+                      key={bucket.bucket}
+                      row={bucket}
+                      isExpanded={expandedRows.has(bucket.bucket)}
+                      onToggle={() => toggleRow(bucket.bucket)}
+                      onChatClick={() => {
+                        const contracts = getContractsForSpendBucket(bucket.bucket);
+                        const ctx = [
+                          `Spend Utilization Bucket: ${bucket.bucket}`,
+                          `Total Contract Value: ${formatCompactCurrency(bucket.amount)}`,
+                          `Number of Contracts: ${bucket.count}`,
+                          '',
+                          'Sample Contracts:',
+                          ...contracts.slice(0, 15).map(c => {
+                            const amt = c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                            return `- ${c.vendorName}${c.contractNumber ? ` (${c.contractNumber})` : ''}: ${amt}, spent ${formatCompactCurrency(c.spending)} (${c.spendPct.toFixed(1)}%)`;
+                          }),
+                        ].join('\n');
+                        openChat(null, null, null, ctx);
+                      }}
+                      onDrillChatClick={(c) => {
+                        const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
+                        const ctx = [
+                          `Vendor: ${c.vendorName}`,
+                          c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
+                          `Contract Amount: ${amt}`,
+                          `Spending to Date: ${formatCompactCurrency(c.spending)}`,
+                          `Spend Rate: ${c.spendPct.toFixed(1)}%`,
+                          '',
+                          `Spend Bucket: ${bucket.bucket}`,
+                          `Bucket Total: ${formatCompactCurrency(bucket.amount)} (${bucket.count} contracts)`,
+                        ].filter(Boolean).join('\n');
+                        openChat(null, null, null, ctx, c.vendorName);
+                      }}
+                      getContractsForSpendBucket={getContractsForSpendBucket}
+                    />
+                  ))}
                 </div>
-                {spendBuckets.map((bucket) => (
-                  <SpendRowItem
-                    key={bucket.bucket}
-                    row={bucket}
-                    isExpanded={expandedRows.has(bucket.bucket)}
-                    onToggle={() => toggleRow(bucket.bucket)}
-                    onChatClick={() => {
-                      const contracts = getContractsForSpendBucket(bucket.bucket);
-                      const ctx = [
-                        `Spend Utilization Bucket: ${bucket.bucket}`,
-                        `Total Contract Value: ${formatCompactCurrency(bucket.amount)}`,
-                        `Number of Contracts: ${bucket.count}`,
-                        '',
-                        'Sample Contracts:',
-                        ...contracts.slice(0, 15).map(c => {
-                          const amt = c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                          return `- ${c.vendorName}${c.contractNumber ? ` (${c.contractNumber})` : ''}: ${amt}, spent ${formatCompactCurrency(c.spending)} (${c.spendPct.toFixed(1)}%)`;
-                        }),
-                      ].join('\n');
-                      openChat(null, null, null, ctx);
-                    }}
-                    onDrillChatClick={(c) => {
-                      const amt = c.amount >= 1e9 ? `$${(c.amount / 1e9).toFixed(1)}B` : c.amount >= 1e6 ? `$${(c.amount / 1e6).toFixed(1)}M` : `$${c.amount.toLocaleString()}`;
-                      const ctx = [
-                        `Vendor: ${c.vendorName}`,
-                        c.contractNumber ? `Contract Number: ${c.contractNumber}` : '',
-                        `Contract Amount: ${amt}`,
-                        `Spending to Date: ${formatCompactCurrency(c.spending)}`,
-                        `Spend Rate: ${c.spendPct.toFixed(1)}%`,
-                        '',
-                        `Spend Bucket: ${bucket.bucket}`,
-                        `Bucket Total: ${formatCompactCurrency(bucket.amount)} (${bucket.count} contracts)`,
-                      ].filter(Boolean).join('\n');
-                      openChat(null, null, null, ctx, c.vendorName);
-                    }}
-                    getContractsForSpendBucket={getContractsForSpendBucket}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-      </AppLayout>
+              ) : null}
+            </div>
+        </AppLayout>
 
-      {/* Contracts Chat Drawer */}
-      <ContractsChatDrawer
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-        departmentName={chatDepartmentName}
-        contractTypeName={chatContractTypeName}
-        vendorName={chatVendorName}
-        dataContext={chatDataContext}
-        drillName={chatDrillName}
-      />
+        {/* Contracts Chat Drawer */}
+        <ContractsChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          departmentName={chatDepartmentName}
+          contractTypeName={chatContractTypeName}
+          vendorName={chatVendorName}
+          dataContext={chatDataContext}
+          drillName={chatDrillName}
+        />
+    </>
   );
 };
 
