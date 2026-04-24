@@ -15,6 +15,7 @@ interface ChatHeaderProps {
   onWhatIsNYSgpt?: () => void;
   onOpenSidebar?: () => void;
   hideNav?: boolean;
+  inline?: boolean;
 }
 
 // Dropdown group structure
@@ -99,7 +100,7 @@ const NAV_ITEMS: {
   },
 ];
 
-export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav = false }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav = false, inline = false }: ChatHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   // Self-managed sidebar (used when no onOpenSidebar prop is provided)
@@ -236,7 +237,14 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav =
         </>
       )}
 
-      <nav className="fixed top-0 left-0 right-0 z-50 px-5 py-2 bg-background/80 backdrop-blur-md">
+      <nav
+        className={cn(
+          "px-5 py-2",
+          inline
+            ? "relative bg-transparent"
+            : "fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md"
+        )}
+      >
         <div className="flex items-center justify-between">
           {/* Left side: NYSgpt on mobile, Logs button on desktop */}
           <div className="flex items-center space-x-1">
