@@ -536,13 +536,13 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
               </TooltipContent>
             </Tooltip>
 
-            <Collapsible className="group/budget">
-              <div className="flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <NavLink
                   to="/budget"
                   onClick={onClose}
                   className={cn(
-                    "flex-1 flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                     isActive("/budget") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
                   )}
                 >
@@ -550,28 +550,11 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                   <span className="flex-1">Budget</span>
                   <ProBadge onNavigate={() => { navigate('/plans'); onClose?.(); }} />
                 </NavLink>
-                <CollapsibleTrigger className="px-2 py-1 text-muted-foreground hover:text-foreground transition-colors">
-                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]/budget:rotate-90" />
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent className="pl-10 space-y-0.5 mt-0.5">
-                {[
-                  { label: 'Appropriations', tab: 'appropriations' },
-                  { label: 'Capital', tab: 'capital' },
-                  { label: 'Spending', tab: 'spending' },
-                  { label: 'Revenue', tab: 'revenue' },
-                ].map((sub) => (
-                  <NavLink
-                    key={sub.tab}
-                    to={sub.tab === 'appropriations' ? '/budget' : `/budget?tab=${sub.tab}`}
-                    onClick={onClose}
-                    className="block px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  >
-                    {sub.label}
-                  </NavLink>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>NYS budget appropriations</p>
+              </TooltipContent>
+            </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
