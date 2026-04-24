@@ -309,7 +309,7 @@ const Bills2 = () => {
           </div>
 
           {/* Results - Grid (Scrollable) */}
-          <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-6">
             {error ? (
               <div className="text-center py-12">
                 <p className="text-destructive">Error loading bills: {String(error)}</p>
