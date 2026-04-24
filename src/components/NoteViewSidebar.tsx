@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useViewTransitionNavigate } from "@/hooks/useViewTransitionNavigate";
 import {
   ScrollText,
   Users,
@@ -114,6 +115,7 @@ const savePinnedNoteIds = (ids: Set<string>) => {
 export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const vtNavigate = useViewTransitionNavigate();
   const { user, signOut } = useAuth();
   const { subscription } = useSubscription();
   const { recentChats, deleteChat, togglePinChat, renameChat, refetch: refetchChats, loadMore, loadingMore, hasMore } = useRecentChats();
@@ -492,7 +494,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                   <TooltipTrigger asChild>
                     <NavLink
                       to="/blog"
-                      onClick={onClose}
+                      onClick={(e) => { e.preventDefault(); onClose?.(); vtNavigate("/blog"); }}
                       className={cn(
                         "group flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-base md:text-[15px] font-normal transition-colors",
                         isActive("/blog") ? "bg-black/5 dark:bg-white/10" : "hover:bg-black/5 dark:hover:bg-white/10"
@@ -1038,7 +1040,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
                 <Play className="h-4 w-4 mr-2" />
                 Video
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { navigate('/blog'); onClose?.(); }}>
+              <DropdownMenuItem onClick={() => { onClose?.(); vtNavigate('/blog'); }}>
                 <Newspaper className="h-4 w-4 mr-2" />
                 Blog
               </DropdownMenuItem>

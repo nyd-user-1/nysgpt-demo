@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Clock3Icon, ArrowRight, Newspaper } from 'lucide-react';
 import { ChatHeader } from '@/components/ChatHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { useViewTransitionNavigate } from '@/hooks/useViewTransitionNavigate';
 
 type BlogPost = Tables<'blog_posts'>;
 
 export default function Blog() {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 

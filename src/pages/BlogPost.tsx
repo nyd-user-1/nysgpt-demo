@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { ChevronRight, Home } from "lucide-react";
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatMarkdown } from "@/components/shared/ChatMarkdown";
+import { useViewTransitionNavigate } from "@/hooks/useViewTransitionNavigate";
 
 type BlogPost = Tables<"blog_posts">;
 
@@ -35,7 +36,7 @@ function XIcon({ className }: { className?: string }) {
 
 export default function BlogPost() {
   const { postId } = useParams<{ postId: string }>();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
 
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -151,12 +152,17 @@ export default function BlogPost() {
       <>
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
-          <Link to="/" className="hover:text-foreground transition-colors">
+          <Link
+            to="/"
+            onClick={(e) => { e.preventDefault(); navigate("/"); }}
+            className="hover:text-foreground transition-colors"
+          >
             <Home className="h-4 w-4" />
           </Link>
           <ChevronRight className="h-3.5 w-3.5" />
           <Link
             to="/blog"
+            onClick={(e) => { e.preventDefault(); navigate("/blog"); }}
             className="hover:text-foreground transition-colors"
           >
             Journal
