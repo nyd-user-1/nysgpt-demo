@@ -225,8 +225,22 @@ const LobbyingDashboard = () => {
   };
 
   return (
-    <>
-      <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
+    <AppLayout
+      sidebarOpen={leftSidebarOpen}
+      onSidebarClose={() => setLeftSidebarOpen(false)}
+      rightPanelOpen={chatOpen}
+      onRightPanelClose={() => setChatOpen(false)}
+      rightPanel={
+        <LobbyingChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          lobbyistName={chatLobbyistName}
+          clientName={chatClientName}
+          dataContext={chatDataContext}
+          drillName={chatDrillName}
+        />
+      }
+    >
             {/* Header */}
             <div className="flex-shrink-0 bg-background border-b">
               <div className="px-4 py-4 md:px-6">
@@ -236,7 +250,7 @@ const LobbyingDashboard = () => {
                     {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
                     <button
                       onClick={() => setLeftSidebarOpen(true)}
-                      className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
+                      className={cn("hidden md:inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
                       aria-label="Open menu"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -451,17 +465,6 @@ const LobbyingDashboard = () => {
               )}
             </div>
         </AppLayout>
-
-        {/* Lobbying Chat Drawer */}
-        <LobbyingChatDrawer
-          open={chatOpen}
-          onOpenChange={setChatOpen}
-          lobbyistName={chatLobbyistName}
-          clientName={chatClientName}
-          dataContext={chatDataContext}
-          drillName={chatDrillName}
-        />
-    </>
   );
 };
 

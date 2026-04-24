@@ -1971,32 +1971,50 @@ const NewChat = () => {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
-      {/* Left Sidebar - slides in from off-screen (authenticated pages + mobile public) */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
+    <div className={cn("fixed inset-0 overflow-hidden", isPublicPage ? "bg-background" : "bg-muted/30")}>
+      {/* Public pages keep the slide-over sidebar. Authenticated pages use the push-sidebar AppLayout pattern. */}
+      {isPublicPage && (
+        <div
+          className={cn(
+            "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
+            sidebarMounted && "transition-transform duration-300 ease-in-out",
+            leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
+        </div>
+      )}
 
       {/* Backdrop overlay when sidebar is open (mobile only) */}
       {leftSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 z-50 transition-opacity md:hidden"
+          className={cn(
+            "fixed inset-0 bg-black/20 transition-opacity",
+            isPublicPage ? "z-50 md:hidden" : "z-40 sm:hidden"
+          )}
           onClick={() => setLeftSidebarOpen(false)}
         />
       )}
 
       {/* Main Content Container - different structure for public vs authenticated */}
-      <div className={cn("h-full", !isPublicPage && "md:p-2 bg-muted/30")}>
+      <div className={cn("h-full", !isPublicPage && "flex overflow-hidden p-2.5")}>
+        {/* Authenticated: sidebar as flex sibling that pushes content */}
+        {!isPublicPage && (
+          <div
+            className={cn(
+              "fixed inset-y-0 left-0 z-50 sm:static sm:z-auto shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+              leftSidebarOpen ? "w-full sm:w-[260px] sm:mr-2.5" : "w-0"
+            )}
+          >
+            <div className="w-full sm:w-[260px] h-full bg-background border border-border rounded-none sm:rounded-2xl overflow-hidden">
+              <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
+            </div>
+          </div>
+        )}
         {/* Inner container - rounded with border for authenticated pages */}
         <div className={cn(
           "h-full flex flex-col relative",
-          !isPublicPage && "md:rounded-2xl md:border bg-background overflow-hidden"
+          !isPublicPage && "flex-1 min-w-0 rounded-2xl border bg-background overflow-hidden"
         )}>
           {/* Header - ChatHeader for public, sidebar toggle + engine for authenticated */}
           {isPublicPage ? (
@@ -2007,7 +2025,7 @@ const NewChat = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setLeftSidebarOpen(true)}
-                  className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                  className="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted transition-colors flex-shrink-0"
                   aria-label="Open menu"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2027,7 +2045,7 @@ const NewChat = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setLeftSidebarOpen(true)}
-                  className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                  className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted transition-colors flex-shrink-0"
                   aria-label="Open menu"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2371,8 +2389,8 @@ const NewChat = () => {
       {/* Bottom Input Area - centered when !chatStarted, bottom when chatStarted (all viewports) */}
       <div className={cn(
         // Centered when no chat started (all viewports), bottom when chatting
-        !chatStarted && "fixed left-0 right-0 z-[5] top-[calc(50%+20px)] -translate-y-1/2",
-        chatStarted && "fixed bottom-0 left-0 right-0 z-[5]",
+        !chatStarted && "absolute left-0 right-0 z-[5] top-[calc(50%+20px)] -translate-y-1/2",
+        chatStarted && "absolute bottom-0 left-0 right-0 z-[5]",
         isPublicPage && chatStarted && "bg-background"
       )}>
         <div className={cn(

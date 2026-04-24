@@ -7,6 +7,9 @@ interface AppLayoutProps {
   children: React.ReactNode;
   className?: string;
   animateIn?: boolean;
+  rightPanel?: React.ReactNode;
+  rightPanelOpen?: boolean;
+  onRightPanelClose?: () => void;
 }
 
 export function AppLayout({
@@ -15,6 +18,9 @@ export function AppLayout({
   children,
   className,
   animateIn = false,
+  rightPanel,
+  rightPanelOpen = false,
+  onRightPanelClose,
 }: AppLayoutProps) {
   return (
     <div className="fixed inset-0 bg-muted/30 overflow-hidden">
@@ -39,12 +45,32 @@ export function AppLayout({
         >
           {children}
         </div>
+
+        {rightPanel && (
+          <div
+            className={cn(
+              "fixed inset-y-0 right-0 z-50 sm:static sm:z-auto shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+              rightPanelOpen ? "w-full sm:w-[480px] sm:ml-2.5" : "w-0"
+            )}
+          >
+            <div className="w-full sm:w-[480px] h-full bg-background border border-border rounded-none sm:rounded-2xl overflow-hidden">
+              {rightPanel}
+            </div>
+          </div>
+        )}
       </div>
 
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40 sm:hidden"
           onClick={onSidebarClose}
+        />
+      )}
+
+      {rightPanelOpen && onRightPanelClose && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40 sm:hidden"
+          onClick={onRightPanelClose}
         />
       )}
     </div>
