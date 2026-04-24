@@ -312,9 +312,9 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
   return (
     <TooltipProvider delayDuration={300}>
     {/* Single scroll container - ChatGPT architecture */}
-    <nav ref={sidebarScrollRef} className="relative flex h-full w-full flex-col overflow-y-auto bg-[#f9f9f9] dark:bg-background">
+    <nav ref={sidebarScrollRef} className="relative flex h-full w-full flex-col overflow-y-auto bg-background">
       {/* Sticky Header - stays at top while scrolling */}
-      <aside className="sticky top-0 z-40 bg-[#f9f9f9] dark:bg-background">
+      <aside className="sticky top-0 z-40 bg-background">
         {/* Header with NYSgpt logo and close button */}
         <div className="flex items-center justify-between px-3 py-3">
           {/* NYSgpt Logo */}
@@ -968,7 +968,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
       </div>
 
       {/* Sticky Bottom Section - Account button (ChatGPT style) */}
-      <aside className="sticky bottom-0 z-30 bg-[#f9f9f9] dark:bg-background p-2 pb-4">
+      <aside className="sticky bottom-0 z-30 bg-background p-2 pb-4">
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
