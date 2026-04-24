@@ -44,7 +44,7 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <ChatHeader />
+      <ChatHeader hideNav />
 
       <main className="flex-1">
         <section className="container mx-auto px-4 pt-[164px] pb-8 md:px-6 2xl:max-w-[1400px]">

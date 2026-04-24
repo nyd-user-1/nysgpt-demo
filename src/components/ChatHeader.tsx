@@ -14,6 +14,7 @@ interface ChatHeaderProps {
   onNewChat?: () => void;
   onWhatIsNYSgpt?: () => void;
   onOpenSidebar?: () => void;
+  hideNav?: boolean;
 }
 
 // Dropdown group structure
@@ -98,7 +99,7 @@ const NAV_ITEMS: {
   },
 ];
 
-export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav = false }: ChatHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   // Self-managed sidebar (used when no onOpenSidebar prop is provided)
@@ -259,6 +260,7 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
           </div>
 
           {/* Center - Navigation with sliding indicator (desktop only) */}
+          {!hideNav && (
           <div className="hidden md:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
             <div
               ref={navRef}
@@ -337,6 +339,7 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
               ))}
             </div>
           </div>
+          )}
 
           {/* Right side: NYSgpt on desktop, Logs button on mobile */}
           <div className="flex items-center gap-2">
