@@ -43,12 +43,12 @@ export default function Blog() {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#efead8] p-2 overflow-hidden">
+    <div className="fixed inset-0 bg-[#efead8] p-5 overflow-hidden">
       <div className="relative h-full w-full bg-background rounded-2xl overflow-hidden">
         <ChatHeader hideNav inline />
 
-        <main className="h-full overflow-y-auto">
-          <section className="container mx-auto px-4 pt-[112px] pb-8 md:px-6 2xl:max-w-[1400px]">
+        <main className="h-full overflow-y-auto scrollbar-hide">
+          <section className="container mx-auto px-4 pt-[100px] pb-8 md:px-6 2xl:max-w-[1400px]">
             {/* Header — left-aligned like Members page */}
             <div className="mb-8">
               <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
