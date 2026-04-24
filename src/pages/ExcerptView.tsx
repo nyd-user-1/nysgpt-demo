@@ -6,8 +6,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { ArrowLeft, Trash2, ExternalLink, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { InsetPanel } from '@/components/ui/inset-panel';
-import { NoteViewSidebar } from "@/components/NoteViewSidebar";
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMarkdown } from "@/components/shared/ChatMarkdown";
@@ -46,13 +45,6 @@ const ExcerptView = () => {
   const [loading, setLoading] = useState(true);
   const [bill, setBill] = useState<BillCitation | null>(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
-
-  // Enable sidebar transitions after mount to prevent flash
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const loadExcerpt = async () => {
@@ -146,38 +138,17 @@ const ExcerptView = () => {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Left Sidebar - OUTSIDE container, slides in from off-screen */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {/* Backdrop overlay when sidebar is open */}
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container with padding */}
-      <InsetPanel className="relative">
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-background flex-shrink-0">
             <div className="flex items-center gap-2 min-w-0">
               {/* Mobile Sidebar Toggle */}
-              <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+              {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
               {/* Left Sidebar Toggle (Desktop) */}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                onClick={() => setLeftSidebarOpen(true)}
                 className={cn("hidden md:inline-flex flex-shrink-0", leftSidebarOpen && "bg-muted")}
               >
                 <PanelLeft className="h-4 w-4" />
@@ -235,12 +206,11 @@ const ExcerptView = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <MobileNYSgpt />
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto py-8 px-4">
+          <div className="flex-1 overflow-y-auto scrollbar-hide py-8 px-4">
             <div className="max-w-[720px] mx-auto space-y-6">
           {/* User Message */}
           <div className="flex justify-end">
@@ -284,8 +254,7 @@ const ExcerptView = () => {
           </div>
             </div>
           </div>
-      </InsetPanel>
-    </div>
+    </AppLayout>
   );
 };
 

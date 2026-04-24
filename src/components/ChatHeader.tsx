@@ -14,6 +14,9 @@ interface ChatHeaderProps {
   onNewChat?: () => void;
   onWhatIsNYSgpt?: () => void;
   onOpenSidebar?: () => void;
+  hideNav?: boolean;
+  inline?: boolean;
+  sidebarOpen?: boolean;
 }
 
 // Dropdown group structure
@@ -98,7 +101,7 @@ const NAV_ITEMS: {
   },
 ];
 
-export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav = false, inline = false, sidebarOpen = false }: ChatHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   // Self-managed sidebar (used when no onOpenSidebar prop is provided)
@@ -235,21 +238,30 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
         </>
       )}
 
-      <nav className="fixed top-0 left-0 right-0 z-50 px-5 py-2 bg-background/80 backdrop-blur-md">
+      <nav
+        className={cn(
+          "px-5 py-2",
+          inline
+            ? "absolute top-0 left-0 right-0 z-10 bg-transparent pointer-events-none"
+            : "fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md"
+        )}
+      >
         <div className="flex items-center justify-between">
           {/* Left side: NYSgpt on mobile, Logs button on desktop */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={handleOpenSidebar}
-              className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
-              aria-label="Open menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-              </svg>
-            </button>
+          <div className={cn("flex items-center space-x-1", inline && "pointer-events-auto")}>
+            {!sidebarOpen && (
+              <button
+                onClick={handleOpenSidebar}
+                className="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted transition-colors"
+                aria-label="Open menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                  <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                  <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                </svg>
+              </button>
+            )}
             <button
               onClick={handleHeartClick}
               className="md:hidden inline-flex items-center justify-center h-10 rounded-md px-3 text-black hover:bg-muted transition-colors font-semibold text-xl"
@@ -259,6 +271,7 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
           </div>
 
           {/* Center - Navigation with sliding indicator (desktop only) */}
+          {!hideNav && (
           <div className="hidden md:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
             <div
               ref={navRef}
@@ -337,35 +350,24 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar }: ChatHea
               ))}
             </div>
           </div>
+          )}
 
-          {/* Right side: NYSgpt on desktop, Logs button on mobile */}
-          <div className="flex items-center gap-2">
-            {/* NYSgpt button (desktop only) */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleHeartClick}
-                  className="hidden md:inline-flex items-center justify-center h-10 rounded-md px-3 text-black hover:bg-muted transition-colors font-semibold text-xl"
-                >
-                  NYSgpt
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="font-medium">
-                What is NYSgpt?
-              </TooltipContent>
-            </Tooltip>
+          {/* Right side: mobile sidebar toggle */}
+          <div className={cn("flex items-center gap-2", inline && "pointer-events-auto")}>
             {/* Logs button (mobile only) */}
-            <button
-              onClick={handleOpenSidebar}
-              className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
-              aria-label="Open menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-              </svg>
-            </button>
+            {!sidebarOpen && (
+              <button
+                onClick={handleOpenSidebar}
+                className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted transition-colors"
+                aria-label="Open menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                  <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                  <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </nav>

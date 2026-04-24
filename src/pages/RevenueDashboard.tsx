@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronDown, ArrowUp, MessageSquare, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardDrawer } from '@/components/DashboardDrawer';
 import {
@@ -26,14 +24,8 @@ export default function RevenueDashboard() {
   const { session } = useAuth();
   const isAuthenticated = !!session;
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { isLoading, error, byFundGroup, grandTotal, totalItems, revenueByYear, getDrillDown } = useRevenueDashboard();
 
@@ -60,18 +52,12 @@ export default function RevenueDashboard() {
   const chartData = revenueByYear;
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      <div className={cn("fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50", sidebarMounted && "transition-transform duration-300 ease-in-out", leftSidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-      {leftSidebarOpen && <div className="fixed inset-0 bg-black/20 z-40 transition-opacity" onClick={() => setLeftSidebarOpen(false)} />}
-
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
         {/* Header area with chart */}
         <div className="flex-shrink-0 bg-background">
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 py-3">
-            <MobileMenuIcon onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+            {!leftSidebarOpen && <MobileMenuIcon onClick={() => setLeftSidebarOpen(true)} />}
             {!isLoading && !error && (
               <div className="text-right flex-shrink-0">
                 <div className="flex items-center gap-2 justify-end">
@@ -90,7 +76,6 @@ export default function RevenueDashboard() {
                 </span>
               </div>
             )}
-            <MobileNYSgpt />
           </div>
 
           {/* Chart — line chart showing revenue over 30+ fiscal years */}
@@ -123,7 +108,7 @@ export default function RevenueDashboard() {
         </div>
 
         {/* Table */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>
           ) : error ? (
@@ -159,8 +144,7 @@ export default function RevenueDashboard() {
             </div>
           )}
         </div>
-      </InsetPanel>
-    </div>
+    </AppLayout>
   );
 }
 

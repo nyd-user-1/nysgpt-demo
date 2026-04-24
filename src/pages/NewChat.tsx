@@ -2026,12 +2026,6 @@ const NewChat = () => {
               {/* Right side: NYSgpt on desktop, Logs button on mobile */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate('/?prompt=What%20is%20NYSgpt%3F')}
-                  className="hidden md:inline-flex items-center justify-center h-10 rounded-md px-3 text-foreground hover:bg-muted transition-colors font-semibold text-xl"
-                >
-                  NYSgpt
-                </button>
-                <button
                   onClick={() => setLeftSidebarOpen(true)}
                   className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors flex-shrink-0"
                   aria-label="Open menu"

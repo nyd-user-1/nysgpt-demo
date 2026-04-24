@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Banknote, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,12 +22,6 @@ const Discretionary = () => {
   const isAuthenticated = !!user;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   const {
     grants,
@@ -96,26 +88,7 @@ const Discretionary = () => {
   const hasActiveFilters = searchTerm || agencyFilter || fundTypeFilter || sponsorFilter || yearFilter || amountFilterActive;
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Left Sidebar */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -123,17 +96,19 @@ const Discretionary = () => {
                 {/* Title row */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
-                      className="inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
-                      aria-label="Open menu"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                        <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                        <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-                      </svg>
-                    </button>
+                    {!leftSidebarOpen && (
+                      <button
+                        onClick={() => setLeftSidebarOpen(true)}
+                        className="inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted transition-colors"
+                        aria-label="Open menu"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                          <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                          <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                        </svg>
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {hasActiveFilters && (
@@ -142,12 +117,6 @@ const Discretionary = () => {
                         Clear filters
                       </Button>
                     )}
-                    <button
-                      onClick={() => navigate('/?prompt=What%20is%20NYSgpt%3F')}
-                      className="inline-flex items-center justify-center h-10 rounded-md px-3 text-foreground hover:bg-muted transition-colors font-semibold text-xl"
-                    >
-                      NYSgpt
-                    </button>
                   </div>
                 </div>
 
@@ -256,7 +225,7 @@ const Discretionary = () => {
           </div>
 
           {/* Results Grid */}
-          <div className="flex-1 overflow-y-auto px-4 py-6" onScroll={(e) => {
+          <div className="flex-1 overflow-y-auto scrollbar-hide px-4 py-6" onScroll={(e) => {
             if (!isAuthenticated) return;
             const el = e.currentTarget;
             if (el.scrollHeight - el.scrollTop - el.clientHeight < 200 && hasMore && !loadingMore) {
@@ -314,8 +283,7 @@ const Discretionary = () => {
               </>
             )}
           </div>
-      </InsetPanel>
-    </div>
+    </AppLayout>
   );
 };
 

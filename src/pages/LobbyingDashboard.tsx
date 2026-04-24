@@ -2,9 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronDown, ArrowUp, MessageSquare, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { LobbyingChatDrawer } from '@/components/LobbyingChatDrawer';
@@ -35,7 +34,6 @@ const LobbyingDashboard = () => {
   const { session } = useAuth();
   const isAuthenticated = !!session;
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<LobbyingDashboardTab>('lobbyist');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
@@ -45,11 +43,6 @@ const LobbyingDashboard = () => {
   const [chatDataContext, setChatDataContext] = useState<string | null>(null);
   const [chatDrillName, setChatDrillName] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(50);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   const {
     isLoading,
@@ -232,264 +225,243 @@ const LobbyingDashboard = () => {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Left Sidebar */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container */}
-      <InsetPanel>
-          {/* Header */}
-          <div className="flex-shrink-0 bg-background border-b">
-            <div className="px-4 py-4 md:px-6">
-              {/* Top row: sidebar + title left, amount right */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
-                  <button
-                    onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
-                    className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
-                    aria-label="Open menu"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                      <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                      <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Amount — top right */}
-                {!isLoading && !error && (
-                  <div className="text-right flex-shrink-0">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        onClick={() => openChat(null, null, buildDataContext({}))}
-                        className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </button>
-                      <span className="text-3xl md:text-4xl font-bold tracking-tight transition-all duration-300">
-                        {formatCompactCurrency(headerAmount)}
-                      </span>
-                      {selectedRow && (
-                        <button
-                          onClick={() => setSelectedRow(null)}
-                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {selectedRow
-                        ? `${selectedRowData?.pctOfTotal.toFixed(1)}% of total`
-                        : 'Total Lobbyist Earnings'}
-                    </span>
-                  </div>
-                )}
-
-                <MobileNYSgpt />
-              </div>
-
-              {/* Chart - Bar chart for lobbyist3, Area chart for others */}
-              {!isLoading && activeTab === 'lobbyist3' && barChartData.length > 0 && (
-                <div className="h-28 md:h-32 mb-4 -mx-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={barChartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-                      <Bar
-                        dataKey="amount"
-                        fill="hsl(217 91% 60%)"
-                        radius={[2, 2, 0, 0]}
-                      />
-                      <XAxis
-                        dataKey="idx"
-                        tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-                        tickLine={false}
-                        axisLine={false}
-                        interval={4}
-                      />
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        formatter={(value: number) => [formatFullCurrency(value), 'Earnings']}
-                        labelFormatter={(_, payload) => payload?.[0]?.payload?.name || ''}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-              {!isLoading && activeTab !== 'lobbyist3' && chartData.length > 1 && (
-                <div className="h-24 md:h-28 mb-4 -mx-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-                      <defs>
-                        <linearGradient id="lobbyingGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
-                          <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
-                        </linearGradient>
-                      </defs>
-                      <Area
-                        type="monotone"
-                        dataKey="cumulative"
-                        stroke="hsl(217 91% 60%)"
-                        strokeWidth={1.5}
-                        fill="url(#lobbyingGradient)"
-                        dot={false}
-                        animationDuration={500}
-                      />
-                      <XAxis
-                        dataKey="rank"
-                        tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                        tickLine={false}
-                        axisLine={false}
-                        interval="preserveStartEnd"
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        formatter={(value: number) => [formatFullCurrency(value), 'Cumulative']}
-                        labelFormatter={(label) => `Top ${label}% of Lobbyists`}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {/* Dashboards picker + Tabs */}
-              <div className="flex items-center gap-3">
-                <DashboardDrawer />
-                {TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      'px-3 py-2 rounded-lg text-sm transition-colors',
-                      activeTab === tab
-                        ? 'bg-muted text-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                  >
-                    {TAB_LABELS[tab]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Table Body */}
-          <div className="flex-1 overflow-y-auto">
-            {error ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-destructive">Error loading lobbying data: {String(error)}</p>
-              </div>
-            ) : isLoading ? (
-              <div className="px-4 md:px-6 py-4 space-y-2">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <p className="text-muted-foreground">No lobbying records found.</p>
-              </div>
-            ) : (
-              <>
-                <div className="divide-y">
-                  {/* Column headers */}
-                  <div className="hidden md:grid grid-cols-[1fr_44px_100px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
-                    <span>Name</span>
-                    <span className="flex items-center justify-center">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="text-right">'25</span>
-                    <span className="text-right">Change</span>
-                    <span className="text-right">Share</span>
-                  </div>
-
-                  {(isAuthenticated ? rows.slice(0, displayCount) : rows.slice(0, 10)).map((row) => (
-                    <DashboardRowItem
-                      key={row.name}
-                      row={row}
-                      isExpanded={expandedRows.has(row.name)}
-                      isSelected={selectedRow === row.name}
-                      hasSelection={selectedRow !== null}
-                      onToggle={() => toggleRow(row.name)}
-                      onChatClick={() => handleChatClick(row)}
-                      tab={activeTab}
-                      getClientsForLobbyist={getClientsForLobbyist}
-                      onDrillDownChatClick={(drillRow) => handleDrillDownChatClick(drillRow, row)}
-                    />
-                  ))}
-
-                  {/* Grand total row */}
-                  <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_44px_100px_80px_80px] gap-4 px-4 md:px-6 py-4 bg-muted/30 font-semibold">
-                    <span>Total</span>
-                    <span className="hidden md:block" />
-                    <span className="text-right">{formatCompactCurrency(grandTotal)}</span>
-                    <span className="hidden md:block text-right">—</span>
-                    <span className="hidden md:block text-right">100%</span>
-                  </div>
-                </div>
-                {!isAuthenticated && (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">
-                      Please log in to view all lobbying records.
-                    </p>
-                    <Button variant="ghost" onClick={() => navigate('/auth-4')}
-                      className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">
-                      Sign Up
-                    </Button>
-                  </div>
-                )}
-                {isAuthenticated && displayCount < rows.length && (
-                  <div className="flex justify-center py-6">
+    <>
+      <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
+            {/* Header */}
+            <div className="flex-shrink-0 bg-background border-b">
+              <div className="px-4 py-4 md:px-6">
+                {/* Top row: sidebar + title left, amount right */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
                     <button
-                      onClick={() => setDisplayCount((prev) => prev + 50)}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setLeftSidebarOpen(true)}
+                      className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
+                      aria-label="Open menu"
                     >
-                      Load More ({Math.min(displayCount, rows.length)} of {rows.length})
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                        <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                        <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                      </svg>
                     </button>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-      </InsetPanel>
 
-      {/* Lobbying Chat Drawer */}
-      <LobbyingChatDrawer
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-        lobbyistName={chatLobbyistName}
-        clientName={chatClientName}
-        dataContext={chatDataContext}
-        drillName={chatDrillName}
-      />
-    </div>
+                  {/* Amount — top right */}
+                  {!isLoading && !error && (
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => openChat(null, null, buildDataContext({}))}
+                          className="w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/80 transition-colors flex-shrink-0"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </button>
+                        <span className="text-3xl md:text-4xl font-bold tracking-tight transition-all duration-300">
+                          {formatCompactCurrency(headerAmount)}
+                        </span>
+                        {selectedRow && (
+                          <button
+                            onClick={() => setSelectedRow(null)}
+                            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {selectedRow
+                          ? `${selectedRowData?.pctOfTotal.toFixed(1)}% of total`
+                          : 'Total Lobbyist Earnings'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Chart - Bar chart for lobbyist3, Area chart for others */}
+                {!isLoading && activeTab === 'lobbyist3' && barChartData.length > 0 && (
+                  <div className="h-28 md:h-32 mb-4 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={barChartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                        <Bar
+                          dataKey="amount"
+                          fill="hsl(217 91% 60%)"
+                          radius={[2, 2, 0, 0]}
+                        />
+                        <XAxis
+                          dataKey="idx"
+                          tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={false}
+                          interval={4}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value: number) => [formatFullCurrency(value), 'Earnings']}
+                          labelFormatter={(_, payload) => payload?.[0]?.payload?.name || ''}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+                {!isLoading && activeTab !== 'lobbyist3' && chartData.length > 1 && (
+                  <div className="h-24 md:h-28 mb-4 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
+                        <defs>
+                          <linearGradient id="lobbyingGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(217 91% 60%)" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(217 91% 60%)" stopOpacity={0.05} />
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="cumulative"
+                          stroke="hsl(217 91% 60%)"
+                          strokeWidth={1.5}
+                          fill="url(#lobbyingGradient)"
+                          dot={false}
+                          animationDuration={500}
+                        />
+                        <XAxis
+                          dataKey="rank"
+                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={false}
+                          axisLine={false}
+                          interval="preserveStartEnd"
+                          tickFormatter={(value) => `${value}%`}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value: number) => [formatFullCurrency(value), 'Cumulative']}
+                          labelFormatter={(label) => `Top ${label}% of Lobbyists`}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Dashboards picker + Tabs */}
+                <div className="flex items-center gap-3">
+                  <DashboardDrawer />
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={cn(
+                        'px-3 py-2 rounded-lg text-sm transition-colors',
+                        activeTab === tab
+                          ? 'bg-muted text-foreground font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      {TAB_LABELS[tab]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Table Body */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {error ? (
+                <div className="text-center py-12 px-4">
+                  <p className="text-destructive">Error loading lobbying data: {String(error)}</p>
+                </div>
+              ) : isLoading ? (
+                <div className="px-4 md:px-6 py-4 space-y-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="h-14 bg-muted/30 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : rows.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <p className="text-muted-foreground">No lobbying records found.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y">
+                    {/* Column headers */}
+                    <div className="hidden md:grid grid-cols-[1fr_44px_100px_80px_80px] gap-4 px-6 py-3 text-xs text-muted-foreground font-medium uppercase tracking-wider bg-background sticky top-0 z-10 border-b">
+                      <span>Name</span>
+                      <span className="flex items-center justify-center">
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="text-right">'25</span>
+                      <span className="text-right">Change</span>
+                      <span className="text-right">Share</span>
+                    </div>
+
+                    {(isAuthenticated ? rows.slice(0, displayCount) : rows.slice(0, 10)).map((row) => (
+                      <DashboardRowItem
+                        key={row.name}
+                        row={row}
+                        isExpanded={expandedRows.has(row.name)}
+                        isSelected={selectedRow === row.name}
+                        hasSelection={selectedRow !== null}
+                        onToggle={() => toggleRow(row.name)}
+                        onChatClick={() => handleChatClick(row)}
+                        tab={activeTab}
+                        getClientsForLobbyist={getClientsForLobbyist}
+                        onDrillDownChatClick={(drillRow) => handleDrillDownChatClick(drillRow, row)}
+                      />
+                    ))}
+
+                    {/* Grand total row */}
+                    <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_44px_100px_80px_80px] gap-4 px-4 md:px-6 py-4 bg-muted/30 font-semibold">
+                      <span>Total</span>
+                      <span className="hidden md:block" />
+                      <span className="text-right">{formatCompactCurrency(grandTotal)}</span>
+                      <span className="hidden md:block text-right">—</span>
+                      <span className="hidden md:block text-right">100%</span>
+                    </div>
+                  </div>
+                  {!isAuthenticated && (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">
+                        Please log in to view all lobbying records.
+                      </p>
+                      <Button variant="ghost" onClick={() => navigate('/auth-4')}
+                        className="mt-4 h-9 px-3 font-semibold text-base hover:bg-muted">
+                        Sign Up
+                      </Button>
+                    </div>
+                  )}
+                  {isAuthenticated && displayCount < rows.length && (
+                    <div className="flex justify-center py-6">
+                      <button
+                        onClick={() => setDisplayCount((prev) => prev + 50)}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                      >
+                        Load More ({Math.min(displayCount, rows.length)} of {rows.length})
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+        </AppLayout>
+
+        {/* Lobbying Chat Drawer */}
+        <LobbyingChatDrawer
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          lobbyistName={chatLobbyistName}
+          clientName={chatClientName}
+          dataContext={chatDataContext}
+          drillName={chatDrillName}
+        />
+    </>
   );
 };
 

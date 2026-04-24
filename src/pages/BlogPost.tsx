@@ -1,10 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { ChevronRight, Home } from "lucide-react";
 import { ChatHeader } from "@/components/ChatHeader";
+import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { ChatMarkdown } from "@/components/shared/ChatMarkdown";
+import { useViewTransitionNavigate } from "@/hooks/useViewTransitionNavigate";
+import { cn } from "@/lib/utils";
 
 type BlogPost = Tables<"blog_posts">;
 
@@ -35,11 +38,12 @@ function XIcon({ className }: { className?: string }) {
 
 export default function BlogPost() {
   const { postId } = useParams<{ postId: string }>();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
 
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<string>("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -121,29 +125,21 @@ export default function BlogPost() {
     x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`,
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <ChatHeader />
-        <main className="flex-1 pt-[120px]">
-          <div className="container mx-auto max-w-[1200px] px-4 md:px-6">
-            <div className="animate-pulse space-y-6">
-              <div className="h-4 bg-muted rounded w-48" />
-              <div className="h-12 bg-muted rounded w-3/4" />
-              <div className="h-4 bg-muted rounded w-64" />
-              <div className="h-64 bg-muted rounded w-full max-w-[720px]" />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const renderBody = () => {
+    if (loading) {
+      return (
+        <div className="animate-pulse space-y-6">
+          <div className="h-4 bg-muted rounded w-48" />
+          <div className="h-12 bg-muted rounded w-3/4" />
+          <div className="h-4 bg-muted rounded w-64" />
+          <div className="h-64 bg-muted rounded w-full max-w-[720px]" />
+        </div>
+      );
+    }
 
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <ChatHeader />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+    if (!post) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-4 py-24">
           <p className="text-muted-foreground">Post not found</p>
           <button
             onClick={() => navigate("/blog")}
@@ -152,66 +148,66 @@ export default function BlogPost() {
             Back to Journal
           </button>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <ChatHeader />
-
-      <main className="flex-1 pt-[120px]">
-        <div className="container mx-auto max-w-[1200px] px-4 md:px-6">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
-            <Link to="/" className="hover:text-foreground transition-colors">
-              <Home className="h-4 w-4" />
-            </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
-            <Link
-              to="/blog"
-              className="hover:text-foreground transition-colors"
-            >
-              Journal
-            </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-foreground font-medium truncate max-w-[300px]">
-              {post.title}
-            </span>
-          </nav>
-
-          {/* Title */}
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl max-w-[820px] mb-6">
+    return (
+      <>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+          <Link
+            to="/"
+            onClick={(e) => { e.preventDefault(); navigate("/"); }}
+            className="hover:text-foreground transition-colors"
+          >
+            <Home className="h-4 w-4" />
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <Link
+            to="/blog"
+            onClick={(e) => { e.preventDefault(); navigate("/blog"); }}
+            className="hover:text-foreground transition-colors"
+          >
+            Journal
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="text-foreground font-medium truncate max-w-[300px]">
             {post.title}
-          </h1>
+          </span>
+        </nav>
 
-          {/* Author + Date */}
-          <div className="flex items-center gap-3 mb-10">
-            <img
-              src={post.author_avatar || "/nysgpt-avatar.png"}
-              alt={post.author_name}
-              className="h-10 w-10 rounded-full shrink-0"
-            />
-            <p className="text-muted-foreground text-sm">
-              <span className="text-foreground font-medium">
-                {post.author_name}
-              </span>{" "}
-              on {formatDate(post.published_at)}
-            </p>
-          </div>
+        {/* Title */}
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl max-w-[820px] mb-6">
+          {post.title}
+        </h1>
 
-          {/* Content + Sidebar layout */}
-          <div className="flex gap-16">
-            {/* Article body */}
-            <article className="min-w-0 flex-1 max-w-[720px] pb-16">
-              <div className="prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-h2:text-2xl prose-h2:font-bold prose-h2:tracking-tight prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:font-semibold prose-p:text-base prose-p:leading-relaxed prose-p:text-foreground prose-blockquote:border-l-2 prose-blockquote:border-foreground prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:font-medium prose-a:text-primary prose-a:underline prose-table:text-sm prose-th:text-left prose-th:font-semibold prose-td:py-2 prose-li:text-foreground">
-                <ChatMarkdown>{articleContent}</ChatMarkdown>
-              </div>
-            </article>
+        {/* Author + Date */}
+        <div className="flex items-center gap-3 mb-10">
+          <img
+            src={post.author_avatar || "/nysgpt-avatar.png"}
+            alt={post.author_name}
+            className="h-10 w-10 rounded-full shrink-0"
+          />
+          <p className="text-muted-foreground text-sm">
+            <span className="text-foreground font-medium">
+              {post.author_name}
+            </span>{" "}
+            on {formatDate(post.published_at)}
+          </p>
+        </div>
 
-            {/* Sticky sidebar — desktop only */}
-            <aside className="hidden lg:block w-[220px] shrink-0">
-              <div className="sticky top-[120px] space-y-6">
+        {/* Content + Sidebar layout */}
+        <div className="flex gap-16">
+          {/* Article body */}
+          <article className="min-w-0 flex-1 max-w-[720px] pb-16">
+            <div className="prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-h2:text-2xl prose-h2:font-bold prose-h2:tracking-tight prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:font-semibold prose-p:text-base prose-p:leading-relaxed prose-p:text-foreground prose-blockquote:border-l-2 prose-blockquote:border-foreground prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:font-medium prose-a:text-primary prose-a:underline prose-table:text-sm prose-th:text-left prose-th:font-semibold prose-td:py-2 prose-li:text-foreground">
+              <ChatMarkdown>{articleContent}</ChatMarkdown>
+            </div>
+          </article>
+
+          {/* Sticky sidebar — desktop only */}
+          <aside className="hidden lg:block w-[220px] shrink-0">
+            <div className="sticky top-[72px] space-y-6">
                 {headings.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">
@@ -277,8 +273,44 @@ export default function BlogPost() {
               </div>
             </aside>
           </div>
+      </>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-muted/30 overflow-hidden">
+      <div className="flex h-full overflow-hidden p-2.5">
+        {/* Push-style sidebar: fixed overlay on mobile, flex sibling on desktop */}
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 sm:static sm:z-auto shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+            sidebarOpen ? "w-full sm:w-[260px] sm:mr-2.5" : "w-0"
+          )}
+        >
+          <div className="w-full sm:w-[260px] h-full bg-background border border-border rounded-none sm:rounded-2xl overflow-hidden">
+            <NoteViewSidebar onClose={() => setSidebarOpen(false)} />
+          </div>
         </div>
-      </main>
+
+        {/* Main content card */}
+        <div className="relative flex flex-1 flex-col min-w-0 bg-background border border-border rounded-2xl overflow-hidden animate-zoom-in">
+          <ChatHeader hideNav inline sidebarOpen={sidebarOpen} onOpenSidebar={() => setSidebarOpen(true)} />
+
+          <main className="h-full overflow-y-auto scrollbar-hide">
+            <div className="container mx-auto max-w-[1200px] px-4 md:px-6 pt-[100px] pb-8">
+              {renderBody()}
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Mobile backdrop when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40 sm:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }

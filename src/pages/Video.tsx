@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarIcon, PlayCircleIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon } from '@/components/MobileMenuButton';
 
 interface VideoPost {
@@ -68,12 +67,6 @@ const videoPosts: VideoPost[] = [
 export default function Video() {
   const navigate = useNavigate();
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   const featuredVideo = videoPosts.find((post) => post.featured);
   const otherVideos = videoPosts.filter((video) => !video.featured);
@@ -86,27 +79,14 @@ export default function Video() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
-      {/* Left Sidebar - slides in from off-screen */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {/* Main Content Container */}
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header with sidebar toggle and NYSgpt */}
           <div className="flex items-center justify-between px-4 py-3 bg-background flex-shrink-0">
             {/* Left side: Sidebar toggle */}
             <div className="flex items-center gap-2">
-              <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+              {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
               <button
-                onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                onClick={() => setLeftSidebarOpen(true)}
                 className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
                 aria-label="Open menu"
               >
@@ -118,16 +98,10 @@ export default function Video() {
               </button>
             </div>
             {/* Right side: NYSgpt */}
-            <button
-              onClick={() => navigate('/?prompt=What%20is%20NYSgpt%3F')}
-              className="inline-flex items-center justify-center h-10 rounded-md px-3 text-foreground hover:bg-muted transition-colors font-semibold text-xl"
-            >
-              NYSgpt
-            </button>
           </div>
 
           {/* Scrollable Content Area */}
-          <div className="absolute top-[57px] bottom-0 left-0 right-0 overflow-y-auto">
+          <div className="absolute top-[57px] bottom-0 left-0 right-0 overflow-y-auto scrollbar-hide">
             <div className="container mx-auto px-4 py-8 max-w-5xl">
               {/* Heading */}
               <div className="mb-8">
@@ -214,7 +188,6 @@ export default function Video() {
               </div>
             </div>
           </div>
-      </InsetPanel>
-    </div>
+    </AppLayout>
   );
 }
