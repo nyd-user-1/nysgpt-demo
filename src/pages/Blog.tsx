@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Clock3Icon, ArrowRight, Newspaper } from 'lucide-react';
 import { ChatHeader } from '@/components/ChatHeader';
+import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { useViewTransitionNavigate } from '@/hooks/useViewTransitionNavigate';
+import { cn } from '@/lib/utils';
 
 type BlogPost = Tables<'blog_posts'>;
 
@@ -11,6 +13,7 @@ export default function Blog() {
   const navigate = useViewTransitionNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -43,12 +46,26 @@ export default function Blog() {
   };
 
   return (
-    <div className="fixed inset-0 bg-muted/30 p-2.5 overflow-hidden">
-      <div className="relative h-full w-full bg-background border border-border rounded-2xl overflow-hidden animate-zoom-in">
-        <ChatHeader hideNav inline />
+    <div className="fixed inset-0 bg-muted/30 overflow-hidden">
+      <div className="flex h-full overflow-hidden p-2.5">
+        {/* Push-style sidebar: fixed overlay on mobile, flex sibling on desktop */}
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 sm:static sm:z-auto shrink-0 transition-all duration-300 ease-in-out overflow-hidden",
+            sidebarOpen ? "w-full sm:w-[260px] sm:mr-2.5" : "w-0"
+          )}
+        >
+          <div className="w-full sm:w-[260px] h-full bg-background border border-border rounded-none sm:rounded-2xl overflow-hidden">
+            <NoteViewSidebar onClose={() => setSidebarOpen(false)} />
+          </div>
+        </div>
 
-        <main className="h-full overflow-y-auto scrollbar-hide">
-          <section className="container mx-auto px-4 pt-[100px] pb-8 md:px-6 2xl:max-w-[1400px]">
+        {/* Main content card */}
+        <div className="relative flex flex-1 flex-col min-w-0 bg-background border border-border rounded-2xl overflow-hidden animate-zoom-in">
+          <ChatHeader hideNav inline onOpenSidebar={() => setSidebarOpen(true)} />
+
+          <main className="h-full overflow-y-auto scrollbar-hide">
+            <section className="container mx-auto px-4 pt-[100px] pb-8 md:px-6 2xl:max-w-[1400px]">
             {/* Header — left-aligned like Members page */}
             <div className="mb-8">
               <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
@@ -110,7 +127,16 @@ export default function Blog() {
             )}
           </section>
         </main>
+        </div>
       </div>
+
+      {/* Mobile backdrop when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40 sm:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
