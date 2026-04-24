@@ -11,21 +11,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ArrowLeft, Plus, ExternalLink, Pencil, Trash2 } from "lucide-react";
-import { NoteViewSidebar } from "@/components/NoteViewSidebar";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Revenue, FISCAL_YEARS, fiscalYearLabel } from "@/types/revenue";
 import { formatRevenueAmount } from "@/hooks/useRevenueSearch";
 import { useContractNotes } from "@/hooks/useContractNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const RevenueDetail = () => {
   const navigate = useNavigate();
   const { revenueId } = useParams<{ revenueId: string }>();
   const [revenueChats, setRevenueChats] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
 
   // Notes state — reuse the contract notes hook with a revenue-specific key
   const noteKey = revenueId ? `revenue-${revenueId}` : undefined;
@@ -165,26 +163,7 @@ const RevenueDetail = () => {
   })).reverse(); // Show most recent first
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Slide-in sidebar */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-50 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container with padding */}
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -442,7 +421,7 @@ const RevenueDetail = () => {
               </div>
             </div>
           </div>
-      </InsetPanel>
+      </AppLayout>
 
       {/* Note Dialog */}
       <NoteDialog
@@ -455,7 +434,6 @@ const RevenueDetail = () => {
         initialNote={editingNote?.content || ''}
         placeholder="Add your notes about this revenue source..."
       />
-    </div>
   );
 };
 

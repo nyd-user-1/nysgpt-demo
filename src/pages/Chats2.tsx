@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Search, X, MessageSquare, ScrollText, Users, Landmark, Wallet, GraduationCap, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobileMenuIcon } from '@/components/MobileMenuButton';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,7 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useChatSessions } from '@/pages/chats/hooks/useChatSessions';
 import { ChatSession } from '@/pages/chats/types';
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 type ChatType = 'all' | 'bill' | 'member' | 'committee' | 'school-funding' | 'contract' | 'general';
 
@@ -44,13 +43,6 @@ const Chats2 = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
-
-  // Enable sidebar transitions after mount to prevent flash
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { chatSessions, loading, deleteSession } = useChatSessions();
   const [searchTerm, setSearchTerm] = useState('');
@@ -143,28 +135,7 @@ const Chats2 = () => {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Left Sidebar - slides in from off-screen */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {/* Backdrop overlay when sidebar is open */}
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container with padding */}
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -172,9 +143,9 @@ const Chats2 = () => {
                 {/* Title row with sidebar toggle and command button */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+                    {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
                     <button
-                      onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                      onClick={() => setLeftSidebarOpen(true)}
                       className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
                       aria-label="Open menu"
                     >
@@ -286,7 +257,7 @@ const Chats2 = () => {
               </div>
             )}
           </div>
-      </InsetPanel>
+      </AppLayout>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -305,7 +276,6 @@ const Chats2 = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
   );
 };
 

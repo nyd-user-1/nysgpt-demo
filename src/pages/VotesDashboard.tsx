@@ -2,9 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, ChevronDown, ArrowUp, MessageSquare, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { VotesChatDrawer } from '@/components/VotesChatDrawer';
@@ -55,7 +54,6 @@ const VotesDashboard = () => {
   const { session } = useAuth();
   const isAuthenticated = !!session;
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [expandedBillRows, setExpandedBillRows] = useState<Set<number>>(new Set());
   const [displayCount, setDisplayCount] = useState(20);
@@ -82,11 +80,6 @@ const VotesDashboard = () => {
   const [chatBillResult, setChatBillResult] = useState<string | null>(null);
   const [chatMemberVoteDetails, setChatMemberVoteDetails] = useState<string | null>(null);
   const [chatBillVoteDetails, setChatBillVoteDetails] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Clear date filter when switching chart modes
   useEffect(() => { setSelectedDate(null); }, [chartMode]);
@@ -345,36 +338,16 @@ const VotesDashboard = () => {
   const hdr = "hover:bg-muted/60 rounded px-1.5 py-1 -mx-1.5 transition-colors cursor-pointer select-none";
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Left Sidebar */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container */}
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background border-b">
             <div className="px-4 py-4 md:px-6">
               {/* Top row: sidebar toggle left, total votes right */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+                  {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
                   <button
-                    onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                    onClick={() => setLeftSidebarOpen(true)}
                     className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
                     aria-label="Open menu"
                   >
@@ -814,7 +787,7 @@ const VotesDashboard = () => {
               )
             ) : null}
           </div>
-      </InsetPanel>
+      </AppLayout>
 
       {/* Votes Chat Drawer */}
       <VotesChatDrawer
@@ -829,7 +802,6 @@ const VotesDashboard = () => {
         billVoteDetails={chatBillVoteDetails}
         dataContext={chatDataContext}
       />
-    </div>
   );
 };
 

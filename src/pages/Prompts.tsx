@@ -4,8 +4,7 @@ import { Search, ChevronRight, ChevronLeft, ArrowUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon } from '@/components/MobileMenuButton';
 
 // Departments (sorted alphabetically)
@@ -181,15 +180,9 @@ export default function Prompts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Enable transition after initial mount
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
 
   // Combine all prompts with category tags
   const allPrompts = [
@@ -239,28 +232,14 @@ export default function Prompts() {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
-      {/* Left Sidebar - slides in from off-screen */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-
-      {/* Main Content Container */}
-      <InsetPanel className="relative">
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header with sidebar toggle and model selector */}
           <div className="flex items-center justify-between px-4 py-3 bg-background flex-shrink-0">
             {/* Left side: Sidebar toggle */}
             <div className="flex items-center gap-2">
-              <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+              {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
               <button
-                onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                onClick={() => setLeftSidebarOpen(true)}
                 className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
                 aria-label="Open menu"
               >
@@ -490,7 +469,6 @@ export default function Prompts() {
               )}
             </div>
           </div>
-      </InsetPanel>
-    </div>
+    </AppLayout>
   );
 }

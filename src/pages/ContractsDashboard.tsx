@@ -2,9 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, ChevronDown, ArrowUp, MessageSquare, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { MobileMenuIcon, MobileNYSgpt } from '@/components/MobileMenuButton';
-import { NoteViewSidebar } from '@/components/NoteViewSidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { ContractsChatDrawer } from '@/components/ContractsChatDrawer';
@@ -52,7 +51,6 @@ const ContractsDashboard = () => {
   const { session } = useAuth();
   const isAuthenticated = !!session;
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<ContractsDashboardTab>('department');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
@@ -73,11 +71,6 @@ const ContractsDashboard = () => {
     const m = subChart ? (CONTRACTS_SLUG_TO_MODE[subChart] ?? 0) : 0;
     setChartMode(m >= 0 && m < NUM_CHART_MODES ? m : 0);
   }, [subChart]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSidebarMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   const {
     isLoading,
@@ -248,36 +241,16 @@ const ContractsDashboard = () => {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Left Sidebar */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-50",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container */}
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background border-b">
             <div className="px-4 py-4 md:px-6">
               {/* Top row: sidebar + title left, amount right */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />
+                  {!leftSidebarOpen && <MobileMenuIcon onOpenSidebar={() => setLeftSidebarOpen(!leftSidebarOpen)} />}
                   <button
-                    onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+                    onClick={() => setLeftSidebarOpen(true)}
                     className={cn("hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors", leftSidebarOpen && "bg-muted")}
                     aria-label="Open menu"
                   >
@@ -780,7 +753,7 @@ const ContractsDashboard = () => {
               </div>
             ) : null}
           </div>
-      </InsetPanel>
+      </AppLayout>
 
       {/* Contracts Chat Drawer */}
       <ContractsChatDrawer
@@ -792,7 +765,6 @@ const ContractsDashboard = () => {
         dataContext={chatDataContext}
         drillName={chatDrillName}
       />
-    </div>
   );
 };
 

@@ -11,20 +11,17 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ArrowLeft, Plus, ExternalLink, Pencil, Trash2 } from "lucide-react";
-import { NoteViewSidebar } from "@/components/NoteViewSidebar";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Discretionary, formatGrantAmount, cleanGranteeName } from "@/types/discretionary";
 import { useContractNotes } from "@/hooks/useContractNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const DiscretionaryDetail = () => {
   const navigate = useNavigate();
   const { grantId } = useParams<{ grantId: string }>();
   const [grantChats, setGrantChats] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
 
   const noteKey = grantId ? `discretionary-${grantId}` : undefined;
   const { notes, addNote, updateNote, deleteNote } = useContractNotes(noteKey);
@@ -154,24 +151,7 @@ const DiscretionaryDetail = () => {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-50 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -444,7 +424,7 @@ const DiscretionaryDetail = () => {
               </div>
             </div>
           </div>
-      </InsetPanel>
+      </AppLayout>
 
       <NoteDialog
         isOpen={noteDialogOpen}
@@ -456,7 +436,6 @@ const DiscretionaryDetail = () => {
         initialNote={editingNote?.content || ''}
         placeholder="Add your notes about this grant..."
       />
-    </div>
   );
 };
 

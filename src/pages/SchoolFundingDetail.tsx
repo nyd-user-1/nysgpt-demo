@@ -11,21 +11,18 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ArrowLeft, Plus, ExternalLink, MapPin, Calendar, DollarSign, TrendingUp, TrendingDown, Pencil, Trash2 } from "lucide-react";
-import { NoteViewSidebar } from "@/components/NoteViewSidebar";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { SchoolFundingTotals, SchoolFunding } from "@/types/schoolFunding";
 import { formatCurrency, formatPercent } from "@/hooks/useSchoolFundingSearch";
 import { useSchoolFundingNotes } from "@/hooks/useSchoolFundingNotes";
 import { NoteDialog } from "@/components/shared/NoteDialog";
-import { InsetPanel } from '@/components/ui/inset-panel';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const SchoolFundingDetail = () => {
   const navigate = useNavigate();
   const { fundingId } = useParams<{ fundingId: string }>();
   const [fundingChats, setFundingChats] = useState<Array<{ id: string; title: string; created_at: string }>>([]);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
-  const [sidebarMounted, setSidebarMounted] = useState(false);
 
   // Notes state
   const { notes, addNote, updateNote, deleteNote } = useSchoolFundingNotes(fundingId);
@@ -206,26 +203,7 @@ const SchoolFundingDetail = () => {
   const isPositiveChange = funding.total_change >= 0;
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Slide-in sidebar */}
-      <div
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-[85vw] max-w-sm md:w-72 bg-background border-r z-[60]",
-          sidebarMounted && "transition-transform duration-300 ease-in-out",
-          leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <NoteViewSidebar onClose={() => setLeftSidebarOpen(false)} />
-      </div>
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-50 transition-opacity"
-          onClick={() => setLeftSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main Container with padding */}
-      <InsetPanel>
+    <AppLayout sidebarOpen={leftSidebarOpen} onSidebarClose={() => setLeftSidebarOpen(false)}>
           {/* Header */}
           <div className="flex-shrink-0 bg-background">
             <div className="px-4 py-4">
@@ -551,7 +529,7 @@ const SchoolFundingDetail = () => {
               </div>
             </div>
           </div>
-      </InsetPanel>
+      </AppLayout>
 
       {/* Note Dialog */}
       <NoteDialog
@@ -564,7 +542,6 @@ const SchoolFundingDetail = () => {
         initialNote={editingNote?.content || ''}
         placeholder="Add your notes about this district's funding..."
       />
-    </div>
   );
 };
 
