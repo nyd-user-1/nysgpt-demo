@@ -269,8 +269,8 @@ export default function BlogPost() {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#efead8] p-5 overflow-hidden">
-      <div className="relative h-full w-full bg-background rounded-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-[#efead8] p-2.5 overflow-hidden">
+      <div className="relative h-full w-full bg-background border border-border rounded-2xl overflow-hidden">
         <ChatHeader hideNav inline />
 
         <main className="h-full overflow-y-auto scrollbar-hide">
