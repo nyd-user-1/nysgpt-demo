@@ -294,7 +294,7 @@ export default function BlogPost() {
 
         {/* Main content card */}
         <div className="relative flex flex-1 flex-col min-w-0 bg-background border border-border rounded-2xl overflow-hidden animate-zoom-in">
-          <ChatHeader hideNav inline onOpenSidebar={() => setSidebarOpen(true)} />
+          <ChatHeader hideNav inline sidebarOpen={sidebarOpen} onOpenSidebar={() => setSidebarOpen(true)} />
 
           <main className="h-full overflow-y-auto scrollbar-hide">
             <div className="container mx-auto max-w-[1200px] px-4 md:px-6 pt-[100px] pb-8">

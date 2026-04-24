@@ -312,7 +312,7 @@ export function NoteViewSidebar({ onClose }: NoteViewSidebarProps) {
   return (
     <TooltipProvider delayDuration={300}>
     {/* Single scroll container - ChatGPT architecture */}
-    <nav ref={sidebarScrollRef} className="relative flex h-full w-full flex-col overflow-y-auto bg-background">
+    <nav ref={sidebarScrollRef} className="relative flex h-full w-full flex-col overflow-y-auto scrollbar-hide bg-background">
       {/* Sticky Header - stays at top while scrolling */}
       <aside className="sticky top-0 z-40 bg-background">
         {/* Header with NYSgpt logo and close button */}

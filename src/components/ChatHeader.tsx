@@ -16,6 +16,7 @@ interface ChatHeaderProps {
   onOpenSidebar?: () => void;
   hideNav?: boolean;
   inline?: boolean;
+  sidebarOpen?: boolean;
 }
 
 // Dropdown group structure
@@ -100,7 +101,7 @@ const NAV_ITEMS: {
   },
 ];
 
-export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav = false, inline = false }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav = false, inline = false, sidebarOpen = false }: ChatHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   // Self-managed sidebar (used when no onOpenSidebar prop is provided)
@@ -248,17 +249,19 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav =
         <div className="flex items-center justify-between">
           {/* Left side: NYSgpt on mobile, Logs button on desktop */}
           <div className={cn("flex items-center space-x-1", inline && "pointer-events-auto")}>
-            <button
-              onClick={handleOpenSidebar}
-              className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
-              aria-label="Open menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-              </svg>
-            </button>
+            {!sidebarOpen && (
+              <button
+                onClick={handleOpenSidebar}
+                className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
+                aria-label="Open menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                  <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                  <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                </svg>
+              </button>
+            )}
             <button
               onClick={handleHeartClick}
               className="md:hidden inline-flex items-center justify-center h-10 rounded-md px-3 text-black hover:bg-muted transition-colors font-semibold text-xl"
@@ -366,17 +369,19 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav =
               </TooltipContent>
             </Tooltip>
             {/* Logs button (mobile only) */}
-            <button
-              onClick={handleOpenSidebar}
-              className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
-              aria-label="Open menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
-                <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
-                <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
-              </svg>
-            </button>
+            {!sidebarOpen && (
+              <button
+                onClick={handleOpenSidebar}
+                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
+                aria-label="Open menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5h1"/><path d="M3 12h1"/><path d="M3 19h1"/>
+                  <path d="M8 5h1"/><path d="M8 12h1"/><path d="M8 19h1"/>
+                  <path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </nav>
