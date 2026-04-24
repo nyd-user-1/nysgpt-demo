@@ -379,8 +379,6 @@ const VotesDashboard = () => {
                       </div>
                     </div>
                   )}
-
-                  <MobileNYSgpt />
                 </div>
 
                 {/* Chart */}

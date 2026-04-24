@@ -206,7 +206,6 @@ const ExcerptView = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <MobileNYSgpt />
             </div>
           </div>
 

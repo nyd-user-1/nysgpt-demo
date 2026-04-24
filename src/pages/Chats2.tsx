@@ -165,12 +165,6 @@ const Chats2 = () => {
                           Clear filters
                         </Button>
                       )}
-                      <button
-                        onClick={() => navigate('/?prompt=What%20is%20NYSgpt%3F')}
-                        className="inline-flex items-center justify-center h-10 rounded-md px-3 text-foreground hover:bg-muted transition-colors font-semibold text-xl"
-                      >
-                        NYSgpt
-                      </button>
                     </div>
                   </div>
 

@@ -292,8 +292,6 @@ const ContractsDashboard = () => {
                       </span>
                     </div>
                   )}
-
-                  <MobileNYSgpt />
                 </div>
 
                 {/* Chart area */}

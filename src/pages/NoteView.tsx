@@ -700,7 +700,6 @@ const NoteView = () => {
           </div>
 
           <div className="flex items-center gap-1">
-            <MobileNYSgpt />
             {/* Save indicator */}
             <span className="text-xs text-muted-foreground mr-2">
               {isSaving ? "Saving..." : hasUnsavedChanges ? "Unsaved" : "Saved"}

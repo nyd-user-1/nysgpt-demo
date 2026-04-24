@@ -80,7 +80,6 @@ export default function DiscretionaryDashboard() {
                 </span>
               </div>
             )}
-            <MobileNYSgpt />
           </div>
 
           {/* Chart */}

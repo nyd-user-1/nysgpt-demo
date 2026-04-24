@@ -180,8 +180,6 @@ const BudgetDashboard = () => {
                       </span>
                     </div>
                   )}
-
-                  <MobileNYSgpt />
                 </div>
 
                 {/* Mini Historical Chart */}

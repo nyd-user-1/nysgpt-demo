@@ -80,7 +80,6 @@ export default function CapitalDashboard() {
                 </span>
               </div>
             )}
-            <MobileNYSgpt />
           </div>
 
           {/* Chart */}

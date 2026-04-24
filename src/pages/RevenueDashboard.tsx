@@ -76,7 +76,6 @@ export default function RevenueDashboard() {
                 </span>
               </div>
             )}
-            <MobileNYSgpt />
           </div>
 
           {/* Chart — line chart showing revenue over 30+ fiscal years */}

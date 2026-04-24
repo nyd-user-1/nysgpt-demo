@@ -276,8 +276,6 @@ const LobbyingDashboard = () => {
                       </span>
                     </div>
                   )}
-
-                  <MobileNYSgpt />
                 </div>
 
                 {/* Chart - Bar chart for lobbyist3, Area chart for others */}
