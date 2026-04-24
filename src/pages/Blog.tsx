@@ -44,11 +44,11 @@ export default function Blog() {
 
   return (
     <div className="fixed inset-0 bg-[#efead8] p-2 overflow-hidden">
-      <div className="h-full w-full bg-background rounded-2xl overflow-y-auto flex flex-col">
+      <div className="relative h-full w-full bg-background rounded-2xl overflow-hidden">
         <ChatHeader hideNav inline />
 
-        <main className="flex-1">
-          <section className="container mx-auto px-4 pt-[56px] pb-8 md:px-6 2xl:max-w-[1400px]">
+        <main className="h-full overflow-y-auto">
+          <section className="container mx-auto px-4 pt-[112px] pb-8 md:px-6 2xl:max-w-[1400px]">
             {/* Header — left-aligned like Members page */}
             <div className="mb-8">
               <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
@@ -78,7 +78,7 @@ export default function Blog() {
                 {posts.map((post) => (
                   <div
                     key={post.id}
-                    className="group bg-background border border-border rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col"
+                    className="group bg-background border border-border rounded-2xl p-6 cursor-pointer transition-colors duration-200 hover:bg-muted/50 flex flex-col"
                     onClick={() => navigate(`/blog/${post.slug}`)}
                   >
                     <span className="text-muted-foreground text-sm">

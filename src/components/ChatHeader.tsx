@@ -241,13 +241,13 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav =
         className={cn(
           "px-5 py-2",
           inline
-            ? "relative bg-transparent"
+            ? "absolute top-0 left-0 right-0 z-10 bg-transparent pointer-events-none"
             : "fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md"
         )}
       >
         <div className="flex items-center justify-between">
           {/* Left side: NYSgpt on mobile, Logs button on desktop */}
-          <div className="flex items-center space-x-1">
+          <div className={cn("flex items-center space-x-1", inline && "pointer-events-auto")}>
             <button
               onClick={handleOpenSidebar}
               className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-md text-foreground hover:bg-muted transition-colors"
@@ -350,7 +350,7 @@ export function ChatHeader({ onNewChat, onWhatIsNYSgpt, onOpenSidebar, hideNav =
           )}
 
           {/* Right side: NYSgpt on desktop, Logs button on mobile */}
-          <div className="flex items-center gap-2">
+          <div className={cn("flex items-center gap-2", inline && "pointer-events-auto")}>
             {/* NYSgpt button (desktop only) */}
             <Tooltip>
               <TooltipTrigger asChild>
