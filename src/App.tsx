@@ -97,6 +97,7 @@ const NewExcerpt = lazyRetry(() => import("./pages/NewExcerpt"));
 const Advertise = lazyRetry(() => import("./pages/Advertise"));
 const Terms = lazyRetry(() => import("./pages/Terms"));
 const Privacy = lazyRetry(() => import("./pages/Privacy"));
+const Explore = lazyRetry(() => import("./pages/Explore"));
 const Contact = lazyRetry(() => import("./pages/Contact"));
 const UserFeedback = lazyRetry(() => import("./pages/UserFeedback"));
 
@@ -220,9 +221,8 @@ const App = () => {
                   <Route path="/charts/revenue" element={<ProtectedRoute><RevenueDashboard /></ProtectedRoute>} />
                   <Route path="/charts/capital" element={<ProtectedRoute><CapitalDashboard /></ProtectedRoute>} />
                   <Route path="/charts/discretionary" element={<ProtectedRoute><DiscretionaryDashboard /></ProtectedRoute>} />
+                  <Route path="/explore" element={<Explore />} />
                   {/* Redirects for old dashboard URLs */}
-                  <Route path="/explore" element={<Navigate to="/charts" replace />} />
-                  <Route path="/explore/*" element={<Navigate to="/charts" replace />} />
                   <Route path="/budget-dashboard" element={<Navigate to="/charts/budget" replace />} />
                   <Route path="/lobbying-dashboard" element={<Navigate to="/charts/lobbying" replace />} />
                   <Route path="/contracts-dashboard" element={<Navigate to="/charts/contracts" replace />} />
