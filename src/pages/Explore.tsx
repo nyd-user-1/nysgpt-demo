@@ -47,10 +47,7 @@ export default function Explore() {
 
           {/* Featured — horizontal scroll portrait cards */}
           <h2 className="text-xl font-bold text-foreground mb-4">Featured</h2>
-          <div
-            className="overflow-x-auto -mx-6 [&::-webkit-scrollbar]:hidden"
-            style={{ scrollbarWidth: 'none' } as React.CSSProperties}
-          >
+          <div className="overflow-x-auto -mx-6 scrollbar-hide">
             <div className="flex gap-3 px-6 snap-x snap-mandatory pb-2">
               {loading
                 ? Array.from({ length: 5 }).map((_, i) => (
@@ -73,11 +70,6 @@ export default function Explore() {
                         <p className="text-sm font-bold text-white leading-snug line-clamp-3">
                           {post.title}
                         </p>
-                        {post.description && (
-                          <p className="text-xs text-white/70 mt-0.5 line-clamp-2">
-                            {post.description}
-                          </p>
-                        )}
                       </div>
                     </div>
                   ))}
@@ -108,14 +100,9 @@ export default function Explore() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-                    <p className="text-lg font-bold text-white mb-0.5 line-clamp-2">
+                    <p className="text-lg font-bold text-white line-clamp-2">
                       {post.title}
                     </p>
-                    {post.description && (
-                      <p className="text-sm text-white/80 line-clamp-2">
-                        {post.description}
-                      </p>
-                    )}
                   </div>
                 </div>
               ))}
